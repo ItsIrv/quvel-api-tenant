@@ -1,5 +1,7 @@
 <?php
 
+use Quvel\Tenant\Resolvers\DomainResolver;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -24,38 +26,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Default Resolver
+    | Tenant Resolver
     |--------------------------------------------------------------------------
     |
-    | The default strategy for resolving the current tenant.
-    | Available: 'domain', 'subdomain', 'path', 'header'
+    | The resolver class to use for identifying tenants from requests.
+    | Must implement \Quvel\Tenant\Contracts\TenantResolver interface.
     |
     */
-    'default_resolver' => env('TENANT_RESOLVER', 'domain'),
+    'resolver' => env('TENANT_RESOLVER', DomainResolver::class),
 
     /*
     |--------------------------------------------------------------------------
     | Resolver Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration for different tenant resolution strategies.
+    | Configuration passed to the resolver's constructor.
     |
     */
-    'resolvers' => [
-        'domain' => [
-            'cache_ttl' => 300, // 5 minutes
-        ],
-        'subdomain' => [
-            'cache_ttl' => 300,
-        ],
-        'path' => [
-            'cache_ttl' => 300,
-            'segment' => 1, // URL segment position
-        ],
-        'header' => [
-            'cache_ttl' => 300,
-            'header_name' => 'X-Tenant-ID',
-        ],
+    'resolver_config' => [
+        'cache_ttl' => env('TENANT_CACHE_TTL', 300), // 5 minutes
     ],
 
     /*
@@ -64,11 +53,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Register your tenant config handler classes here. These classes
-    | handle seeding, endpoint data, and per-request config application.
+    | handle tenant-specific configuration and customization.
     |
     */
     'config_handlers' => [
-        // \App\Tenant\CoreConfigHandler::class,
         // \App\Tenant\DatabaseConfigHandler::class,
+        // \App\Tenant\MailConfigHandler::class,
+        // \App\Tenant\CacheConfigHandler::class,
     ],
 ];

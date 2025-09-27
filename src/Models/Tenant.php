@@ -68,11 +68,39 @@ class Tenant extends Model
     }
 
     /**
-     * Get a config value by key.
+     * Get a config value by key with parent inheritance.
      */
     public function getConfig(string $key, mixed $default = null): mixed
     {
-        return data_get($this->config, $key, $default);
+        $value = data_get($this->config, $key);
+
+        // If value not found and has parent, check parent
+        if ($value === null && $this->parent_id) {
+            $parent = $this->parent;
+            if ($parent) {
+                return $parent->getConfig($key, $default);
+            }
+        }
+
+        return $value ?? $default;
+    }
+
+    /**
+     * Get merged configuration with parent inheritance.
+     */
+    public function getMergedConfig(): array
+    {
+        $config = $this->config ?? [];
+
+        if ($this->parent_id) {
+            $parent = $this->parent;
+            if ($parent) {
+                $parentConfig = $parent->getMergedConfig();
+                $config = array_merge($parentConfig, $config);
+            }
+        }
+
+        return $config;
     }
 
     /**

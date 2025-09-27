@@ -8,105 +8,81 @@ use Illuminate\Http\Request;
 use InvalidArgumentException;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Models\Tenant;
-use Quvel\Tenant\Resolvers\DomainResolver;
-use Quvel\Tenant\Resolvers\HeaderResolver;
-use Quvel\Tenant\Resolvers\PathResolver;
-use Quvel\Tenant\Resolvers\SubdomainResolver;
 
 /**
- * Manages tenant resolution strategies.
+ * Manages tenant resolution.
  *
- * Coordinates different resolver types and provides a unified interface
- * for resolving tenants from HTTP requests.
+ * Provides a simple, configurable approach to resolving tenants
+ * from HTTP requests using a single configured strategy.
  */
 class TenantResolverManager
 {
     /**
-     * @var array<string, string> Built-in resolver mappings
+     * @var TenantResolver|null The current resolver instance
      */
-    protected array $builtInResolvers = [
-        'domain' => DomainResolver::class,
-        'subdomain' => SubdomainResolver::class,
-        'path' => PathResolver::class,
-        'header' => HeaderResolver::class,
-    ];
+    protected ?TenantResolver $resolver = null;
 
     /**
-     * @var array<string, string> Custom resolver mappings
-     */
-    protected array $customResolvers = [];
-
-    /**
-     * Register a custom resolver.
-     *
-     * @param string $name Resolver name
-     * @param string $resolverClass Resolver class that implements TenantResolver
-     * @throws InvalidArgumentException If resolver doesn't implement TenantResolver
-     */
-    public function registerResolver(string $name, string $resolverClass): void
-    {
-        if (!is_subclass_of($resolverClass, TenantResolver::class)) {
-            throw new InvalidArgumentException("Resolver must implement TenantResolver interface");
-        }
-
-        $this->customResolvers[$name] = $resolverClass;
-    }
-
-    /**
-     * Resolve tenant using the default resolver strategy.
+     * Resolve tenant using the configured resolver.
      *
      * @param Request $request The HTTP request
      * @return Tenant|null The resolved tenant or null if none found
      */
     public function resolve(Request $request): ?Tenant
     {
-        $defaultResolver = config('tenant.default_resolver', 'domain');
-
-        return $this->resolveWith($defaultResolver, $request);
+        return $this->getResolver()->resolve($request);
     }
 
     /**
-     * Resolve tenant using a specific resolver strategy.
+     * Get the configured resolver instance.
      *
-     * @param string $resolverName The resolver strategy name
-     * @param Request $request The HTTP request
-     * @return Tenant|null The resolved tenant or null if none found
-     * @throws InvalidArgumentException If resolver not found
+     * @return TenantResolver
+     * @throws InvalidArgumentException If resolver is not configured or invalid
      */
-    public function resolveWith(string $resolverName, Request $request): ?Tenant
+    public function getResolver(): TenantResolver
     {
-        $resolverClass = $this->getResolverClass($resolverName);
-
-        if (!$resolverClass) {
-            throw new InvalidArgumentException("Resolver '{$resolverName}' not found");
+        if ($this->resolver === null) {
+            $this->resolver = $this->createResolver();
         }
 
-        $resolver = new $resolverClass();
-
-        return $resolver->resolve($request);
+        return $this->resolver;
     }
 
     /**
-     * Get resolver class for a given name.
+     * Set a custom resolver instance.
      *
-     * @param string $name Resolver name
-     * @return string|null Resolver class or null if not found
+     * @param TenantResolver $resolver
+     * @return void
      */
-    protected function getResolverClass(string $name): ?string
+    public function setResolver(TenantResolver $resolver): void
     {
-        return $this->customResolvers[$name] ?? $this->builtInResolvers[$name] ?? null;
+        $this->resolver = $resolver;
     }
 
     /**
-     * Get all available resolver names.
+     * Create a resolver instance from configuration.
      *
-     * @return array<string> Array of resolver names
+     * @return TenantResolver
+     * @throws InvalidArgumentException If resolver is not configured or invalid
      */
-    public function getAvailableResolvers(): array
+    protected function createResolver(): TenantResolver
     {
-        return array_merge(
-            array_keys($this->builtInResolvers),
-            array_keys($this->customResolvers)
-        );
+        $resolverClass = config('tenant.resolver');
+
+        if (!$resolverClass) {
+            throw new InvalidArgumentException("No tenant resolver configured");
+        }
+
+        if (!class_exists($resolverClass)) {
+            throw new InvalidArgumentException("Resolver class does not exist: $resolverClass");
+        }
+
+        if (!is_subclass_of($resolverClass, TenantResolver::class)) {
+            throw new InvalidArgumentException("Resolver must implement TenantResolver interface");
+        }
+
+        $config = config('tenant.resolver_config', []);
+
+        return new $resolverClass($config);
     }
 }
