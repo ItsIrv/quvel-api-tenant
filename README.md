@@ -72,7 +72,7 @@ use Quvel\Tenant\Models\Tenant;
 // Create a new tenant
 $tenant = Tenant::create([
     'name' => 'Acme Corp',
-    'domain' => 'acme.example.com',
+    'identifier' => 'acme.example.com',
     'config' => [
         'database' => 'acme_db',
         'theme' => 'blue',

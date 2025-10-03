@@ -1,7 +1,5 @@
 <?php
 
-use Quvel\Tenant\Resolvers\DomainResolver;
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -26,39 +24,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Tenant Resolver
+    | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |
-    | The resolver class to use for identifying tenants from requests.
-    | Must implement \Quvel\Tenant\Contracts\TenantResolver interface.
+    | Define which tables should have tenant_id column added.
+    | You can use:
+    | - true: Use default settings
+    | - array: Custom configuration
+    | - string: Class that implements table configuration
     |
     */
-    'resolver' => env('TENANT_RESOLVER', DomainResolver::class),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resolver Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configuration passed to the resolver's constructor.
-    |
-    */
-    'resolver_config' => [
-        'cache_ttl' => env('TENANT_CACHE_TTL', 300), // 5 minutes
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Config Handlers
-    |--------------------------------------------------------------------------
-    |
-    | Register your tenant config handler classes here. These classes
-    | handle tenant-specific configuration and customization.
-    |
-    */
-    'config_handlers' => [
-        // \App\Tenant\DatabaseConfigHandler::class,
-        // \App\Tenant\MailConfigHandler::class,
-        // \App\Tenant\CacheConfigHandler::class,
+    'tables' => [
+        // Users table with proper tenant isolation
+        'users' => [
+            'after' => 'id',
+            'cascade_delete' => true,
+            'drop_uniques' => [['email']],
+            'tenant_unique_constraints' => [['email']]
+        ],
+        // 'posts' => true, // Simple registration with defaults
+        // 'orders' => \App\Tenant\Tables\OrdersTableConfig::class,
     ],
 ];

@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Quvel\Tenant;
 
 use Illuminate\Support\ServiceProvider;
+use Quvel\Tenant\Database\TenantTableRegistry;
 
 class TenantServiceProvider extends ServiceProvider
 {
+    /**
+     * Register services.
+     */
     public function register(): void
     {
         $this->mergeConfigFrom(
@@ -15,19 +19,14 @@ class TenantServiceProvider extends ServiceProvider
             'tenant'
         );
 
-        $this->app->singleton(TenantConfigManager::class, function ($app) {
-            $handlers = config('tenant.config_handlers', []);
-            $manager = new TenantConfigManager();
-            $manager->registerHandlers($handlers);
-
-            return $manager;
-        });
-
-        $this->app->singleton(TenantResolverManager::class, function ($app) {
-            return new TenantResolverManager();
+        $this->app->singleton(TenantTableRegistry::class, function ($app) {
+            return new TenantTableRegistry();
         });
     }
 
+    /**
+     * Bootstrap services.
+     */
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
@@ -38,10 +37,6 @@ class TenantServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../database/migrations/' => database_path('migrations'),
             ], 'tenant-migrations');
-
-            $this->commands([
-                Commands\TenantInstallCommand::class,
-            ]);
         }
     }
 }

@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Quvel\Tenant\Database;
+
+/**
+ * Configuration for making a database table tenant-aware.
+ *
+ * This value object contains all settings needed to add and manage
+ * a tenant_id column on a database table.
+ */
+readonly class TenantTableConfig
+{
+    public function __construct(
+        /**
+         * Column after which the tenant_id should be added.
+         */
+        public string $after = 'id',
+
+        /**
+         * Whether tenant deletion should cascade to this table.
+         */
+        public bool $cascadeDelete = true,
+
+        /**
+         * List of unique constraints to drop before adding tenant-specific ones.
+         * Each entry is an array of columns that form a unique constraint.
+         *
+         * @var array<int, array<int, string>>
+         */
+        public array $dropUniques = [],
+
+        /**
+         * Unique constraints that should include tenant_id.
+         * Each entry is an array of columns that should be unique together within a tenant.
+         *
+         * @var array<int, array<int, string>>
+         */
+        public array $tenantUniqueConstraints = [],
+    ) {
+    }
+
+    /**
+     * Convert to array format for migrations.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'after' => $this->after,
+            'cascade_delete' => $this->cascadeDelete,
+            'drop_uniques' => $this->dropUniques,
+            'tenant_unique_constraints' => $this->tenantUniqueConstraints,
+        ];
+    }
+
+    /**
+     * Create from array configuration.
+     *
+     * @param array<string, mixed> $config
+     * @return static
+     */
+    public static function fromArray(array $config): static
+    {
+        return new static(
+            after: $config['after'] ?? 'id',
+            cascadeDelete: $config['cascade_delete'] ?? true,
+            dropUniques: $config['drop_uniques'] ?? [],
+            tenantUniqueConstraints: $config['tenant_unique_constraints'] ?? []
+        );
+    }
+
+    /**
+     * Create with default configuration.
+     *
+     * @return static
+     */
+    public static function default(): static
+    {
+        return new static();
+    }
+}

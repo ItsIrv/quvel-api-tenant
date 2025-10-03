@@ -74,9 +74,9 @@ class Tenant extends Model
     {
         $value = data_get($this->config, $key);
 
-        // If value not found and has parent, check parent
         if ($value === null && $this->parent_id) {
             $parent = $this->parent;
+
             if ($parent) {
                 return $parent->getConfig($key, $default);
             }
@@ -94,6 +94,7 @@ class Tenant extends Model
 
         if ($this->parent_id) {
             $parent = $this->parent;
+
             if ($parent) {
                 $parentConfig = $parent->getMergedConfig();
                 $config = array_merge($parentConfig, $config);
