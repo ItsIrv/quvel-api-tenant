@@ -69,6 +69,16 @@ class Tenant extends Model
     }
 
     /**
+     * Find an active tenant by identifier.
+     */
+    public static function findByIdentifier(string $identifier): ?static
+    {
+        return static::where('identifier', $identifier)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
      * Get a config value by key with parent inheritance.
      */
     public function getConfig(string $key, mixed $default = null): mixed

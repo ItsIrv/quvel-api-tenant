@@ -24,6 +24,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Middleware Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure automatic middleware registration.
+    |
+    */
+    'middleware' => [
+        'auto_register' => env('TENANT_AUTO_MIDDLEWARE', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tenant Resolver Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure how tenants are resolved from requests.
+    |
+    */
+    'resolver' => [
+        'class' => env('TENANT_RESOLVER', \Quvel\Tenant\Resolvers\DomainResolver::class),
+        'config' => [
+            'cache_ttl' => env('TENANT_CACHE_TTL', 300),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |
