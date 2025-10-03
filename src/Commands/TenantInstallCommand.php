@@ -26,8 +26,10 @@ class TenantInstallCommand extends Command
         ]);
 
         $this->info('Tenant package installed successfully!');
-        $this->info('Run: php artisan migrate');
-        $this->info('Run: php artisan db:seed --class=TenantConfigSeeder');
+        $this->info('');
+        $this->info('Next steps:');
+        $this->info('1. Configure your tables in config/tenant.php');
+        $this->info('2. Run: php artisan migrate');
 
         return 0;
     }
