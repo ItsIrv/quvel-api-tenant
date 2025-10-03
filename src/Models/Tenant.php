@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Quvel\Tenant\Database\Factories\TenantFactory;
+use Quvel\Tenant\Enums\ConfigVisibility;
 
 /**
  * Tenant model - simplified and clean.
@@ -148,6 +149,94 @@ class Tenant extends Model
         $this->config = array_merge($this->config ?? [], $values);
 
         return $this;
+    }
+
+    /**
+     * Set the visibility level for a config key.
+     */
+    public function setConfigVisibility(string $key, ConfigVisibility|string $visibility): self
+    {
+        $config = $this->config ?? [];
+
+        $visibilityValue = $visibility instanceof ConfigVisibility ? $visibility->value : $visibility;
+
+        data_set($config, '__visibility.' . $key, $visibilityValue);
+
+        $this->config = $config;
+
+        return $this;
+    }
+
+    /**
+     * Get the visibility level for a config key.
+     */
+    public function getConfigVisibility(string $key): ConfigVisibility
+    {
+        $visibility = data_get($this->config, '__visibility.' . $key);
+
+        return ConfigVisibility::tryFrom($visibility) ?? ConfigVisibility::PRIVATE;
+    }
+
+    /**
+     * Get resolved config with full inheritance (excludes __visibility).
+     */
+    public function getResolvedConfig(): array
+    {
+        $config = $this->getMergedConfig();
+        unset($config['__visibility']);
+
+        return $config;
+    }
+
+    /**
+     * Get config filtered by visibility level.
+     */
+    public function getConfigByVisibility(ConfigVisibility $minVisibility): array
+    {
+        $config = $this->getResolvedConfig();
+        $visibility = data_get($this->config, '__visibility', []);
+        $filtered = [];
+
+        foreach ($config as $key => $value) {
+            $keyVisibility = ConfigVisibility::tryFrom($visibility[$key] ?? null) ?? ConfigVisibility::PRIVATE;
+
+            // Include if visibility level is >= minimum required
+            if ($this->isVisibilityAllowed($keyVisibility, $minVisibility)) {
+                data_set($filtered, $key, $value);
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Get public configuration (PUBLIC visibility only).
+     */
+    public function getPublicConfig(): array
+    {
+        return $this->getConfigByVisibility(ConfigVisibility::PUBLIC);
+    }
+
+    /**
+     * Get protected configuration (PUBLIC + PROTECTED visibility).
+     */
+    public function getProtectedConfig(): array
+    {
+        return $this->getConfigByVisibility(ConfigVisibility::PROTECTED);
+    }
+
+    /**
+     * Check if a visibility level meets the minimum requirement.
+     */
+    protected function isVisibilityAllowed(ConfigVisibility $actual, ConfigVisibility $required): bool
+    {
+        $levels = [
+            ConfigVisibility::PRIVATE->value => 0,
+            ConfigVisibility::PROTECTED->value => 1,
+            ConfigVisibility::PUBLIC->value => 2,
+        ];
+
+        return $levels[$actual->value] >= $levels[$required->value];
     }
 
     protected static function newFactory(): TenantFactory
