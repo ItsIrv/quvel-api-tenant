@@ -51,6 +51,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tenant Not Found Handling
+    |--------------------------------------------------------------------------
+    |
+    | Configure what happens when no tenant is resolved from a request.
+    |
+    | Strategies:
+    | - allow_null: Continue processing without tenant (default)
+    | - abort: Return 404 Not Found response
+    | - redirect: Redirect to specified URL
+    | - default_tenant: Use a fallback tenant identifier
+    | - custom: Call a custom handler class/closure
+    |
+    */
+    'not_found' => [
+        'strategy' => env('TENANT_NOT_FOUND_STRATEGY', 'abort'),
+        'config' => [
+            // For 'redirect' strategy
+            'redirect_url' => env('TENANT_NOT_FOUND_REDIRECT', '/'),
+
+            // For 'default_tenant' strategy
+            'default_identifier' => env('TENANT_DEFAULT_IDENTIFIER'),
+
+            // For 'custom' strategy
+            'handler' => null, // Class name or closure
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configuration Pipes
+    |--------------------------------------------------------------------------
+    |
+    | Configuration pipes that apply tenant config to Laravel's runtime config.
+    | Pipes are executed in array order - reorder to change execution sequence.
+    |
+    */
+    'pipes' => [
+        \Quvel\Tenant\Pipes\CoreConfigPipe::class,
+        // Add your custom pipes here
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |

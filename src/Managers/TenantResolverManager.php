@@ -11,12 +11,7 @@ use Quvel\Tenant\Concerns\TenantResolver;
 use Quvel\Tenant\Models\Tenant;
 
 /**
- * Manages tenant resolution, caching, and context.
- *
- * Handles the complete tenant resolution flow:
- * 1. Extract identifier from request via resolver
- * 2. Cache and lookup tenant from database
- * 3. Manage current tenant context
+ * Manages tenant resolution, and caching.
  */
 class TenantResolverManager
 {
