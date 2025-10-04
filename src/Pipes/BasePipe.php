@@ -50,12 +50,19 @@ abstract class BasePipe implements ConfigurationPipe
     /**
      * Set multiple Laravel config values from tenant config.
      *
-     * Usage: $this->setMany(['app_name' => 'app.name', 'app_url' => 'app.url'])
+     * Usage:
+     * - Direct mapping: $this->setMany(['app.name', 'cache.prefix'])
+     * - Custom mapping: $this->setMany(['pusher_key' => 'broadcasting.connections.pusher.key'])
+     * - Mixed: $this->setMany(['app.name', 'pusher_key' => 'broadcasting.connections.pusher.key'])
      */
     protected function setMany(array $mappings): void
     {
         foreach ($mappings as $tenantKey => $laravelKey) {
-            $this->setIfExists($tenantKey, $laravelKey);
+            if (is_int($tenantKey)) {
+                $this->setIfExists($laravelKey, $laravelKey);
+            } else {
+                $this->setIfExists($tenantKey, $laravelKey);
+            }
         }
     }
 }

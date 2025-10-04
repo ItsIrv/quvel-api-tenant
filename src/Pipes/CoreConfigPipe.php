@@ -17,24 +17,33 @@ class CoreConfigPipe extends BasePipe
     public function apply(): void
     {
         $this->setMany([
-            'app_name' => 'app.name',
-            'app_env' => 'app.env',
-            'app_key' => 'app.key',
-            'app_debug' => 'app.debug',
-            'app_url' => 'app.url',
-            'app_timezone' => 'app.timezone',
-            'app_locale' => 'app.locale',
-            'app_fallback_locale' => 'app.fallback_locale',
+            'app.name',
+            'app.env',
+            'app.key',
+            'app.debug',
+            'app.url',
+            'app.timezone',
+            'app.locale',
+            'app.fallback_locale',
+            'frontend.url',
+            'frontend.internal_api_url',
+            'frontend.capacitor_scheme',
+            'broadcasting.connections.pusher.key',
+            'broadcasting.connections.pusher.secret',
+            'broadcasting.connections.pusher.app_id',
+            'broadcasting.connections.pusher.options.cluster',
+            'recaptcha_secret_key',
+            'recaptcha_site_key',
         ]);
 
         $this->configureCors();
         $this->handleForwardedPrefix();
 
-        if ($this->tenant->hasConfig('app_url')) {
+        if ($this->tenant->hasConfig('app.url')) {
             $this->refreshUrlGenerator();
         }
 
-        if ($this->tenant->hasConfig('app_locale')) {
+        if ($this->tenant->hasConfig('app.locale')) {
             $this->refreshLocale();
         }
 
@@ -48,12 +57,12 @@ class CoreConfigPipe extends BasePipe
     {
         $allowedOrigins = [];
 
-        if ($this->tenant->hasConfig('app_url')) {
-            $allowedOrigins[] = $this->tenant->getConfig('app_url');
+        if ($this->tenant->hasConfig('app.url')) {
+            $allowedOrigins[] = $this->tenant->getConfig('app.url');
         }
 
-        if ($this->tenant->hasConfig('frontend_url')) {
-            $allowedOrigins[] = $this->tenant->getConfig('frontend_url');
+        if ($this->tenant->hasConfig('frontend.url')) {
+            $allowedOrigins[] = $this->tenant->getConfig('frontend.url');
         }
 
         if (!empty($allowedOrigins)) {
