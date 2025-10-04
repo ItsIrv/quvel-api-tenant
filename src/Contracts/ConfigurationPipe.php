@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Concerns;
+namespace Quvel\Tenant\Contracts;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Models\Tenant;

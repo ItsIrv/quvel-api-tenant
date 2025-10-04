@@ -151,4 +151,26 @@ return [
         // 'posts' => true, // Simple registration with defaults
         // 'orders' => \App\Tenant\Tables\OrdersTableConfig::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scoped Models Configuration
+    |--------------------------------------------------------------------------
+    |
+    | External models (from Laravel or packages) that should have tenant
+    | scoping automatically applied. The package will add global scopes
+    | and model events to enforce tenant isolation.
+    |
+    */
+    'scoped_models' => [
+        // Laravel's built-in models
+        // \Illuminate\Notifications\DatabaseNotification::class,
+
+        // Sanctum tokens
+        // \Laravel\Sanctum\PersonalAccessToken::class,
+
+        // Spatie permissions (be careful with global roles)
+        // \Spatie\Permission\Models\Role::class,
+        // \Spatie\Permission\Models\Permission::class,
+    ],
 ];

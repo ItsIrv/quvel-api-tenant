@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Resolvers;
 
 use Illuminate\Http\Request;
-use Quvel\Tenant\Concerns\TenantResolver;
+use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Models\Tenant;
 
 /**

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Concerns;
+namespace Quvel\Tenant\Contracts;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

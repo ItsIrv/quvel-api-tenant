@@ -7,7 +7,7 @@ namespace Quvel\Tenant\Managers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
-use Quvel\Tenant\Concerns\TenantResolver;
+use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Models\Tenant;
 
 /**

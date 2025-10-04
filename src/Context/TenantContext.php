@@ -71,4 +71,12 @@ class TenantContext
     {
         return $this->bypassed;
     }
+
+    /**
+     * Restore the context to non-bypassed state.
+     */
+    public function clearBypassed(): void
+    {
+        $this->bypassed = false;
+    }
 }

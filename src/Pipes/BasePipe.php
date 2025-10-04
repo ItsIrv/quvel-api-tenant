@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Pipes;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Quvel\Tenant\Concerns\ConfigurationPipe;
+use Quvel\Tenant\Contracts\ConfigurationPipe;
 use Quvel\Tenant\Models\Tenant;
 
 /**
