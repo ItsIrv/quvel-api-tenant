@@ -21,6 +21,7 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('set null');
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_internal')->default(false);
             $table->json('config')->nullable();
             $table->timestamps();
             $table->softDeletes();

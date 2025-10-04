@@ -22,6 +22,7 @@ use Quvel\Tenant\Enums\ConfigVisibility;
  * @property string $identifier
  * @property int|null $parent_id
  * @property bool $is_active
+ * @property bool $is_internal
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
