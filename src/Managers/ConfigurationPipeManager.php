@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Services;
+namespace Quvel\Tenant\Managers;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Collection;
-use Quvel\Tenant\Concerns\ConfigurationPipe;
 use Quvel\Tenant\Models\Tenant;
+use Quvel\Tenant\Pipes\BasePipe;
 
 /**
  * Manages configuration handlers for applying tenant config to Laravel.
  */
-class ConfigurationPipeline
+class ConfigurationPipeManager
 {
     /**
-     * @var Collection<int, ConfigurationPipe>
+     * @var Collection<int, BasePipe>
      */
     protected Collection $pipes;
 
@@ -37,7 +37,7 @@ class ConfigurationPipeline
     /**
      * Register a configuration pipe.
      */
-    public function register(ConfigurationPipe|string $pipe): static
+    public function register(BasePipe|string $pipe): static
     {
         if (is_string($pipe)) {
             $pipe = app($pipe);
@@ -51,7 +51,7 @@ class ConfigurationPipeline
     /**
      * Register multiple pipes.
      *
-     * @param array<ConfigurationPipe|string> $pipes
+     * @param array<BasePipe|string> $pipes
      */
     public function registerMany(array $pipes): static
     {
@@ -75,7 +75,7 @@ class ConfigurationPipeline
     /**
      * Get all registered pipes.
      *
-     * @return Collection<int, ConfigurationPipe>
+     * @return Collection<int, BasePipe>
      */
     public function getPipes(): Collection
     {

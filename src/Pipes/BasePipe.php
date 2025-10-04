@@ -17,12 +17,19 @@ abstract class BasePipe implements ConfigurationPipe
     protected ConfigRepository $config;
 
     /**
-     * Set the context for this pipe execution.
+     * Apply the configuration changes. Override this in child classes.
      */
-    protected function setContext(Tenant $tenant, ConfigRepository $config): void
+    abstract public function apply(): void;
+
+    /**
+     * Handle method wrapper that sets context automatically.
+     */
+    public function handle(Tenant $tenant, ConfigRepository $config): void
     {
         $this->tenant = $tenant;
         $this->config = $config;
+
+        $this->apply();
     }
 
     /**

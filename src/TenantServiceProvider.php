@@ -12,8 +12,8 @@ use Quvel\Tenant\Concerns\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Database\TenantTableRegistry;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
+use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
-use Quvel\Tenant\Services\ConfigurationPipeline;
 use RuntimeException;
 
 class TenantServiceProvider extends ServiceProvider
@@ -40,8 +40,8 @@ class TenantServiceProvider extends ServiceProvider
             return $app->make(TenantResolverManager::class)->getResolver();
         });
 
-        $this->app->singleton(ConfigurationPipeline::class, function () {
-            return new ConfigurationPipeline();
+        $this->app->singleton(ConfigurationPipeManager::class, function () {
+            return new ConfigurationPipeManager();
         });
 
         $this->app->bind(TenantContext::class, function () {

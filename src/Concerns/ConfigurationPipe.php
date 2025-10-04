@@ -13,10 +13,7 @@ use Quvel\Tenant\Models\Tenant;
 interface ConfigurationPipe
 {
     /**
-     * Apply tenant configuration to Laravel's runtime config.
-     *
-     * @param Tenant $tenant The tenant context
-     * @param ConfigRepository $config Laravel config repository
+     * Apply tenant configuration changes.
      */
-    public function handle(Tenant $tenant, ConfigRepository $config): void;
+    public function apply(): void;
 }

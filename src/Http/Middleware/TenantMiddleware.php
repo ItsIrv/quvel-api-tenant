@@ -7,8 +7,8 @@ namespace Quvel\Tenant\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
-use Quvel\Tenant\Services\ConfigurationPipeline;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -20,7 +20,7 @@ class TenantMiddleware
     public function __construct(
         protected TenantResolverManager $tenantManager,
         protected TenantContext $tenantContext,
-        protected ConfigurationPipeline $configPipeline
+        protected ConfigurationPipeManager $configPipeline
     ) {
     }
 
