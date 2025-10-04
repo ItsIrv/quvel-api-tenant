@@ -27,10 +27,13 @@ return [
     | Middleware Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure automatic middleware registration.
+    | Configure automatic middleware registration and dependencies.
     |
     | auto_register: When true, tenant middleware runs on ALL HTTP requests.
     |                When false, add 'tenant' middleware to specific routes.
+    |
+    | internal_request: Middleware class for protecting internal endpoints.
+    |                   Used by SSR config endpoints. Can be swapped out.
     |
     | For admin panels or tenant-free routes:
     | - Option 1: Set auto_register=false, add 'tenant' only where needed
@@ -39,6 +42,7 @@ return [
     */
     'middleware' => [
         'auto_register' => env('TENANT_AUTO_MIDDLEWARE', true),
+        'internal_request' => null, // Set to middleware class or true for no protection
     ],
 
     /*
@@ -82,6 +86,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tenant Config API
+    |--------------------------------------------------------------------------
+    |
+    | Default settings for tenant config API endpoints.
+    | These can be overridden per-tenant using the same config keys.
+    |
+    | Examples of tenant-specific overrides:
+    | - tenant.api.allow_public_config: true/false
+    | - tenant.api.allow_protected_config: true/false
+    |
+    */
+    'api' => [
+        'allow_public_config' => env('TENANT_ALLOW_PUBLIC_CONFIG', false),
+        'allow_protected_config' => env('TENANT_ALLOW_PROTECTED_CONFIG', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Configuration Pipes
     |--------------------------------------------------------------------------
     |
@@ -101,6 +123,7 @@ return [
         \Quvel\Tenant\Pipes\RedisConfigPipe::class,
         \Quvel\Tenant\Pipes\SessionConfigPipe::class,
         \Quvel\Tenant\Pipes\ServicesConfigPipe::class,
+        \Quvel\Tenant\Pipes\CoreServicesScopingPipe::class,
 
         // Add your custom pipes here
     ],

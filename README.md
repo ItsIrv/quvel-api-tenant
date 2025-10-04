@@ -74,11 +74,57 @@ $tenant = Tenant::create([
     'name' => 'Acme Corp',
     'identifier' => 'acme.example.com',
     'config' => [
-        'database' => 'acme_db',
-        'theme' => 'blue',
+        // Use Laravel config paths directly - they map 1:1 to Laravel's config system
+        'app.name' => 'Acme Corp',
+        'app.url' => 'https://acme.example.com',
+        'database.connections.mysql.database' => 'acme_db',
+        'mail.from.address' => 'noreply@acme.example.com',
+        'broadcasting.connections.pusher.app_id' => '123456',
     ],
 ]);
 ```
+
+### Configuration System
+
+The tenant configuration system uses **dot notation** that maps directly to Laravel's config paths:
+
+```php
+// Setting config values
+$tenant->setConfig('app.name', 'Acme Corp');
+$tenant->setConfig('mail.from.address', 'hello@acme.com');
+$tenant->setConfig('broadcasting.connections.pusher.app_id', '123456');
+
+// Getting config values (with parent inheritance)
+$appName = $tenant->getConfig('app.name');
+$mailFrom = $tenant->getConfig('mail.from.address', 'default@example.com');
+
+// Checking if config exists
+if ($tenant->hasConfig('broadcasting.connections.pusher.app_id')) {
+    // Pusher is configured for this tenant
+}
+
+// Removing config
+$tenant->forgetConfig('old.config.key');
+```
+
+**How it works:**
+- Config keys use Laravel's dot notation (e.g., `app.name`, `database.connections.mysql.host`)
+- Values are stored as nested arrays: `{"app": {"name": "Acme"}}`
+- Pipes automatically apply these configs to Laravel's runtime configuration
+- Child tenants inherit config from parent tenants
+
+**Available Configuration Pipes:**
+- `CoreConfigPipe` - App settings, URLs, locales, CORS
+- `BroadcastingConfigPipe` - Pusher, Reverb, Redis broadcasting
+- `CacheConfigPipe` - Cache drivers and tenant isolation
+- `DatabaseConfigPipe` - Database connections per tenant
+- `FilesystemConfigPipe` - Storage disks and S3 configuration
+- `LoggingConfigPipe` - Log channels and Sentry integration
+- `MailConfigPipe` - SMTP and mail service settings
+- `QueueConfigPipe` - Queue drivers (database, Redis, SQS)
+- `RedisConfigPipe` - Redis connections with tenant prefixing
+- `ServicesConfigPipe` - Third-party APIs (Stripe, PayPal, etc.)
+- `SessionConfigPipe` - Session configuration and isolation
 
 ### Resolving Current Tenant
 

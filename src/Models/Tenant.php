@@ -26,6 +26,7 @@ use Quvel\Tenant\Enums\ConfigVisibility;
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  * @property array $config
+ * @property ?Tenant $parent
  */
 class Tenant extends Model
 {

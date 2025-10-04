@@ -7,6 +7,7 @@ namespace Quvel\Tenant;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Concerns\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
@@ -44,7 +45,7 @@ class TenantServiceProvider extends ServiceProvider
             return new ConfigurationPipeManager();
         });
 
-        $this->app->bind(TenantContext::class, function () {
+        $this->app->scoped(TenantContext::class, function () {
             return new TenantContext();
         });
     }
@@ -56,6 +57,7 @@ class TenantServiceProvider extends ServiceProvider
     {
         $this->registerTenantMiddleware();
         $this->registerMiddlewareAlias();
+        $this->registerRoutes();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -102,5 +104,15 @@ class TenantServiceProvider extends ServiceProvider
         } catch (BindingResolutionException $e) {
             throw new RuntimeException('Failed to register tenant middleware', 0, $e);
         }
+    }
+
+    /**
+     * Register tenant config routes.
+     */
+    protected function registerRoutes(): void
+    {
+        Route::prefix('tenant-info')
+            ->name('tenant.')
+            ->group(__DIR__.'/../routes/tenant.php');
     }
 }
