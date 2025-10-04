@@ -16,6 +16,7 @@ use Quvel\Tenant\Models\Tenant;
 class TenantResolverManager
 {
     protected readonly TenantResolver $resolver;
+    protected $bypassCallback = null;
 
     public function __construct()
     {
@@ -81,5 +82,27 @@ class TenantResolverManager
         }
 
         return new $resolverClass($config);
+    }
+
+    /**
+     * Set a callback to determine if tenant resolution should be bypassed.
+     *
+     * @param callable|null $callback Receives Request, returns bool
+     */
+    public function setBypassCallback(?callable $callback): void
+    {
+        $this->bypassCallback = $callback;
+    }
+
+    /**
+     * Check if tenant resolution should be bypassed for this request.
+     */
+    public function shouldBypass(Request $request): bool
+    {
+        if ($this->bypassCallback === null) {
+            return false;
+        }
+
+        return ($this->bypassCallback)($request);
     }
 }

@@ -6,6 +6,7 @@ namespace Quvel\Tenant;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Concerns\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
@@ -54,6 +55,7 @@ class TenantServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerTenantMiddleware();
+        $this->registerMiddlewareAlias();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -63,6 +65,20 @@ class TenantServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../database/migrations/' => database_path('migrations'),
             ], 'tenant-migrations');
+        }
+    }
+
+    /**
+     * Register middleware alias.
+     */
+    protected function registerMiddlewareAlias(): void
+    {
+        try {
+            /** @var Router $router */
+            $router = $this->app->make('router');
+            $router->aliasMiddleware('tenant', TenantMiddleware::class);
+        } catch (BindingResolutionException $e) {
+            throw new RuntimeException('Failed to alias tenant middleware', 0 , $e);
         }
     }
 
@@ -80,10 +96,11 @@ class TenantServiceProvider extends ServiceProvider
         }
 
         try {
+            /** @var Kernel $kernel */
             $kernel = $this->app->make(Kernel::class);
             $kernel->prependMiddleware(TenantMiddleware::class);
         } catch (BindingResolutionException $e) {
-            throw new RuntimeException('Failed to register TenantMiddleware', 0, $e);
+            throw new RuntimeException('Failed to register tenant middleware', 0, $e);
         }
     }
 }

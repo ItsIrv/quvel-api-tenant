@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Managers\TenantResolverManager;
-use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Services\ConfigurationPipeline;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -30,17 +29,20 @@ class TenantMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($this->tenantManager->shouldBypass($request)) {
+            $this->tenantContext->bypass();
+
+            return $next($request);
+        }
+
         $tenant = $this->tenantManager->resolveTenant($request);
 
         if ($tenant === null) {
-            $tenant = $this->handleTenantNotFound($request);
+            $this->handleTenantNotFound($request);
         }
 
         $this->tenantContext->setCurrent($tenant);
-
-        if ($tenant !== null) {
-            $this->configPipeline->apply($tenant, config());
-        }
+        $this->configPipeline->apply($tenant, config());
 
         return $next($request);
     }
@@ -48,40 +50,27 @@ class TenantMiddleware
     /**
      * Handle when no tenant is found.
      */
-    protected function handleTenantNotFound(Request $request): ?Tenant
+    protected function handleTenantNotFound(Request $request): never
     {
-        $strategy = config('tenant.not_found.strategy', 'abort');
+        $strategy = config('tenant.not_found.strategy');
         $config = config('tenant.not_found.config', []);
 
-        return match ($strategy) {
-            'allow_null' => null,
-            'abort' => throw new NotFoundHttpException('Tenant not found'),
-            'redirect' => redirect($config['redirect_url'] ?? '/'),
-            'default_tenant' => $this->getDefaultTenant($config['default_identifier'] ?? null),
+        match ($strategy) {
+            'redirect' => redirect($config['redirect_url'] ?? '/')->send(),
             'custom' => $this->callCustomHandler($config['handler'] ?? null, $request),
-            default => null,
+            default => throw new NotFoundHttpException('Tenant not found'),
         };
-    }
 
-    /**
-     * Get the default tenant by identifier.
-     */
-    protected function getDefaultTenant(?string $identifier): ?Tenant
-    {
-        if ($identifier === null) {
-            return null;
-        }
-
-        return Tenant::findByIdentifier($identifier);
+        exit;
     }
 
     /**
      * Call a custom tenant not found handler.
      */
-    protected function callCustomHandler(mixed $handler, Request $request): ?Tenant
+    protected function callCustomHandler(mixed $handler, Request $request): never
     {
         if ($handler === null) {
-            return null;
+            throw new NotFoundHttpException('Tenant not found');
         }
 
         if (is_string($handler) && class_exists($handler)) {
@@ -89,9 +78,10 @@ class TenantMiddleware
         }
 
         if (is_callable($handler)) {
-            return $handler($request);
+            $handler($request);
+            exit;
         }
 
-        return null;
+        throw new NotFoundHttpException('Tenant not found');
     }
 }

@@ -29,6 +29,13 @@ return [
     |
     | Configure automatic middleware registration.
     |
+    | auto_register: When true, tenant middleware runs on ALL HTTP requests.
+    |                When false, add 'tenant' middleware to specific routes.
+    |
+    | For admin panels or tenant-free routes:
+    | - Option 1: Set auto_register=false, add 'tenant' only where needed
+    | - Option 2: Set auto_register=true, use bypass callback for exceptions
+    |
     */
     'middleware' => [
         'auto_register' => env('TENANT_AUTO_MIDDLEWARE', true),
@@ -57,11 +64,9 @@ return [
     | Configure what happens when no tenant is resolved from a request.
     |
     | Strategies:
-    | - allow_null: Continue processing without tenant (default)
-    | - abort: Return 404 Not Found response
-    | - redirect: Redirect to specified URL
-    | - default_tenant: Use a fallback tenant identifier
-    | - custom: Call a custom handler class/closure
+    | - 'abort': Return 404 Not Found response (default)
+    | - 'redirect': Redirect to specified URL
+    | - 'custom': Call a custom handler invokable class
     |
     */
     'not_found' => [
@@ -70,11 +75,8 @@ return [
             // For 'redirect' strategy
             'redirect_url' => env('TENANT_NOT_FOUND_REDIRECT', '/'),
 
-            // For 'default_tenant' strategy
-            'default_identifier' => env('TENANT_DEFAULT_IDENTIFIER'),
-
             // For 'custom' strategy
-            'handler' => null, // Class name or closure
+            'handler' => null, // Invokable class name
         ],
     ],
 

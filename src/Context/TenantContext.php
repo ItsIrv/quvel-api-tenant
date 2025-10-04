@@ -21,6 +21,7 @@ use Quvel\Tenant\Models\Tenant;
 class TenantContext
 {
     protected ?Tenant $tenant = null;
+    protected bool $bypassed = false;
 
     /**
      * Set the current tenant for this request.
@@ -52,5 +53,22 @@ class TenantContext
     public function clear(): void
     {
         $this->tenant = null;
+        $this->bypassed = false;
+    }
+
+    /**
+     * Mark the context as bypassed (no tenant required).
+     */
+    public function bypass(): void
+    {
+        $this->bypassed = true;
+    }
+
+    /**
+     * Check if the context is bypassed.
+     */
+    public function isBypassed(): bool
+    {
+        return $this->bypassed;
     }
 }
