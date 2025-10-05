@@ -215,4 +215,30 @@ return [
     |
     */
     'preserve_context' => env('TENANT_PRESERVE_CONTEXT', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware queue behavior for Laravel's database queue driver.
+    |
+    | When enabled, this automatically:
+    | 1. Adds tenant_id columns to jobs, failed_jobs, and job_batches tables
+    | 2. Overrides the database queue connector to set tenant_id when dispatching jobs
+    | 3. Overrides the failed job provider to set tenant_id when jobs fail
+    | 4. Preserves tenant context across queue boundaries using Laravel Context
+    |
+    | Requirements:
+    | - Database queue driver must be configured (config/queue.php)
+    | - Tables must exist (run migrations after enabling this)
+    |
+    | Note: Only affects the 'database' queue driver. Other drivers (Redis, SQS)
+    | rely on payload-based tenant context preservation via Laravel Context.
+    |
+    */
+    'queue' => [
+        // Enable tenant-aware database queue with automatic tenant_id column management
+        'auto_tenant_id' => env('TENANT_QUEUE_AUTO_TENANT_ID', false),
+    ],
 ];

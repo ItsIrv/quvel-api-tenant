@@ -7,6 +7,8 @@ namespace Quvel\Tenant;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Queue\Failed\FailedJobProviderInterface;
+use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +19,8 @@ use Quvel\Tenant\Managers\TenantTableManager;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
+use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
+use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
 
@@ -52,6 +56,8 @@ class TenantServiceProvider extends ServiceProvider
         $this->app->scoped(TenantContext::class, function () {
             return new TenantContext();
         });
+
+        $this->registerTenantQueueConnector();
     }
 
     /**
@@ -64,6 +70,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->bootExternalModelScoping();
         $this->registerContextPreservation();
+        $this->registerTenantFailedJobProvider();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -189,6 +196,40 @@ class TenantServiceProvider extends ServiceProvider
                 );
             }
         });
+    }
+
+    /**
+     * Register tenant-aware queue connector if enabled.
+     */
+    protected function registerTenantQueueConnector(): void
+    {
+        if (config('tenant.queue.auto_tenant_id', true)) {
+            $this->app->resolving('queue', function (QueueManager $manager) {
+                $manager->addConnector('database', function () {
+                    return new TenantDatabaseConnector($this->app['db']);
+                });
+            });
+        }
+    }
+
+    /**
+     * Register tenant-aware failed job provider if enabled.
+     */
+    protected function registerTenantFailedJobProvider(): void
+    {
+        if (config('tenant.queue.auto_tenant_id', true)) {
+            $this->app->extend('queue.failer', function ($provider, $app) {
+                if ($app['config']->get('queue.failed.database') !== null) {
+                    return new TenantDatabaseUuidFailedJobProvider(
+                        $app['db'],
+                        $app['config']['queue.failed.database'],
+                        $app['config']['queue.failed.table']
+                    );
+                }
+
+                return $provider;
+            });
+        }
     }
 
 }

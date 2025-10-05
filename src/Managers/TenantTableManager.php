@@ -313,6 +313,28 @@ class TenantTableManager
     public function loadFromConfig(): void
     {
         $tables = config('tenant.tables', []);
+
+        // Auto-register queue tables if queue.auto_tenant_id is enabled
+        if (config('tenant.queue.auto_tenant_id', false)) {
+            $queueTables = [
+                'jobs' => [
+                    'after' => 'id',
+                    'cascade_delete' => true,
+                ],
+                'failed_jobs' => [
+                    'after' => 'id',
+                    'cascade_delete' => true,
+                ],
+                'job_batches' => [
+                    'after' => 'id',
+                    'cascade_delete' => true,
+                ],
+            ];
+
+            // Merge with user tables, user config takes precedence
+            $tables = array_merge($queueTables, $tables);
+        }
+
         $this->registerMany($tables);
     }
 
