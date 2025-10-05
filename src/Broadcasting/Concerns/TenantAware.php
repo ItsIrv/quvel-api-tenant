@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Broadcasting;
+namespace Quvel\Tenant\Broadcasting\Concerns;
 
 use Quvel\Tenant\Context\TenantContext;
 

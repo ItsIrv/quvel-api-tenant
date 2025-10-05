@@ -159,7 +159,7 @@ The package provides automatic tenant scoping with support for multiple isolatio
 
 ```php
 use Illuminate\Database\Eloquent\Model;
-use Quvel\Tenant\Traits\TenantScoped;
+use Quvel\Tenant\Concerns\TenantScoped;
 
 class Post extends Model
 {

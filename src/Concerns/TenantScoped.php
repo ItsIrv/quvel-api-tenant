@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Traits;
+namespace Quvel\Tenant\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Quvel\Tenant\Scopes\TenantScope;

@@ -11,7 +11,7 @@ use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Exceptions\NoTenantException;
 use Quvel\Tenant\Events\TenantScopeApplied;
 use Quvel\Tenant\Events\TenantScopeNoTenantFound;
-use Quvel\Tenant\Traits\HandlesTenantModels;
+use Quvel\Tenant\Concerns\HandlesTenantModels;
 
 /**
  * Global scope that automatically filters queries by tenant_id.
