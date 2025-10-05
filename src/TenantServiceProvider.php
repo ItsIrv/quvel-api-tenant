@@ -6,6 +6,7 @@ namespace Quvel\Tenant;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -120,6 +121,18 @@ class TenantServiceProvider extends ServiceProvider
 
     /**
      * Boot external model scoping for Laravel/package models.
+     *
+     * The scoped_models configuration provides tenant scoping (WHERE tenant_id = ?)
+     * and tenant-aware model events. Database connection switching is handled
+     * automatically by the DatabaseConfigPipe when tenants have database overrides.
+     *
+     * Models in scoped_models automatically get:
+     * - Tenant scoping (WHERE tenant_id filtering)
+     * - Tenant-aware model events (creating/updating/deleting guards)
+     * - Automatic database connection switching (via global default connection)
+     * - Isolated database support (skips tenant_id logic when appropriate)
+     *
+     * No manual traits required - third-party packages work automatically.
      */
     protected function bootExternalModelScoping(): void
     {
@@ -130,49 +143,100 @@ class TenantServiceProvider extends ServiceProvider
                 continue;
             }
 
-            $modelClass::addGlobalScope(new Scopes\TenantScope());
-
-            $modelClass::creating(static function ($model) {
-                if (!isset($model->tenant_id) && !tenant_bypassed()) {
-                    $model->tenant_id = tenant_id();
-                }
-            });
-
-            $modelClass::updating(static function ($model) {
-                if (tenant_bypassed()) {
-                    return;
-                }
-
-                $currentTenantId = tenant_id();
-                if ($model->tenant_id !== $currentTenantId) {
-                    throw new Exceptions\TenantMismatchException(
-                        sprintf(
-                            'Cannot update %s with tenant_id %s from tenant %s',
-                            get_class($model),
-                            $model->tenant_id,
-                            $currentTenantId
-                        )
-                    );
-                }
-            });
-
-            $modelClass::deleting(static function ($model) {
-                if (tenant_bypassed()) {
-                    return;
-                }
-
-                $currentTenantId = tenant_id();
-                if ($model->tenant_id !== $currentTenantId) {
-                    throw new Exceptions\TenantMismatchException(
-                        sprintf(
-                            'Cannot delete %s with tenant_id %s from tenant %s',
-                            get_class($model),
-                            $model->tenant_id,
-                            $currentTenantId
-                        )
-                    );
-                }
-            });
+            $this->addTenantScopingToModel($modelClass);
+            $this->addTenantEventsToModel($modelClass);
         }
+    }
+
+    /**
+     * Add tenant scoping to external model.
+     */
+    protected function addTenantScopingToModel(string $modelClass): void
+    {
+        /** @var $modelClass Model */
+        $modelClass::addGlobalScope(new Scopes\TenantScope());
+    }
+
+
+    /**
+     * Add tenant-aware model events to external model.
+     */
+    protected function addTenantEventsToModel(string $modelClass): void
+    {
+        /** @var $modelClass Model */
+        $modelClass::creating(static function ($model) {
+            if (!isset($model->tenant_id) && !tenant_bypassed()) {
+                $tenant = app(TenantContext::class)->current();
+
+                // Skip tenant_id assignment for isolated databases
+                if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
+                    return;
+                }
+
+                $model->tenant_id = tenant_id();
+            }
+        });
+
+        $modelClass::updating(static function ($model) {
+            if (tenant_bypassed()) {
+                return;
+            }
+
+            $tenant = app(TenantContext::class)->current();
+
+            // Skip tenant_id checks for isolated databases
+            if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
+                return;
+            }
+
+            $currentTenantId = tenant_id();
+            if ($model->tenant_id !== $currentTenantId) {
+                throw new Exceptions\TenantMismatchException(
+                    sprintf(
+                        'Cannot update %s with tenant_id %s from tenant %s',
+                        get_class($model),
+                        $model->tenant_id,
+                        $currentTenantId
+                    )
+                );
+            }
+        });
+
+        $modelClass::deleting(static function ($model) {
+            if (tenant_bypassed()) {
+                return;
+            }
+
+            $tenant = app(TenantContext::class)->current();
+
+            // Skip tenant_id checks for isolated databases
+            if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
+                return;
+            }
+
+            $currentTenantId = tenant_id();
+            if ($model->tenant_id !== $currentTenantId) {
+                throw new Exceptions\TenantMismatchException(
+                    sprintf(
+                        'Cannot delete %s with tenant_id %s from tenant %s',
+                        get_class($model),
+                        $model->tenant_id,
+                        $currentTenantId
+                    )
+                );
+            }
+        });
+    }
+
+    /**
+     * Check if tenant uses isolated database (separate database/server).
+     */
+    protected static function tenantUsesIsolatedDatabase($tenant): bool
+    {
+        $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
+
+        // Isolated if tenant has custom host OR custom database name
+        return $tenant->hasConfig("database.connections.$baseConnection.host") ||
+               $tenant->hasConfig("database.connections.$baseConnection.database");
     }
 }

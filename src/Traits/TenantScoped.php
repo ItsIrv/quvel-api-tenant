@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Scopes\TenantScope;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
+use Quvel\Tenant\Events\TenantModelCreated;
+use Quvel\Tenant\Events\TenantMismatchDetected;
 
 /**
  * Automatically applies tenant scoping to models with security guards.
@@ -26,6 +28,7 @@ use Quvel\Tenant\Exceptions\TenantMismatchException;
  * - Adds 'tenant_id' to $fillable array for mass assignment
  * - Adds 'tenant_id' to $hidden array to hide from API responses
  * - Provides tenant relationship and helper methods via HasTenant trait
+ * - Skips tenant_id logic for isolated databases (database-level isolation)
  *
  * Usage:
  * ```php
@@ -57,7 +60,19 @@ trait TenantScoped
 
         static::creating(static function ($model) {
             if (!isset($model->tenant_id)) {
+                $tenant = $model->getCurrentTenant();
+
+                if ($tenant && $model->tenantUsesIsolatedDatabase($tenant)) {
+                    TenantModelCreated::dispatch($model, $tenant);
+
+                    return;
+                }
+
                 $model->tenant_id = $model->getCurrentTenantId();
+
+                if ($tenant) {
+                    TenantModelCreated::dispatch($model, $tenant);
+                }
             }
         });
 
@@ -154,6 +169,13 @@ trait TenantScoped
     protected function ensureTenantIdSet(): void
     {
         if (!isset($this->tenant_id) && !tenant_bypassed()) {
+            $tenant = $this->getCurrentTenant();
+
+            // Skip tenant_id assignment for isolated databases
+            if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
+                return;
+            }
+
             $this->tenant_id = $this->getCurrentTenantId();
         }
     }
@@ -169,10 +191,24 @@ trait TenantScoped
             return;
         }
 
+        $tenant = $this->getCurrentTenant();
+
+        // Skip tenant_id checks for isolated databases
+        if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
+            return;
+        }
+
         $currentTenantId = $this->getCurrentTenantId();
         $modelTenantId = $this->tenant_id;
 
         if ($modelTenantId !== null && $modelTenantId !== $currentTenantId) {
+            TenantMismatchDetected::dispatch(
+                get_class($this),
+                $modelTenantId,
+                $currentTenantId,
+                'modify'
+            );
+
             throw new TenantMismatchException(
                 sprintf(
                     'Cross-tenant operation blocked: %s (tenant_id: %s) cannot be modified from tenant %s context',

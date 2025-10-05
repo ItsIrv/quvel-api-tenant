@@ -149,6 +149,131 @@ Route::middleware(['tenant'])->group(function () {
 });
 ```
 
+## Database Scoping System
+
+The package provides automatic tenant isolation for your Eloquent models using two complementary approaches.
+
+### Automatic Scoping (`scoped_models` Configuration)
+
+Configure external models (from Laravel or packages) to automatically have tenant scoping applied:
+
+```php
+// config/tenant.php
+'scoped_models' => [
+    \App\Models\User::class,
+    \Illuminate\Notifications\DatabaseNotification::class,
+    \Laravel\Sanctum\PersonalAccessToken::class,
+],
+```
+
+**Features:**
+- Automatically adds `TenantScope` to filter queries by `tenant_id`
+- Sets `tenant_id` on model creation
+- Prevents updating/deleting models from other tenants
+- Works without modifying the model files
+
+---
+
+### Trait-Based Scoping (`TenantScoped`)
+
+Add the trait to your application models for automatic scoping with additional convenience methods:
+
+```php
+use Quvel\Tenant\Traits\TenantScoped;
+
+class Post extends Model
+{
+    use TenantScoped;
+}
+```
+
+**Features:**
+- All features from `scoped_models` configuration
+- Adds `tenant()` relationship
+- Helper methods: `getCurrentTenant()`, `belongsToCurrentTenant()`
+- Auto-adds `tenant_id` to `$fillable` and `$hidden`
+- Query scopes: `forCurrentTenant()`, `forTenant($id)`, `forAllTenants()`
+- Security guards on `save()`, `update()`, `delete()` operations
+- Prevents changing `tenant_id` after model creation
+
+---
+
+### Manual Control (`HasTenant`)
+
+For models that need tenant relationships but not automatic scoping:
+
+```php
+use Quvel\Tenant\Traits\HasTenant;
+
+class SystemLog extends Model
+{
+    use HasTenant;
+
+    public function scopeCurrentTenantLogs($query)
+    {
+        return $query->forCurrentTenant();
+    }
+}
+```
+
+**Features:**
+- Adds `tenant()` relationship
+- Provides helper methods
+- No automatic scoping or tenant assignment
+- Full manual control over scoping behavior
+
+---
+
+### Query Behavior
+
+All scoped models automatically filter queries by the current tenant:
+
+```php
+// Automatically scoped queries
+User::all();                  // WHERE tenant_id = 1
+User::find(123);              // WHERE id = 123 AND tenant_id = 1
+User::where('active', true);  // WHERE active = 1 AND tenant_id = 1
+
+// Bypass scoping when needed
+User::withoutTenantScope()->get();  // No tenant filtering
+User::forAllTenants()->get();       // Alias for withoutTenantScope
+User::forTenant(2)->get();          // Query specific tenant
+
+// Helper functions for admin operations
+without_tenant(fn() => User::count());  // Execute without scoping
+with_tenant($tenant, fn() => User::count());  // Execute with specific tenant
+```
+
+### Configuration Options
+
+Control scoping behavior through configuration:
+
+```php
+// config/tenant.php
+'scoping' => [
+    // Throw exception or return empty results when no tenant found
+    'throw_no_tenant_exception' => true,
+
+    // Automatically add tenant_id to model $fillable arrays
+    'auto_fillable' => true,
+
+    // Automatically add tenant_id to model $hidden arrays
+    'auto_hidden' => true,
+],
+```
+
+## Helper Functions
+
+```php
+tenant();           // Get current tenant model
+tenant_id();        // Get current tenant ID
+tenant_config('key'); // Get tenant config value
+tenant_bypassed();  // Check if currently bypassed
+without_tenant(fn); // Execute without tenant scoping
+with_tenant($t, fn); // Execute with specific tenant
+```
+
+
 ## License
 
 MIT

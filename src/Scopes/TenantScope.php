@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Exceptions\NoTenantException;
+use Quvel\Tenant\Events\TenantScopeApplied;
+use Quvel\Tenant\Events\TenantScopeNoTenantFound;
 
 /**
  * Global scope that automatically filters queries by tenant_id.
@@ -45,6 +47,8 @@ class TenantScope implements Scope
         $tenant = $tenantContext->current();
 
         if (!$tenant) {
+            TenantScopeNoTenantFound::dispatch(get_class($model));
+
             if (config('tenant.scoping.throw_no_tenant_exception', true)) {
                 throw new NoTenantException(
                     sprintf(
@@ -59,6 +63,14 @@ class TenantScope implements Scope
 
             return;
         }
+
+        if ($this->tenantUsesIsolatedDatabase($tenant)) {
+            TenantScopeApplied::dispatch(get_class($model), $tenant, 'database_isolation');
+
+            return;
+        }
+
+        TenantScopeApplied::dispatch(get_class($model), $tenant, $this->column);
 
         $builder->where($this->column, $tenant->id);
     }
@@ -80,5 +92,20 @@ class TenantScope implements Scope
         $builder->macro('forAllTenants', function (Builder $builder) {
             return $builder->withoutGlobalScope($this);
         });
+    }
+
+    /**
+     * Check if tenant uses isolated database (separate database/server).
+     *
+     * When true, tenant_id scoping is not needed since database isolation
+     * provides the tenant boundary.
+     */
+    protected function tenantUsesIsolatedDatabase($tenant): bool
+    {
+        $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
+
+        // Isolated if tenant has custom host OR custom database name
+        return $tenant->hasConfig("database.connections.$baseConnection.host") ||
+               $tenant->hasConfig("database.connections.$baseConnection.database");
     }
 }
