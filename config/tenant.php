@@ -264,4 +264,27 @@ return [
     'sessions' => [
         'auto_tenant_id' => env('TENANT_SESSIONS_AUTO_TENANT_ID', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware cache behavior for Laravel's database cache driver.
+    |
+    | When enabled, this automatically:
+    | 1. Adds tenant_id columns to cache and cache_locks tables
+    | 2. Isolates cache entries per tenant (tenants can't access other tenant cache)
+    |
+    | Requirements:
+    | - Database cache driver must be configured (config/cache.php)
+    | - Cache tables must exist (run migrations after enabling this)
+    |
+    | Note: Only affects the 'database' cache driver. Other drivers (redis, file)
+    | rely on different isolation mechanisms (like prefixes).
+    |
+    */
+    'cache' => [
+        'auto_tenant_id' => env('TENANT_CACHE_AUTO_TENANT_ID', false),
+    ],
 ];

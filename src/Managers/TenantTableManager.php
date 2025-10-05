@@ -344,6 +344,21 @@ class TenantTableManager
             $tables = array_merge($sessionsTables, $tables);
         }
 
+        if (config('tenant.cache.auto_tenant_id', false)) {
+            $cacheTables = [
+                'cache' => [
+                    'after' => 'key',
+                    'cascade_delete' => true,
+                ],
+                'cache_locks' => [
+                    'after' => 'key',
+                    'cascade_delete' => true,
+                ],
+            ];
+
+            $tables = array_merge($cacheTables, $tables);
+        }
+
         $this->registerMany($tables);
     }
 

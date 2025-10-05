@@ -6,6 +6,7 @@ namespace Quvel\Tenant;
 
 use Illuminate\Bus\BatchFactory;
 use Illuminate\Bus\DatabaseBatchRepository;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
@@ -15,6 +16,7 @@ use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Managers\TenantTableManager;
@@ -64,6 +66,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantQueueConnector();
         $this->registerTenantBatchRepository();
         $this->registerTenantSessionHandler();
+        $this->registerTenantCacheStore();
     }
 
     /**
@@ -267,6 +270,31 @@ class TenantServiceProvider extends ServiceProvider
                     $connection = $app['db']->connection($app['config']['session.connection']);
 
                     return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
+                });
+
+                return $manager;
+            });
+        }
+    }
+
+    /**
+     * Register tenant-aware cache store if enabled.
+     */
+    protected function registerTenantCacheStore(): void
+    {
+        if (config('tenant.cache.auto_tenant_id', false)) {
+            $this->app->extend('cache', function (CacheManager $manager, $app) {
+                $manager->extend('database', function ($app, $config) use ($manager) {
+                    $connection = $app['db']->connection($config['connection'] ?? null);
+                    $table = $config['table'];
+                    $prefix = $config['prefix'] ?? '';
+                    $lockTable = $config['lock_table'] ?? 'cache_locks';
+
+                    $store = new TenantDatabaseStore(
+                        $connection, $table, $prefix, $lockTable
+                    );
+
+                    return $manager->repository($store);
                 });
 
                 return $manager;
