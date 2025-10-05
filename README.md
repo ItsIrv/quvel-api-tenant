@@ -294,6 +294,16 @@ $result = without_tenant(function () {
 });
 ```
 
+## Events
+
+The package dispatches events for monitoring and extending tenant behavior:
+
+- **`Quvel\Tenant\Events\TenantResolved`** - Fired when a tenant is successfully resolved from a request
+- **`Quvel\Tenant\Events\TenantNotFound`** - Fired when no tenant could be resolved from a request
+- **`Quvel\Tenant\Events\TenantMismatchDetected`** - Fired when a cross-tenant operation is blocked for security
+- **`Quvel\Tenant\Events\TenantScopeApplied`** - Fired when tenant scoping is applied to a query
+- **`Quvel\Tenant\Events\TenantScopeNoTenantFound`** - Fired when no tenant is found for scoping
+
 ## License
 
 MIT
