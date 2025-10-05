@@ -9,7 +9,6 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
-use Quvel\Tenant\Models\Tenant;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
@@ -55,7 +54,8 @@ trait TenantAware
 
     protected function runForAllTenants($callback): int
     {
-        $tenants = Tenant::where('is_active', true)->get();
+        $tenantModel = config('tenant.model');
+        $tenants = $tenantModel::where('is_active', true)->get();
 
         if ($tenants->isEmpty()) {
             $this->error('No active tenants found.');
@@ -93,7 +93,7 @@ trait TenantAware
         return $this->executeWithTenant($tenant, $callback);
     }
 
-    protected function executeWithTenant(Tenant $tenant, $callback): int
+    protected function executeWithTenant($tenant, $callback): int
     {
         $tenantContext = app(TenantContext::class);
         $originalTenant = $tenantContext->current();
@@ -126,9 +126,10 @@ trait TenantAware
         return $this->option('apply-tenant-config') ?? false;
     }
 
-    protected function findTenant(string $identifier): ?Tenant
+    protected function findTenant(string $identifier): mixed
     {
-        $tenant = Tenant::where('identifier', $identifier)
+        $tenantModel = config('tenant.model');
+        $tenant = $tenantModel::where('identifier', $identifier)
             ->orWhere('id', $identifier)
             ->orWhere('name', $identifier)
             ->first();
@@ -141,7 +142,7 @@ trait TenantAware
         return $tenant;
     }
 
-    protected function getCurrentTenant(): ?Tenant
+    protected function getCurrentTenant(): mixed
     {
         return app(TenantContext::class)->current();
     }

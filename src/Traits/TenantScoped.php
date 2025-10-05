@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Traits;
 
 use Illuminate\Database\Eloquent\Model;
-use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Scopes\TenantScope;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
 
@@ -15,7 +14,7 @@ use Quvel\Tenant\Exceptions\TenantMismatchException;
  * @mixin Model
  *
  * @property int|null $tenant_id The tenant ID this model belongs to
- * @property-read Tenant|null $tenant The tenant relationship
+ * @property-read mixed $tenant The tenant relationship
  *
  * Usage:
  * ```php

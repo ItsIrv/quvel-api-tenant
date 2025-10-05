@@ -7,7 +7,6 @@ namespace Quvel\Tenant\Pipes;
 use Closure;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Contracts\ConfigurationPipe;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Base configuration pipe with helper methods.
@@ -19,7 +18,7 @@ abstract class BasePipe implements ConfigurationPipe
      */
     protected static array $configurators = [];
 
-    protected Tenant $tenant;
+    protected $tenant;
     protected ConfigRepository $config;
 
     /**
@@ -30,7 +29,7 @@ abstract class BasePipe implements ConfigurationPipe
     /**
      * Get the current tenant instance.
      */
-    public function getTenant(): Tenant
+    public function getTenant()
     {
         return $this->tenant;
     }
@@ -38,7 +37,7 @@ abstract class BasePipe implements ConfigurationPipe
     /**
      * Handle method wrapper that sets context automatically.
      */
-    public function handle(Tenant $tenant, ConfigRepository $config): void
+    public function handle($tenant, ConfigRepository $config): void
     {
         $this->tenant = $tenant;
         $this->config = $config;

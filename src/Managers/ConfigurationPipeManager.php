@@ -6,7 +6,6 @@ namespace Quvel\Tenant\Managers;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Collection;
-use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Pipes\BasePipe;
 
 /**
@@ -65,7 +64,7 @@ class ConfigurationPipeManager
     /**
      * Apply tenant configuration through all pipes.
      */
-    public function apply(Tenant $tenant, ConfigRepository $config): void
+    public function apply($tenant, ConfigRepository $config): void
     {
         foreach ($this->pipes as $pipe) {
             $pipe->handle($tenant, $config);

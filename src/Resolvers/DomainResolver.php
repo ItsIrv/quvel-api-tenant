@@ -6,7 +6,6 @@ namespace Quvel\Tenant\Resolvers;
 
 use Illuminate\Http\Request;
 use Quvel\Tenant\Contracts\TenantResolver;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Resolves tenant identifiers from request domain.
@@ -26,7 +25,7 @@ class DomainResolver implements TenantResolver
     /**
      * Resolve tenant from request domain.
      */
-    public function resolve(Request $request): ?Tenant
+    public function resolve(Request $request)
     {
         $identifier = $request->getHost();
 
@@ -34,7 +33,8 @@ class DomainResolver implements TenantResolver
             return null;
         }
 
-        return Tenant::findByIdentifier($identifier);
+        $tenantModel = config('tenant.model');
+        return $tenantModel::findByIdentifier($identifier);
     }
 
     /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Context;
 
 use Quvel\Tenant\Events\TenantContextSet;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Octane-safe per-request tenant context.
@@ -21,13 +20,13 @@ use Quvel\Tenant\Models\Tenant;
  */
 class TenantContext
 {
-    protected ?Tenant $tenant = null;
+    protected $tenant = null;
     protected bool $bypassed = false;
 
     /**
      * Set the current tenant for this request.
      */
-    public function setCurrent(?Tenant $tenant): void
+    public function setCurrent($tenant): void
     {
         $this->tenant = $tenant;
 
@@ -39,7 +38,7 @@ class TenantContext
     /**
      * Get the current tenant.
      */
-    public function current(): ?Tenant
+    public function current()
     {
         return $this->tenant;
     }

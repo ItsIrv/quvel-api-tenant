@@ -11,7 +11,6 @@ use Quvel\Tenant\Actions\TenantPublicConfig;
 use Quvel\Tenant\Actions\TenantsCache;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
-use Quvel\Tenant\Models\Tenant;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -62,7 +61,8 @@ class TenantConfigController
         }
 
         if ($tenant->isInternal() && $request->hasHeader('X-Tenant-ID')) {
-            $targetTenant = Tenant::where('identifier', $request->header('X-Tenant-ID'))->first();
+            $tenantModel = config('tenant.model');
+            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-ID'))->first();
             if ($targetTenant) {
                 $tenant = $targetTenant;
             }

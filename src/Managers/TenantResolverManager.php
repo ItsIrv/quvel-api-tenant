@@ -10,7 +10,6 @@ use InvalidArgumentException;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Events\TenantNotFound;
 use Quvel\Tenant\Events\TenantResolved;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Manages tenant resolution, and caching.
@@ -28,7 +27,7 @@ class TenantResolverManager
     /**
      * Resolve tenant from request.
      */
-    public function resolveTenant(Request $request): ?Tenant
+    public function resolveTenant(Request $request)
     {
         $identifier = null;
 
@@ -64,7 +63,7 @@ class TenantResolverManager
     /**
      * Resolve tenant with caching support.
      */
-    protected function resolveTenantWithCache(string $cacheKey, TenantResolver $resolver, Request $request): ?Tenant
+    protected function resolveTenantWithCache(string $cacheKey, TenantResolver $resolver, Request $request)
     {
         $cacheTtl = config('tenant.resolver.config.cache_ttl', 0);
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Actions;
 
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
-use Quvel\Tenant\Models\Tenant;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -17,7 +16,7 @@ class TenantProtectedConfig
     /**
      * Execute the action.
      */
-    public function __invoke(Tenant $tenant): TenantConfigResource
+    public function __invoke($tenant): TenantConfigResource
     {
         $allowProtectedConfig = config('tenant.api.allow_protected_config', false);
 

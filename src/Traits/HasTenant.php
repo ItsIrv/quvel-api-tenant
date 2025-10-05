@@ -17,7 +17,7 @@ use Quvel\Tenant\Models\Tenant;
  * @mixin Model
  *
  * @property int|null $tenant_id The tenant ID this model belongs to
- * @property-read Tenant|null $tenant The tenant relationship
+ * @property-read mixed $tenant The tenant relationship
  *
  * @method static Builder forCurrentTenant() Scope to current tenant
  * @method static Builder forTenant(int $tenantId) Scope to specific tenant
@@ -37,7 +37,7 @@ trait HasTenant
     /**
      * Get the current tenant from context.
      */
-    public function getCurrentTenant(): ?Tenant
+    public function getCurrentTenant()
     {
         return app(TenantContext::class)->current();
     }

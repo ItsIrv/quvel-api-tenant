@@ -6,7 +6,6 @@ namespace Quvel\Tenant\Console;
 
 use Illuminate\Console\Command;
 use Quvel\Tenant\Console\Concerns\TenantAware;
-use Quvel\Tenant\Models\Tenant;
 
 abstract class TenantAwareCommand extends Command
 {
@@ -33,7 +32,7 @@ abstract class TenantAwareCommand extends Command
      * Handle the command for a specific tenant.
      * Override this method in your command.
      */
-    protected function handleForTenant(Tenant $tenant): int
+    protected function handleForTenant($tenant): int
     {
         return $this->runWithoutTenant();
     }

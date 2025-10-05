@@ -6,11 +6,15 @@ namespace Quvel\Tenant\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Quvel\Tenant\Models\Tenant;
 
 class TenantFactory extends Factory
 {
-    protected $model = Tenant::class;
+    public function __construct()
+    {
+        $this->model = config('tenant.model');
+
+        parent::__construct();
+    }
 
     public function definition(): array
     {
@@ -39,7 +43,7 @@ class TenantFactory extends Factory
         ]);
     }
 
-    public function child(Tenant $parent): static
+    public function child($parent): static
     {
         return $this->state(fn (array $attributes) => [
             'parent_id' => $parent->id,

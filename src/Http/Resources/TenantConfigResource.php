@@ -6,12 +6,11 @@ namespace Quvel\Tenant\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Handles visibility filtering and metadata generation.
  *
- * @property Tenant $resource
+ * @property mixed $resource
  */
 class TenantConfigResource extends JsonResource
 {

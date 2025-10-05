@@ -7,7 +7,6 @@ namespace Quvel\Tenant\Traits;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Events\TenantMismatchDetected;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
-use Quvel\Tenant\Models\Tenant;
 
 /**
  * Shared logic for tenant model scoping and validation.
@@ -17,7 +16,7 @@ trait HandlesTenantModels
     /**
      * Check if tenant uses isolated database and should skip tenant_id logic.
      */
-    protected function tenantUsesIsolatedDatabase(Tenant $tenant): bool
+    protected function tenantUsesIsolatedDatabase($tenant): bool
     {
         $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
         $hasIsolatedDatabase = $tenant->hasConfig("database.connections.$baseConnection.host") ||
