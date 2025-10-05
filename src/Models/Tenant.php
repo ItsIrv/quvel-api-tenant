@@ -210,7 +210,7 @@ class Tenant extends Model
         $filtered = [];
 
         foreach ($config as $key => $value) {
-            $keyVisibility = ConfigVisibility::tryFrom($visibility[$key] ?? null) ?? ConfigVisibility::PRIVATE;
+            $keyVisibility = ConfigVisibility::tryFrom($visibility[$key] ?? '') ?? ConfigVisibility::PRIVATE;
 
             // Include if visibility level is >= minimum required
             if ($this->isVisibilityAllowed($keyVisibility, $minVisibility)) {
