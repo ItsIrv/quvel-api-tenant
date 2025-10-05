@@ -56,7 +56,8 @@ return [
     'resolver' => [
         'class' => env('TENANT_RESOLVER', \Quvel\Tenant\Resolvers\DomainResolver::class),
         'config' => [
-            'cache_ttl' => env('TENANT_CACHE_TTL', 300),
+            'cache_enabled' => env('TENANT_RESOLVER_ENABLE_CACHE', false),
+            'cache_ttl' => env('TENANT_RESOLVER_CACHE_TTL', 300),
         ],
     ],
 
@@ -172,5 +173,25 @@ return [
         // Spatie permissions (be careful with global roles)
         // \Spatie\Permission\Models\Role::class,
         // \Spatie\Permission\Models\Permission::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scoping Behavior Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure how tenant scoping behaves when errors occur.
+    |
+    */
+    'scoping' => [
+        // Whether to throw NoTenantException when no tenant is found
+        // When false, returns empty results instead of throwing
+        'throw_no_tenant_exception' => env('TENANT_THROW_NO_TENANT_EXCEPTION', true),
+
+        // Whether to automatically add tenant_id to model $fillable arrays
+        'auto_fillable' => env('TENANT_AUTO_FILLABLE', true),
+
+        // Whether to automatically add tenant_id to model $hidden arrays
+        'auto_hidden' => env('TENANT_AUTO_HIDDEN', true),
     ],
 ];

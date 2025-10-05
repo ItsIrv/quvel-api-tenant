@@ -28,7 +28,7 @@ class TenantResolverManager
      */
     public function resolveTenant(Request $request): ?Tenant
     {
-        if (method_exists($this->resolver, 'getCacheKey')) {
+        if (method_exists($this->resolver, 'getCacheKey') && config('tenant.resolver.config.cache_enabled', true)) {
             $cacheKey = $this->resolver->getCacheKey($request);
 
             if ($cacheKey) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
-use Illuminate\Database\DatabaseManager;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Handles database configuration for tenants.
@@ -23,29 +23,58 @@ class DatabaseConfigPipe extends BasePipe
 
         $connection = $this->tenant->getConfig('database.default') ?? 'mysql';
 
-        $this->setIfExists('database.default', 'database.default');
-        $this->setIfExists("database.connections.$connection.host", "database.connections.$connection.host");
-        $this->setIfExists("database.connections.$connection.port", "database.connections.$connection.port");
-        $this->setIfExists("database.connections.$connection.database", "database.connections.$connection.database");
-        $this->setIfExists("database.connections.$connection.username", "database.connections.$connection.username");
-        $this->setIfExists("database.connections.$connection.password", "database.connections.$connection.password");
+        $this->setMany([
+            'database.default' => 'database.default',
+            "database.connections.$connection.host",
+            "database.connections.$connection.port",
+            "database.connections.$connection.database",
+            "database.connections.$connection.username",
+            "database.connections.$connection.password",
+        ]);
 
-        $this->switchDatabaseConnection($connection);
+        $tenantConnection = $this->createTenantConnection($connection);
+
+        if ($tenantConnection) {
+            DB::setDefaultConnection($tenantConnection);
+        }
     }
 
     /**
-     * Switch database connection and purge existing connections.
+     * Create tenant-specific database connection.
      */
-    protected function switchDatabaseConnection(string $connection): void
+    protected function createTenantConnection(string $baseConnection): ?string
     {
-        $dbManager = app(DatabaseManager::class);
+        $tenantConnectionName = 'tenant_' . $this->tenant->id;
 
-        $connections = $dbManager->getConnections();
-        if ($connections !== [] && array_key_exists($connection, $connections)) {
-            $dbManager->purge($connection);
+        if (config("database.connections.$tenantConnectionName")) {
+            return $tenantConnectionName;
         }
 
-        $dbManager->setDefaultConnection($connection);
-        $dbManager->reconnect($connection);
+        $baseConfig = config("database.connections.$baseConnection", []);
+        $tenantConfig = $baseConfig;
+
+        if ($this->tenant->hasConfig("database.connections.$baseConnection.host")) {
+            $tenantConfig['host'] = $this->tenant->getConfig("database.connections.$baseConnection.host");
+        }
+
+        if ($this->tenant->hasConfig("database.connections.$baseConnection.port")) {
+            $tenantConfig['port'] = $this->tenant->getConfig("database.connections.$baseConnection.port");
+        }
+
+        if ($this->tenant->hasConfig("database.connections.$baseConnection.database")) {
+            $tenantConfig['database'] = $this->tenant->getConfig("database.connections.$baseConnection.database");
+        }
+
+        if ($this->tenant->hasConfig("database.connections.$baseConnection.username")) {
+            $tenantConfig['username'] = $this->tenant->getConfig("database.connections.$baseConnection.username");
+        }
+
+        if ($this->tenant->hasConfig("database.connections.$baseConnection.password")) {
+            $tenantConfig['password'] = $this->tenant->getConfig("database.connections.$baseConnection.password");
+        }
+
+        config(["database.connections.$tenantConnectionName" => $tenantConfig]);
+
+        return $tenantConnectionName;
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Quvel\Tenant\Concerns\TenantResolver;
+use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Database\TenantTableRegistry;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
@@ -58,6 +58,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantMiddleware();
         $this->registerMiddlewareAlias();
         $this->registerRoutes();
+        $this->bootExternalModelScoping();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -79,6 +80,7 @@ class TenantServiceProvider extends ServiceProvider
             /** @var Router $router */
             $router = $this->app->make('router');
             $router->aliasMiddleware('tenant', TenantMiddleware::class);
+            $router->aliasMiddleware('tenant.internal', Http\Middleware\RequireInternalTenant::class);
         } catch (BindingResolutionException $e) {
             throw new RuntimeException('Failed to alias tenant middleware', 0 , $e);
         }
@@ -114,5 +116,63 @@ class TenantServiceProvider extends ServiceProvider
         Route::prefix('tenant-info')
             ->name('tenant.')
             ->group(__DIR__.'/../routes/tenant.php');
+    }
+
+    /**
+     * Boot external model scoping for Laravel/package models.
+     */
+    protected function bootExternalModelScoping(): void
+    {
+        $models = config('tenant.scoped_models', []);
+
+        foreach ($models as $modelClass) {
+            if (!class_exists($modelClass)) {
+                continue;
+            }
+
+            $modelClass::addGlobalScope(new Scopes\TenantScope());
+
+            $modelClass::creating(static function ($model) {
+                if (!isset($model->tenant_id) && !tenant_bypassed()) {
+                    $model->tenant_id = tenant_id();
+                }
+            });
+
+            $modelClass::updating(static function ($model) {
+                if (tenant_bypassed()) {
+                    return;
+                }
+
+                $currentTenantId = tenant_id();
+                if ($model->tenant_id !== $currentTenantId) {
+                    throw new Exceptions\TenantMismatchException(
+                        sprintf(
+                            'Cannot update %s with tenant_id %s from tenant %s',
+                            get_class($model),
+                            $model->tenant_id,
+                            $currentTenantId
+                        )
+                    );
+                }
+            });
+
+            $modelClass::deleting(static function ($model) {
+                if (tenant_bypassed()) {
+                    return;
+                }
+
+                $currentTenantId = tenant_id();
+                if ($model->tenant_id !== $currentTenantId) {
+                    throw new Exceptions\TenantMismatchException(
+                        sprintf(
+                            'Cannot delete %s with tenant_id %s from tenant %s',
+                            get_class($model),
+                            $model->tenant_id,
+                            $currentTenantId
+                        )
+                    );
+                }
+            });
+        }
     }
 }
