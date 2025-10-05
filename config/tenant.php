@@ -164,15 +164,20 @@ return [
     |
     */
     'scoped_models' => [
+        // Add your application models here
+        // \App\Models\Post::class,
+        // \App\Models\Order::class,
+
         // Laravel's built-in models
         // \Illuminate\Notifications\DatabaseNotification::class,
 
-        // Sanctum tokens
+        // Sanctum tokens (for API authentication per tenant)
         // \Laravel\Sanctum\PersonalAccessToken::class,
 
-        // Spatie permissions (be careful with global roles)
+        // Spatie permissions (enable if roles should be tenant-scoped)
         // \Spatie\Permission\Models\Role::class,
         // \Spatie\Permission\Models\Permission::class,
+
     ],
 
     /*

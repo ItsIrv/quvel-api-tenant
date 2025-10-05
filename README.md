@@ -294,6 +294,33 @@ $result = without_tenant(function () {
 });
 ```
 
+## Service Isolation
+
+Enable automatic tenant isolation for Laravel services. Each service adds `tenant_id` columns and scopes operations per tenant.
+
+```php
+// config/tenant.php
+'queue' => ['auto_tenant_id' => true],           // Jobs, failed jobs, batches
+'sessions' => ['auto_tenant_id' => true],        // Database sessions
+'cache' => ['auto_tenant_id' => true],           // Database cache & locks
+'password_reset_tokens' => ['auto_tenant_id' => true], // Password resets
+'preserve_context' => true,                      // Queue context preservation
+```
+
+**Add tenant_id columns:**
+```php
+app(\Quvel\Tenant\Managers\TenantTableManager::class)->processTables();
+```
+
+**What gets isolated:**
+- **Queues**: Jobs maintain tenant context automatically
+- **Sessions**: Complete session isolation between tenants
+- **Cache**: Cache entries and locks are tenant-scoped
+- **Password Resets**: Tokens isolated per tenant
+- **Context**: Tenant preserved across async operations
+
+No code changes required - everything works automatically once enabled.
+
 ## Events
 
 The package dispatches events for monitoring and extending tenant behavior:
