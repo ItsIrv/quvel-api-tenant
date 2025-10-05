@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Mail\Mailer;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Models\Tenant;
 
@@ -133,5 +134,91 @@ if (!function_exists('tenant_broadcast')) {
         $tenantChannels = array_map('tenant_channel', $channels);
 
         broadcast($event)->to($tenantChannels)->with($data);
+    }
+}
+
+
+if (!function_exists('tenant_mail')) {
+    /**
+     * Get a tenant-specific mail manager instance.
+     */
+    function tenant_mail(): Mailer
+    {
+        $mailerName = tenant_mailer();
+        return app('mail.manager')->mailer($mailerName);
+    }
+}
+
+if (!function_exists('tenant_mailer')) {
+    /**
+     * Get the tenant-specific mailer driver name.
+     */
+    function tenant_mailer(): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return config('mail.default');
+        }
+
+        return $tenant->getConfig('mail.default', config('mail.default'));
+    }
+}
+
+if (!function_exists('tenant_from')) {
+    /**
+     * Get tenant-specific from address and name.
+     */
+    function tenant_from(): array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return [
+                'address' => config('mail.from.address'),
+                'name' => config('mail.from.name'),
+            ];
+        }
+
+        return [
+            'address' => $tenant->getConfig('mail.from.address', config('mail.from.address')),
+            'name' => $tenant->getConfig('mail.from.name', config('mail.from.name')),
+        ];
+    }
+}
+
+if (!function_exists('tenant_reply_to')) {
+    /**
+     * Get tenant-specific reply-to address and name.
+     */
+    function tenant_reply_to(): ?array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return null;
+        }
+
+        $address = $tenant->getConfig('mail.reply_to.address');
+        $name = $tenant->getConfig('mail.reply_to.name');
+
+        if (!$address) {
+            return null;
+        }
+
+        return [
+            'address' => $address,
+            'name' => $name,
+        ];
+    }
+}
+
+if (!function_exists('tenant_model')) {
+    /**
+     * Get a new instance of the configured tenant model.
+     */
+    function tenant_model(): mixed
+    {
+        return app(config('tenant.model'));
     }
 }

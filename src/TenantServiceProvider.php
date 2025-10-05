@@ -28,7 +28,7 @@ use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
 use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
 use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
-use Quvel\Tenant\Traits\HandlesTenantModels;
+use Quvel\Tenant\Concerns\HandlesTenantModels;
 use RuntimeException;
 
 class TenantServiceProvider extends ServiceProvider
@@ -69,7 +69,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantSessionHandler();
         $this->registerTenantCacheStore();
         $this->registerTenantPasswordResetTokenRepository();
-        // Broadcasting manager registered in boot method
+        $this->registerTenantMailManager();
     }
 
     /**
@@ -355,6 +355,21 @@ class TenantServiceProvider extends ServiceProvider
                     );
                 });
             }
+        }
+    }
+
+    /**
+     * Register tenant-aware mail manager if enabled.
+     */
+    protected function registerTenantMailManager(): void
+    {
+        if (config('tenant.mail.auto_tenant_mail', false)) {
+            $this->app->extend('mail.manager', function ($manager, $app) {
+                return new Mail\TenantMailManager(
+                    $app,
+                    $app->make(TenantContext::class)
+                );
+            });
         }
     }
 }

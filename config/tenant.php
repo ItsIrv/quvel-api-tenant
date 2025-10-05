@@ -332,4 +332,23 @@ return [
     'broadcasting' => [
         'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mail Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware mail behavior.
+    |
+    | When auto_tenant_mail is enabled, ALL mail sent through the Mail facade
+    | automatically uses tenant-specific from addresses, reply-to addresses,
+    | and return paths without requiring code changes.
+    |
+    | For manual control, use the TenantAware trait in your mail classes
+    | or use the tenant_mail() helper functions for selective configuration.
+    |
+    */
+    'mail' => [
+        'auto_tenant_mail' => env('TENANT_MAIL_AUTO_TENANT', false),
+    ],
 ];
