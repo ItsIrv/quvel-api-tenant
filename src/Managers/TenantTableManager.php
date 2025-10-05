@@ -359,6 +359,17 @@ class TenantTableManager
             $tables = array_merge($cacheTables, $tables);
         }
 
+        if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
+            $passwordResetTables = [
+                'password_reset_tokens' => [
+                    'after' => 'email',
+                    'cascade_delete' => true,
+                ],
+            ];
+
+            $tables = array_merge($passwordResetTables, $tables);
+        }
+
         $this->registerMany($tables);
     }
 

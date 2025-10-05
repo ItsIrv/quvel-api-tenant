@@ -27,6 +27,8 @@ use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
 use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
+use Quvel\Tenant\Auth\TenantDatabaseTokenRepository;
+use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
 use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
 
@@ -67,6 +69,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantBatchRepository();
         $this->registerTenantSessionHandler();
         $this->registerTenantCacheStore();
+        $this->registerTenantPasswordResetTokenRepository();
     }
 
     /**
@@ -298,6 +301,18 @@ class TenantServiceProvider extends ServiceProvider
                 });
 
                 return $manager;
+            });
+        }
+    }
+
+    /**
+     * Register tenant-aware password reset token repository if enabled.
+     */
+    protected function registerTenantPasswordResetTokenRepository(): void
+    {
+        if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
+            $this->app->extend('auth.password', function ($manager, $app) {
+                return new TenantPasswordBrokerManager($app);
             });
         }
     }

@@ -287,4 +287,25 @@ return [
     'cache' => [
         'auto_tenant_id' => env('TENANT_CACHE_AUTO_TENANT_ID', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Reset Tokens Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware password reset tokens behavior.
+    |
+    | When enabled, this automatically:
+    | 1. Adds tenant_id column to password_reset_tokens table
+    | 2. Isolates password reset tokens per tenant
+    |
+    | Requirements:
+    | - Password reset tokens table must exist (run migrations after enabling this)
+    |
+    | Note: This ensures users can only reset passwords within their own tenant.
+    |
+    */
+    'password_reset_tokens' => [
+        'auto_tenant_id' => env('TENANT_PASSWORD_RESET_AUTO_TENANT_ID', false),
+    ],
 ];
