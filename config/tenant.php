@@ -313,4 +313,23 @@ return [
     'password_reset_tokens' => [
         'auto_tenant_id' => env('TENANT_PASSWORD_RESET_AUTO_TENANT_ID', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Broadcasting Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware broadcasting behavior.
+    |
+    | When auto_tenant_id is enabled, ALL broadcasts are automatically prefixed
+    | with tenant identifiers at the driver level (Pusher, Reverb) ensuring
+    | complete tenant isolation without code changes.
+    |
+    | For manual control, use the TenantAware trait in your broadcast events
+    | or use the tenant_channel() helper function for selective prefixing.
+    |
+    */
+    'broadcasting' => [
+        'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', true),
+    ],
 ];

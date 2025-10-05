@@ -92,3 +92,46 @@ if (!function_exists('without_tenant')) {
         }
     }
 }
+
+if (!function_exists('tenant_channel')) {
+    /**
+     * Get a tenant-specific channel name.
+     */
+    function tenant_channel(string $channel): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $channel;
+        }
+
+        $prefix = "tenant.$tenant->public_id.";
+
+        if (str_starts_with($channel, 'tenant.')) {
+            return $channel;
+        }
+
+        if (str_starts_with($channel, 'presence-')) {
+            return 'presence-' . $prefix . substr($channel, 9);
+        }
+
+        if (str_starts_with($channel, 'private-')) {
+            return 'private-' . $prefix . substr($channel, 8);
+        }
+
+        return $prefix . $channel;
+    }
+}
+
+if (!function_exists('tenant_broadcast')) {
+    /**
+     * Broadcast an event to a tenant-specific channel.
+     */
+    function tenant_broadcast($channels, string $event, array $data = []): void
+    {
+        $channels = is_array($channels) ? $channels : [$channels];
+        $tenantChannels = array_map('tenant_channel', $channels);
+
+        broadcast($event)->to($tenantChannels)->with($data);
+    }
+}
