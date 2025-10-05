@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant;
 
+use Illuminate\Bus\BatchFactory;
+use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Contracts\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Context;
@@ -21,6 +22,7 @@ use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
+use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
 use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
 
@@ -58,6 +60,7 @@ class TenantServiceProvider extends ServiceProvider
         });
 
         $this->registerTenantQueueConnector();
+        $this->registerTenantBatchRepository();
     }
 
     /**
@@ -232,4 +235,19 @@ class TenantServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Register tenant-aware batch repository if enabled.
+     */
+    protected function registerTenantBatchRepository(): void
+    {
+        if (config('tenant.queue.auto_tenant_id', true)) {
+            $this->app->extend(DatabaseBatchRepository::class, function ($repository, $app) {
+                return new TenantDatabaseBatchRepository(
+                    $app->make(BatchFactory::class),
+                    $app->make('db')->connection($app->config->get('queue.batching.database')),
+                    $app->config->get('queue.batching.table', 'job_batches')
+                );
+            });
+        }
+    }
 }
