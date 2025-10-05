@@ -205,4 +205,14 @@ return [
         */
         'skip_tenant_id_in_isolated_databases' => env('TENANT_SKIP_TENANT_ID_ISOLATED', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preserve Tenant Context
+    |--------------------------------------------------------------------------
+    |
+    | When true, automatically preserve tenant context using Laravel's Context.
+    |
+    */
+    'preserve_context' => env('TENANT_PRESERVE_CONTEXT', true),
 ];

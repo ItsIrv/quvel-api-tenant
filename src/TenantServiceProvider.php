@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant;
 
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Contracts\TenantResolver;
@@ -61,6 +63,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerMiddlewareAlias();
         $this->registerRoutes();
         $this->bootExternalModelScoping();
+        $this->registerContextPreservation();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -155,6 +158,37 @@ class TenantServiceProvider extends ServiceProvider
                 $provider->validateTenantMatch($model);
             });
         }
+    }
+
+    /**
+     * Register tenant context preservation hooks.
+     */
+    protected function registerContextPreservation(): void
+    {
+        if (!config('tenant.preserve_context', true)) {
+            return;
+        }
+
+        Context::dehydrating(static function ($context): void {
+            $tenant = app(TenantContext::class)->current();
+
+            if ($tenant) {
+                $context->addHidden('tenant', $tenant);
+            }
+        });
+
+        Context::hydrated(function ($context): void {
+            if ($context->hasHidden('tenant')) {
+                $tenant = $context->getHidden('tenant');
+
+                app(TenantContext::class)->setCurrent($tenant);
+
+                app(ConfigurationPipeManager::class)->apply(
+                    $tenant,
+                    $this->app->make(ConfigRepository::class)
+                );
+            }
+        });
     }
 
 }
