@@ -9,26 +9,14 @@ use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Scopes\TenantScope;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
 use Quvel\Tenant\Events\TenantModelCreated;
-use Quvel\Tenant\Events\TenantMismatchDetected;
 
 /**
- * Automatically applies tenant scoping to models with security guards.
- * Combines HasTenant relationship with TenantScope filtering and cross-tenant protection.
+ * Tenant scoping with automatic isolation detection.
  *
  * @mixin Model
  *
  * @property int|null $tenant_id The tenant ID this model belongs to
  * @property-read Tenant|null $tenant The tenant relationship
- *
- * This trait automatically:
- * - Adds a global TenantScope to filter queries by tenant_id
- * - Sets tenant_id during model creation (::creating event)
- * - Guards against cross-tenant save/update/delete operations
- * - Prevents changing tenant_id after model creation
- * - Adds 'tenant_id' to $fillable array for mass assignment
- * - Adds 'tenant_id' to $hidden array to hide from API responses
- * - Provides tenant relationship and helper methods via HasTenant trait
- * - Skips tenant_id logic for isolated databases (database-level isolation)
  *
  * Usage:
  * ```php
@@ -37,14 +25,15 @@ use Quvel\Tenant\Events\TenantMismatchDetected;
  *     use TenantScoped;
  * }
  *
- * // Queries are automatically scoped to current tenant
- * Post::all(); // Only posts for current tenant
- * Post::forAllTenants()->get(); // Bypass scoping
+ * // Automatic tenant scoping
+ * Post::all(); // Only current tenant's posts
+ * Post::forAllTenants()->get(); // Administrative access
  * ```
  */
 trait TenantScoped
 {
     use HasTenant;
+    use HandlesTenantModels;
 
     /**
      * Boot the scoped trait.
@@ -171,7 +160,6 @@ trait TenantScoped
         if (!isset($this->tenant_id) && !tenant_bypassed()) {
             $tenant = $this->getCurrentTenant();
 
-            // Skip tenant_id assignment for isolated databases
             if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
                 return;
             }
@@ -187,40 +175,11 @@ trait TenantScoped
      */
     protected function guardAgainstTenantMismatch(): void
     {
-        if (tenant_bypassed()) {
-            return;
-        }
+        $this->validateTenantMatch($this);
 
-        $tenant = $this->getCurrentTenant();
-
-        // Skip tenant_id checks for isolated databases
-        if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
-            return;
-        }
-
-        $currentTenantId = $this->getCurrentTenantId();
-        $modelTenantId = $this->tenant_id;
-
-        if ($modelTenantId !== null && $modelTenantId !== $currentTenantId) {
-            TenantMismatchDetected::dispatch(
-                get_class($this),
-                $modelTenantId,
-                $currentTenantId,
-                'modify'
-            );
-
-            throw new TenantMismatchException(
-                sprintf(
-                    'Cross-tenant operation blocked: %s (tenant_id: %s) cannot be modified from tenant %s context',
-                    get_class($this),
-                    $modelTenantId,
-                    $currentTenantId
-                )
-            );
-        }
-
-        if ($modelTenantId === null && !$this->exists) {
-            $this->tenant_id = $currentTenantId;
+        if ($this->tenant_id === null && !$this->exists) {
+            $this->tenant_id = $this->getCurrentTenantId();
         }
     }
+
 }

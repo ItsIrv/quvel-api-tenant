@@ -11,6 +11,7 @@ use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Exceptions\NoTenantException;
 use Quvel\Tenant\Events\TenantScopeApplied;
 use Quvel\Tenant\Events\TenantScopeNoTenantFound;
+use Quvel\Tenant\Traits\HandlesTenantModels;
 
 /**
  * Global scope that automatically filters queries by tenant_id.
@@ -28,6 +29,8 @@ use Quvel\Tenant\Events\TenantScopeNoTenantFound;
  */
 class TenantScope implements Scope
 {
+    use HandlesTenantModels;
+
     public function __construct(
         protected string $column = 'tenant_id'
     ) {
@@ -94,18 +97,4 @@ class TenantScope implements Scope
         });
     }
 
-    /**
-     * Check if tenant uses isolated database (separate database/server).
-     *
-     * When true, tenant_id scoping is not needed since database isolation
-     * provides the tenant boundary.
-     */
-    protected function tenantUsesIsolatedDatabase($tenant): bool
-    {
-        $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
-
-        // Isolated if tenant has custom host OR custom database name
-        return $tenant->hasConfig("database.connections.$baseConnection.host") ||
-               $tenant->hasConfig("database.connections.$baseConnection.database");
-    }
 }

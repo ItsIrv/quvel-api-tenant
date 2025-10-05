@@ -180,7 +180,7 @@ return [
     | Scoping Behavior Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure how tenant scoping behaves when errors occur.
+    | Configure how tenant scoping behaves in different scenarios.
     |
     */
     'scoping' => [
@@ -193,5 +193,16 @@ return [
 
         // Whether to automatically add tenant_id to model $hidden arrays
         'auto_hidden' => env('TENANT_AUTO_HIDDEN', true),
+
+        /*
+        |----------------------------------------------------------------------
+        | Skip Tenant ID in Isolated Databases
+        |----------------------------------------------------------------------
+        |
+        | When true, skip tenant_id scoping for tenants using isolated databases.
+        | When false, always use tenant_id scoping for consistency.
+        |
+        */
+        'skip_tenant_id_in_isolated_databases' => env('TENANT_SKIP_TENANT_ID_ISOLATED', false),
     ],
 ];

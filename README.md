@@ -149,130 +149,150 @@ Route::middleware(['tenant'])->group(function () {
 });
 ```
 
-## Database Scoping System
+## Tenant Scoping & Database Isolation
 
-The package provides automatic tenant isolation for your Eloquent models using two complementary approaches.
+The package provides automatic tenant scoping with support for multiple isolation strategies.
 
-### Automatic Scoping (`scoped_models` Configuration)
+### Model Scoping
 
-Configure external models (from Laravel or packages) to automatically have tenant scoping applied:
-
-```php
-// config/tenant.php
-'scoped_models' => [
-    \App\Models\User::class,
-    \Illuminate\Notifications\DatabaseNotification::class,
-    \Laravel\Sanctum\PersonalAccessToken::class,
-],
-```
-
-**Features:**
-- Automatically adds `TenantScope` to filter queries by `tenant_id`
-- Sets `tenant_id` on model creation
-- Prevents updating/deleting models from other tenants
-- Works without modifying the model files
-
----
-
-### Trait-Based Scoping (`TenantScoped`)
-
-Add the trait to your application models for automatic scoping with additional convenience methods:
+**Option 1: Using the TenantScoped Trait**
 
 ```php
+use Illuminate\Database\Eloquent\Model;
 use Quvel\Tenant\Traits\TenantScoped;
 
 class Post extends Model
 {
     use TenantScoped;
 }
+
+// Queries are automatically scoped to current tenant
+$posts = Post::all(); // Only current tenant's posts
+$posts = Post::forAllTenants()->get(); // Bypass scoping (admin access)
 ```
 
-**Features:**
-- All features from `scoped_models` configuration
-- Adds `tenant()` relationship
-- Helper methods: `getCurrentTenant()`, `belongsToCurrentTenant()`
-- Auto-adds `tenant_id` to `$fillable` and `$hidden`
-- Query scopes: `forCurrentTenant()`, `forTenant($id)`, `forAllTenants()`
-- Security guards on `save()`, `update()`, `delete()` operations
-- Prevents changing `tenant_id` after model creation
-
----
-
-### Manual Control (`HasTenant`)
-
-For models that need tenant relationships but not automatic scoping:
+**Option 2: Using scoped_models Configuration**
 
 ```php
-use Quvel\Tenant\Traits\HasTenant;
-
-class SystemLog extends Model
-{
-    use HasTenant;
-
-    public function scopeCurrentTenantLogs($query)
-    {
-        return $query->forCurrentTenant();
-    }
-}
+// config/tenant.php
+return [
+    'scoped_models' => [
+        \App\Models\User::class,
+        \App\Models\Post::class,
+        \Spatie\Permission\Models\Role::class, // Works with third-party packages
+    ],
+];
 ```
 
-**Features:**
-- Adds `tenant()` relationship
-- Provides helper methods
-- No automatic scoping or tenant assignment
-- Full manual control over scoping behavior
+With `scoped_models`, models automatically get tenant scoping without requiring code changes.
 
----
+### Database Isolation Strategies
 
-### Query Behavior
+The package supports multiple database isolation patterns:
 
-All scoped models automatically filter queries by the current tenant:
-
+**1. Shared Database (tenant_id column)**
 ```php
-// Automatically scoped queries
-User::all();                  // WHERE tenant_id = 1
-User::find(123);              // WHERE id = 123 AND tenant_id = 1
-User::where('active', true);  // WHERE active = 1 AND tenant_id = 1
-
-// Bypass scoping when needed
-User::withoutTenantScope()->get();  // No tenant filtering
-User::forAllTenants()->get();       // Alias for withoutTenantScope
-User::forTenant(2)->get();          // Query specific tenant
-
-// Helper functions for admin operations
-without_tenant(fn() => User::count());  // Execute without scoping
-with_tenant($tenant, fn() => User::count());  // Execute with specific tenant
+$tenant = Tenant::create([
+    'name' => 'Acme Corp',
+    'identifier' => 'acme.example.com',
+    // No database config = shared database with tenant_id scoping
+]);
 ```
 
-### Configuration Options
+**2. Dedicated Database (same server, different database)**
+```php
+$tenant = Tenant::create([
+    'name' => 'Acme Corp',
+    'identifier' => 'acme.example.com',
+    'config' => [
+        'database.connections.mysql.database' => 'acme_database',
+    ],
+]);
+```
 
-Control scoping behavior through configuration:
+**3. Isolated Database (separate server/credentials)**
+```php
+$tenant = Tenant::create([
+    'name' => 'Acme Corp',
+    'identifier' => 'acme.example.com',
+    'config' => [
+        'database.connections.mysql.host' => 'acme-db.example.com',
+        'database.connections.mysql.database' => 'acme_production',
+        'database.connections.mysql.username' => 'acme_user',
+        'database.connections.mysql.password' => 'secure_password',
+    ],
+]);
+```
+
+**Automatic Detection**: The system automatically detects isolation strategy and adapts behavior:
+- Shared database: Uses `WHERE tenant_id = ?` filtering
+- Isolated database: Uses database-level isolation, with configurable tenant_id behavior
+
+### Skip Tenant ID in Isolated Databases
+
+Configure whether to skip tenant_id scoping for tenants using isolated databases:
 
 ```php
 // config/tenant.php
 'scoping' => [
-    // Throw exception or return empty results when no tenant found
-    'throw_no_tenant_exception' => true,
-
-    // Automatically add tenant_id to model $fillable arrays
-    'auto_fillable' => true,
-
-    // Automatically add tenant_id to model $hidden arrays
-    'auto_hidden' => true,
+    'skip_tenant_id_in_isolated_databases' => false,
 ],
 ```
 
-## Helper Functions
+**Configuration Options:**
+
+- `false` (default): Always use tenant_id scoping for consistency across all tenant architectures
+- `true`: Skip tenant_id scoping in isolated databases for performance or customer appeal (database-level isolation only)
+
+### Tenant Creation with Configuration Builder
 
 ```php
-tenant();           // Get current tenant model
-tenant_id();        // Get current tenant ID
-tenant_config('key'); // Get tenant config value
-tenant_bypassed();  // Check if currently bypassed
-without_tenant(fn); // Execute without tenant scoping
-with_tenant($t, fn); // Execute with specific tenant
+use Quvel\Tenant\Actions\CreateTenant;
+use Quvel\Tenant\Builders\TenantConfigurationBuilder;
+
+$config = TenantConfigurationBuilder::create()
+    ->withCoreConfig(
+        appName: 'Acme Corp',
+        appUrl: 'https://acme.example.com'
+    )
+    ->withIsolatedDatabase(
+        host: 'acme-db.example.com',
+        database: 'acme_production',
+        username: 'acme_user',
+        password: 'secure_password'
+    );
+
+$tenant = app(CreateTenant::class)->execute(
+    name: 'Acme Corp',
+    identifier: 'acme.example.com',
+    configBuilder: $config
+);
 ```
 
+### Security Features
+
+- **Cross-tenant protection**: Prevents models from being accessed/modified across tenant boundaries
+- **Automatic tenant assignment**: Models get `tenant_id` assigned automatically during creation
+- **Bypass protection**: Administrative operations can bypass tenant scoping with `without_tenant()`
+- **Event-driven audit trail**: Tenant operations trigger events for monitoring and compliance
+
+### Helper Functions
+
+```php
+// Get current tenant
+$tenant = tenant();
+$tenantId = tenant_id();
+
+// Execute code in specific tenant context
+$result = with_tenant($tenant, function () {
+    return User::count(); // Counts users for specific tenant
+});
+
+// Execute code bypassing tenant scoping
+$result = without_tenant(function () {
+    return User::all(); // Returns all users across all tenants
+});
+```
 
 ## License
 

@@ -6,20 +6,21 @@ namespace Quvel\Tenant;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
-use Quvel\Tenant\Database\TenantTableRegistry;
+use Quvel\Tenant\Managers\TenantTableManager;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
+use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
 
 class TenantServiceProvider extends ServiceProvider
 {
+    use HandlesTenantModels;
     /**
      * Register services.
      */
@@ -30,8 +31,8 @@ class TenantServiceProvider extends ServiceProvider
             'tenant'
         );
 
-        $this->app->singleton(TenantTableRegistry::class, function () {
-            return new TenantTableRegistry();
+        $this->app->singleton(TenantTableManager::class, function () {
+            return new TenantTableManager();
         });
 
         $this->app->singleton(TenantResolverManager::class, function () {
@@ -120,123 +121,40 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Boot external model scoping for Laravel/package models.
-     *
-     * The scoped_models configuration provides tenant scoping (WHERE tenant_id = ?)
-     * and tenant-aware model events. Database connection switching is handled
-     * automatically by the DatabaseConfigPipe when tenants have database overrides.
-     *
-     * Models in scoped_models automatically get:
-     * - Tenant scoping (WHERE tenant_id filtering)
-     * - Tenant-aware model events (creating/updating/deleting guards)
-     * - Automatic database connection switching (via global default connection)
-     * - Isolated database support (skips tenant_id logic when appropriate)
-     *
-     * No manual traits required - third-party packages work automatically.
+     * Boot model scoping for config models.
      */
     protected function bootExternalModelScoping(): void
     {
         $models = config('tenant.scoped_models', []);
+        $provider = $this; // Capture instance for use in closures
 
         foreach ($models as $modelClass) {
             if (!class_exists($modelClass)) {
                 continue;
             }
 
-            $this->addTenantScopingToModel($modelClass);
-            $this->addTenantEventsToModel($modelClass);
+            $modelClass::addGlobalScope(new Scopes\TenantScope());
+
+            $modelClass::creating(static function ($model) use ($provider) {
+                if (!isset($model->tenant_id) && !tenant_bypassed()) {
+                    $tenant = app(TenantContext::class)->current();
+
+                    if ($tenant && $provider->tenantUsesIsolatedDatabase($tenant)) {
+                        return;
+                    }
+
+                    $model->tenant_id = tenant_id();
+                }
+            });
+
+            $modelClass::updating(static function ($model) use ($provider) {
+                $provider->validateTenantMatch($model);
+            });
+
+            $modelClass::deleting(static function ($model) use ($provider) {
+                $provider->validateTenantMatch($model);
+            });
         }
     }
 
-    /**
-     * Add tenant scoping to external model.
-     */
-    protected function addTenantScopingToModel(string $modelClass): void
-    {
-        /** @var $modelClass Model */
-        $modelClass::addGlobalScope(new Scopes\TenantScope());
-    }
-
-
-    /**
-     * Add tenant-aware model events to external model.
-     */
-    protected function addTenantEventsToModel(string $modelClass): void
-    {
-        /** @var $modelClass Model */
-        $modelClass::creating(static function ($model) {
-            if (!isset($model->tenant_id) && !tenant_bypassed()) {
-                $tenant = app(TenantContext::class)->current();
-
-                // Skip tenant_id assignment for isolated databases
-                if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
-                    return;
-                }
-
-                $model->tenant_id = tenant_id();
-            }
-        });
-
-        $modelClass::updating(static function ($model) {
-            if (tenant_bypassed()) {
-                return;
-            }
-
-            $tenant = app(TenantContext::class)->current();
-
-            // Skip tenant_id checks for isolated databases
-            if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
-                return;
-            }
-
-            $currentTenantId = tenant_id();
-            if ($model->tenant_id !== $currentTenantId) {
-                throw new Exceptions\TenantMismatchException(
-                    sprintf(
-                        'Cannot update %s with tenant_id %s from tenant %s',
-                        get_class($model),
-                        $model->tenant_id,
-                        $currentTenantId
-                    )
-                );
-            }
-        });
-
-        $modelClass::deleting(static function ($model) {
-            if (tenant_bypassed()) {
-                return;
-            }
-
-            $tenant = app(TenantContext::class)->current();
-
-            // Skip tenant_id checks for isolated databases
-            if ($tenant && self::tenantUsesIsolatedDatabase($tenant)) {
-                return;
-            }
-
-            $currentTenantId = tenant_id();
-            if ($model->tenant_id !== $currentTenantId) {
-                throw new Exceptions\TenantMismatchException(
-                    sprintf(
-                        'Cannot delete %s with tenant_id %s from tenant %s',
-                        get_class($model),
-                        $model->tenant_id,
-                        $currentTenantId
-                    )
-                );
-            }
-        });
-    }
-
-    /**
-     * Check if tenant uses isolated database (separate database/server).
-     */
-    protected static function tenantUsesIsolatedDatabase($tenant): bool
-    {
-        $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
-
-        // Isolated if tenant has custom host OR custom database name
-        return $tenant->hasConfig("database.connections.$baseConnection.host") ||
-               $tenant->hasConfig("database.connections.$baseConnection.database");
-    }
 }
