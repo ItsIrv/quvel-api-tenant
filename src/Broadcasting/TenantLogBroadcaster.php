@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Broadcasting;
 
-use Illuminate\Broadcasting\Broadcasters\ReverseProxyBroadcaster;
+use Illuminate\Broadcasting\Broadcasters\LogBroadcaster;
 use Quvel\Tenant\Context\TenantContext;
 
 /**
- * Reverb broadcaster that automatically prefixes channels with tenant identifiers.
+ * Log broadcaster that automatically prefixes channels with tenant identifiers.
  */
-class TenantReverbBroadcaster extends ReverseProxyBroadcaster
+class TenantLogBroadcaster extends LogBroadcaster
 {
     public function __construct(
-        array $config,
+        \Psr\Log\LoggerInterface $logger,
         protected TenantContext $tenantContext
     ) {
-        parent::__construct($config);
+        parent::__construct($logger);
     }
 
     /**
@@ -25,7 +25,6 @@ class TenantReverbBroadcaster extends ReverseProxyBroadcaster
     public function broadcast(array $channels, $event, array $payload = []): void
     {
         $channels = $this->formatChannels($channels);
-
         parent::broadcast($channels, $event, $payload);
     }
 

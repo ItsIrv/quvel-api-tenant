@@ -16,7 +16,6 @@ use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Broadcasting\BroadcastManager;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
@@ -28,7 +27,6 @@ use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
 use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
-use Quvel\Tenant\Auth\TenantDatabaseTokenRepository;
 use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
 use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
@@ -71,7 +69,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantSessionHandler();
         $this->registerTenantCacheStore();
         $this->registerTenantPasswordResetTokenRepository();
-        $this->registerTenantBroadcastingManager();
+        // Broadcasting manager registered in boot method
     }
 
     /**
@@ -85,6 +83,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->bootExternalModelScoping();
         $this->registerContextPreservation();
         $this->registerTenantFailedJobProvider();
+        $this->registerTenantBroadcastingManager();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -324,33 +323,38 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantBroadcastingManager(): void
     {
-        if (config('tenant.broadcasting.auto_tenant_id', true) && $this->app->bound('broadcast')) {
-            $this->app->extend('broadcast', function (BroadcastManager $manager, $app) {
-                if (class_exists(\Pusher\Pusher::class)) {
-                    $manager->extend('pusher', function ($app, $config) {
-                        return new Broadcasting\TenantPusherBroadcaster(
-                            new \Pusher\Pusher(
-                                $config['key'],
-                                $config['secret'],
-                                $config['app_id'],
-                                $config['options'] ?? []
-                            ),
-                            $app->make(TenantContext::class)
-                        );
-                    });
-                }
+        if (config('tenant.broadcasting.auto_tenant_id', true)) {
+            $manager = $this->app->make(\Illuminate\Broadcasting\BroadcastManager::class);
 
-                if (class_exists(\Illuminate\Broadcasting\Broadcasters\ReverseProxyBroadcaster::class)) {
-                    $manager->extend('reverb', function ($app, $config) {
-                        return new Broadcasting\TenantReverbBroadcaster(
-                            $config['options'] ?? [],
-                            $app->make(TenantContext::class)
-                        );
-                    });
-                }
-
-                return $manager;
+            $manager->extend('log', function ($app, $config) {
+                return new Broadcasting\TenantLogBroadcaster(
+                    $app->make('log'),
+                    $app->make(TenantContext::class)
+                );
             });
+
+            if (class_exists(\Pusher\Pusher::class)) {
+                $manager->extend('pusher', function ($app, $config) {
+                    return new Broadcasting\TenantPusherBroadcaster(
+                        new \Pusher\Pusher(
+                            $config['key'],
+                            $config['secret'],
+                            $config['app_id'],
+                            $config['options'] ?? []
+                        ),
+                        $app->make(TenantContext::class)
+                    );
+                });
+            }
+
+            if (class_exists(\Illuminate\Broadcasting\Broadcasters\ReverseProxyBroadcaster::class)) {
+                $manager->extend('reverb', function ($app, $config) {
+                    return new Broadcasting\TenantReverbBroadcaster(
+                        $config['options'] ?? [],
+                        $app->make(TenantContext::class)
+                    );
+                });
+            }
         }
     }
 }
