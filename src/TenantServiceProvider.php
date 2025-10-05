@@ -82,7 +82,7 @@ class TenantServiceProvider extends ServiceProvider
             /** @var Router $router */
             $router = $this->app->make('router');
             $router->aliasMiddleware('tenant', TenantMiddleware::class);
-            $router->aliasMiddleware('tenant.internal', Http\Middleware\RequireInternalTenant::class);
+            $router->aliasMiddleware('tenant.is-internal', Http\Middleware\RequireInternalTenant::class);
         } catch (BindingResolutionException $e) {
             throw new RuntimeException('Failed to alias tenant middleware', 0 , $e);
         }

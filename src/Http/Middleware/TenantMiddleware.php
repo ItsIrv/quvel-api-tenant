@@ -7,6 +7,7 @@ namespace Quvel\Tenant\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Events\TenantMiddlewareCompleted;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,6 +44,8 @@ class TenantMiddleware
 
         $this->tenantContext->setCurrent($tenant);
         $this->configPipeline->apply($tenant, config());
+
+        TenantMiddlewareCompleted::dispatch($tenant, $request);
 
         return $next($request);
     }

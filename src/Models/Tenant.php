@@ -51,6 +51,7 @@ class Tenant extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_internal' => 'boolean',
         'config' => 'array',
     ];
 
@@ -235,6 +236,11 @@ class Tenant extends Model
     public function getProtectedConfig(): array
     {
         return $this->getConfigByVisibility(ConfigVisibility::PROTECTED);
+    }
+
+    public function isInternal(): bool
+    {
+        return $this->is_internal;
     }
 
     /**

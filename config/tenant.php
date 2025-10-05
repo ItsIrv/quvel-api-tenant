@@ -42,7 +42,7 @@ return [
     */
     'middleware' => [
         'auto_register' => env('TENANT_AUTO_MIDDLEWARE', true),
-        'internal_request' => 'tenant.internal',
+        'internal_request' => 'tenant.is-internal',
     ],
 
     /*

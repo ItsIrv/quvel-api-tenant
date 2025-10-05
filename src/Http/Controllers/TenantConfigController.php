@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Quvel\Tenant\Actions\TenantProtectedConfig;
 use Quvel\Tenant\Actions\TenantPublicConfig;
 use Quvel\Tenant\Actions\TenantsCache;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
+use Quvel\Tenant\Models\Tenant;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -20,29 +22,17 @@ class TenantConfigController
     /**
      * Get public tenant configuration.
      */
-    public function public(TenantContext $tenantContext, TenantPublicConfig $action): TenantConfigResource
+    public function public(Request $request, TenantContext $tenantContext, TenantPublicConfig $action): TenantConfigResource
     {
-        $tenant = $tenantContext->current();
-
-        if ($tenant === null) {
-            throw new NotFoundHttpException('Tenant not found');
-        }
-
-        return $action($tenant);
+        return $this->overrideTenant($tenantContext, $request, $action);
     }
 
     /**
      * Get protected tenant configuration.
      */
-    public function protected(TenantContext $tenantContext, TenantProtectedConfig $action): TenantConfigResource
+    public function protected(Request $request, TenantContext $tenantContext, TenantProtectedConfig $action): TenantConfigResource
     {
-        $tenant = $tenantContext->current();
-
-        if ($tenant === null) {
-            throw new NotFoundHttpException('Tenant not found');
-        }
-
-        return $action($tenant);
+        return $this->overrideTenant($tenantContext, $request, $action);
     }
 
     /**
@@ -52,5 +42,32 @@ class TenantConfigController
         TenantsCache $action
     ): AnonymousResourceCollection {
         return $action();
+    }
+
+    /**
+     * @param TenantContext $tenantContext
+     * @param Request $request
+     * @param TenantProtectedConfig|TenantPublicConfig $action
+     * @return TenantConfigResource
+     */
+    public function overrideTenant(
+        TenantContext $tenantContext,
+        Request $request,
+        TenantProtectedConfig|TenantPublicConfig $action
+    ): TenantConfigResource {
+        $tenant = $tenantContext->current();
+
+        if ($tenant === null) {
+            throw new NotFoundHttpException('Tenant not found');
+        }
+
+        if ($tenant->isInternal() && $request->hasHeader('X-Tenant-ID')) {
+            $targetTenant = Tenant::where('identifier', $request->header('X-Tenant-ID'))->first();
+            if ($targetTenant) {
+                $tenant = $targetTenant;
+            }
+        }
+
+        return $action($tenant);
     }
 }

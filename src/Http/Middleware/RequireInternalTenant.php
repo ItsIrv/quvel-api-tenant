@@ -28,7 +28,7 @@ class RequireInternalTenant
     {
         $tenant = $this->tenantContext->current();
 
-        if (!$tenant || !$tenant->is_internal) {
+        if (!$tenant || !$tenant->isInternal()) {
             throw new NotFoundHttpException('Endpoint not available');
         }
 

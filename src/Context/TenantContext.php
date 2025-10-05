@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Context;
 
+use Quvel\Tenant\Events\TenantContextSet;
 use Quvel\Tenant\Models\Tenant;
 
 /**
@@ -29,6 +30,10 @@ class TenantContext
     public function setCurrent(?Tenant $tenant): void
     {
         $this->tenant = $tenant;
+
+        if ($tenant) {
+            TenantContextSet::dispatch($tenant);
+        }
     }
 
     /**
