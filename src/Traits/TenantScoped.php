@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Quvel\Tenant\Models\Tenant;
 use Quvel\Tenant\Scopes\TenantScope;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
-use Quvel\Tenant\Events\TenantModelCreated;
 
 /**
  * Tenant scoping with automatic isolation detection.
@@ -52,16 +51,10 @@ trait TenantScoped
                 $tenant = $model->getCurrentTenant();
 
                 if ($tenant && $model->tenantUsesIsolatedDatabase($tenant)) {
-                    TenantModelCreated::dispatch($model, $tenant);
-
                     return;
                 }
 
                 $model->tenant_id = $model->getCurrentTenantId();
-
-                if ($tenant) {
-                    TenantModelCreated::dispatch($model, $tenant);
-                }
             }
         });
 

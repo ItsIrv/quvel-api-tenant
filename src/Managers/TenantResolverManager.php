@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 use Quvel\Tenant\Contracts\TenantResolver;
+use Quvel\Tenant\Events\TenantResolved;
 use Quvel\Tenant\Models\Tenant;
 
 /**
@@ -28,15 +29,31 @@ class TenantResolverManager
      */
     public function resolveTenant(Request $request): ?Tenant
     {
+        $tenant = null;
+        $cacheKey = null;
+
         if (method_exists($this->resolver, 'getCacheKey') && config('tenant.resolver.config.cache_enabled', true)) {
             $cacheKey = $this->resolver->getCacheKey($request);
 
             if ($cacheKey) {
-                return $this->resolveTenantWithCache($cacheKey, $this->resolver, $request);
+                $tenant = $this->resolveTenantWithCache($cacheKey, $this->resolver, $request);
             }
         }
 
-        return $this->resolver->resolve($request);
+        if (!$tenant) {
+            $tenant = $this->resolver->resolve($request);
+            $cacheKey = null;
+        }
+
+        if ($tenant) {
+            TenantResolved::dispatch(
+                $tenant,
+                get_class($this->resolver),
+                $cacheKey
+            );
+        }
+
+        return $tenant;
     }
 
     /**
