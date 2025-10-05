@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,7 +22,7 @@ class DatabaseConfigPipe extends BasePipe
             return;
         }
 
-        $connection = $this->tenant->getConfig('database.default') ?? 'mysql';
+        $connection = $this->tenant->getConfig('database.default') ?? $this->getDefaultConnection();
 
         $this->setMany([
             'database.default' => 'database.default',
@@ -44,7 +45,7 @@ class DatabaseConfigPipe extends BasePipe
      */
     protected function createTenantConnection(string $baseConnection): ?string
     {
-        $tenantConnectionName = 'tenant_' . $this->tenant->id;
+        $tenantConnectionName = $this->getTenantConnectionName($baseConnection);
 
         if (config("database.connections.$tenantConnectionName")) {
             return $tenantConnectionName;
@@ -76,5 +77,45 @@ class DatabaseConfigPipe extends BasePipe
         config(["database.connections.$tenantConnectionName" => $tenantConfig]);
 
         return $tenantConnectionName;
+    }
+
+    /**
+     * Configure default connection type.
+     */
+    public static function withDefaultConnection(Closure $callback): string
+    {
+        static::registerConfigurator('default_connection', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure tenant connection name generator.
+     */
+    public static function withTenantConnectionName(Closure $callback): string
+    {
+        static::registerConfigurator('tenant_connection_name', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get default connection using configurator or default.
+     */
+    protected function getDefaultConnection(): string
+    {
+        return $this->applyConfigurator('default_connection', 'mysql');
+    }
+
+    /**
+     * Get tenant connection name using configurator or default.
+     */
+    protected function getTenantConnectionName(string $baseConnection): string
+    {
+        if ($this->hasConfigurator('tenant_connection_name')) {
+            return static::$configurators['tenant_connection_name']($this, $baseConnection);
+        }
+
+        return 'tenant_' . $this->tenant->id;
     }
 }

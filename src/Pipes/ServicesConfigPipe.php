@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
+
 /**
  * Handles third-party services configuration for tenants.
  */
@@ -47,17 +49,17 @@ class ServicesConfigPipe extends BasePipe
     protected function configureServicesWithDefaults(): void
     {
         if ($this->tenant->hasConfig('paypal_client_id')) {
-            $mode = $this->tenant->getConfig('paypal_mode') ?? 'sandbox';
+            $mode = $this->tenant->getConfig('paypal_mode') ?? $this->getDefaultPayPalMode();
             $this->config->set('services.paypal.mode', $mode);
         }
 
         if ($this->tenant->hasConfig('mailgun_domain')) {
-            $endpoint = $this->tenant->getConfig('mailgun_endpoint') ?? 'api.mailgun.net';
+            $endpoint = $this->tenant->getConfig('mailgun_endpoint') ?? $this->getDefaultMailgunEndpoint();
             $this->config->set('services.mailgun.endpoint', $endpoint);
         }
 
         if ($this->tenant->hasConfig('ses_key')) {
-            $region = $this->tenant->getConfig('ses_region') ?? 'us-east-1';
+            $region = $this->tenant->getConfig('ses_region') ?? $this->getDefaultSesRegion();
             $this->config->set('services.ses.region', $region);
         }
     }
@@ -79,5 +81,59 @@ class ServicesConfigPipe extends BasePipe
                 $this->config->set('services.custom.' . $service . '.key', $apiKey);
             }
         }
+    }
+
+    /**
+     * Configure default PayPal mode.
+     */
+    public static function withDefaultPayPalMode(Closure $callback): string
+    {
+        static::registerConfigurator('default_paypal_mode', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure default Mailgun endpoint.
+     */
+    public static function withDefaultMailgunEndpoint(Closure $callback): string
+    {
+        static::registerConfigurator('default_mailgun_endpoint', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure default SES region.
+     */
+    public static function withDefaultSesRegion(Closure $callback): string
+    {
+        static::registerConfigurator('default_ses_region', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get default PayPal mode using configurator or default.
+     */
+    protected function getDefaultPayPalMode(): string
+    {
+        return $this->applyConfigurator('default_paypal_mode', 'sandbox');
+    }
+
+    /**
+     * Get default Mailgun endpoint using configurator or default.
+     */
+    protected function getDefaultMailgunEndpoint(): string
+    {
+        return $this->applyConfigurator('default_mailgun_endpoint', 'api.mailgun.net');
+    }
+
+    /**
+     * Get default SES region using configurator or default.
+     */
+    protected function getDefaultSesRegion(): string
+    {
+        return $this->applyConfigurator('default_ses_region', 'us-east-1');
     }
 }

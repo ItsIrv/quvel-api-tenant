@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
-use Exception;
-use Illuminate\Cache\CacheManager;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use RuntimeException;
+use Closure;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Handles cache configuration for tenants.
@@ -16,6 +14,8 @@ class CacheConfigPipe extends BasePipe
 {
     public function apply(): void
     {
+        $hasCacheOverride = $this->tenant->hasConfig('cache.default');
+
         $this->setMany([
             'cache.default',
         ]);
@@ -23,26 +23,31 @@ class CacheConfigPipe extends BasePipe
         if ($this->tenant->hasConfig('cache.prefix')) {
             $this->setIfExists('cache.prefix', 'cache.prefix');
         } else {
-            $this->config->set('cache.prefix', "tenant_{$this->tenant->public_id}");
+            $this->config->set('cache.prefix', $this->getDefaultPrefix());
         }
 
-        $this->rebindCacheManager();
+        if ($hasCacheOverride) {
+            $defaultDriver = $this->config->get('cache.default');
+
+            Cache::setDefaultDriver($defaultDriver);
+        }
     }
 
     /**
-     * Rebind cache manager to pick up new configuration.
+     * Configure default prefix generator.
      */
-    protected function rebindCacheManager(): void
+    public static function withDefaultPrefix(Closure $callback): string
     {
-        try {
-            app()->forgetInstance(CacheManager::class);
-            app()->forgetInstance(CacheRepository::class);
+        static::registerConfigurator('default_prefix', $callback);
 
-            app()->extend(CacheManager::class, function ($cacheManager, $app): CacheManager {
-                return new CacheManager($app);
-            });
-        } catch (Exception $e) {
-            throw new RuntimeException('Failed to override cache instance', 0, $e);
-        }
+        return static::class;
+    }
+
+    /**
+     * Get default prefix using configurator or default.
+     */
+    protected function getDefaultPrefix(): string
+    {
+        return $this->applyConfigurator('default_prefix', "tenant_{$this->tenant->public_id}");
     }
 }

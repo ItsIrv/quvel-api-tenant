@@ -16,4 +16,9 @@ interface ConfigurationPipe
      * Apply tenant configuration changes.
      */
     public function apply(): void;
+
+    /**
+     * Get the current tenant instance.
+     */
+    public function getTenant(): Tenant;
 }

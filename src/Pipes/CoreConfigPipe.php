@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Context;
@@ -47,7 +48,7 @@ class CoreConfigPipe extends BasePipe
             $this->refreshLocale();
         }
 
-        Context::add('tenant_id', $this->tenant->public_id);
+        Context::add('tenant_id', $this->getContextTenantId());
     }
 
     /**
@@ -66,6 +67,7 @@ class CoreConfigPipe extends BasePipe
         }
 
         if (!empty($allowedOrigins)) {
+            $allowedOrigins = $this->getCustomCorsOrigins($allowedOrigins);
             $this->config->set('cors.allowed_origins', $allowedOrigins);
         }
     }
@@ -127,5 +129,45 @@ class CoreConfigPipe extends BasePipe
         } catch (Exception) {
             // Log error if needed
         }
+    }
+
+    /**
+     * Configure context tenant ID generator.
+     */
+    public static function withContextTenantId(Closure $callback): string
+    {
+        static::registerConfigurator('context_tenant_id', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure CORS origins customizer.
+     */
+    public static function withCorsOrigins(Closure $callback): string
+    {
+        static::registerConfigurator('cors_origins', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get context tenant ID using configurator or default.
+     */
+    protected function getContextTenantId(): string
+    {
+        return $this->applyConfigurator('context_tenant_id', $this->tenant->public_id);
+    }
+
+    /**
+     * Get custom CORS origins using configurator or default.
+     */
+    protected function getCustomCorsOrigins(array $defaultOrigins): array
+    {
+        if ($this->hasConfigurator('cors_origins')) {
+            return static::$configurators['cors_origins']($this, $defaultOrigins);
+        }
+
+        return $defaultOrigins;
     }
 }

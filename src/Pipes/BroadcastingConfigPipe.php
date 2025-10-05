@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
+
 /**
  * Handles broadcasting configuration for tenants.
  */
@@ -29,9 +31,27 @@ class BroadcastingConfigPipe extends BasePipe
         ]);
 
         if ($this->config->get('broadcasting.default') === 'redis' || $this->tenant->hasConfig('broadcasting.connections.redis.prefix')) {
-            $prefix = $this->tenant->getConfig('broadcasting.connections.redis.prefix') ?? 'tenant_' . $this->tenant->public_id;
+            $prefix = $this->tenant->getConfig('broadcasting.connections.redis.prefix') ?? $this->getRedisPrefix();
 
             $this->config->set('broadcasting.connections.redis.prefix', $prefix);
         }
+    }
+
+    /**
+     * Configure Redis prefix generator.
+     */
+    public static function withRedisPrefix(Closure $callback): string
+    {
+        static::registerConfigurator('redis_prefix', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get Redis prefix using configurator or default.
+     */
+    protected function getRedisPrefix(): string
+    {
+        return $this->applyConfigurator('redis_prefix', 'tenant_' . $this->tenant->public_id);
     }
 }

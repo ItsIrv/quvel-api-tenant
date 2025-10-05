@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
+
 /**
  * Handles logging configuration for tenants.
  */
@@ -40,13 +42,13 @@ class LoggingConfigPipe extends BasePipe
         if ($this->tenant->hasConfig('log_single_path')) {
             $this->setIfExists('log_single_path', 'logging.channels.single.path');
         } else {
-            $this->config->set('logging.channels.single.path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+            $this->config->set('logging.channels.single.path', $this->getSingleLogPath());
         }
 
         if ($this->tenant->hasConfig('log_daily_path')) {
             $this->setIfExists('log_daily_path', 'logging.channels.daily.path');
         } else {
-            $this->config->set('logging.channels.daily.path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+            $this->config->set('logging.channels.daily.path', $this->getDailyLogPath());
         }
     }
 
@@ -69,9 +71,63 @@ class LoggingConfigPipe extends BasePipe
     {
         $this->config->set('logging.channels.tenant', [
             'driver' => $this->tenant->getConfig('log_custom_driver'),
-            'path'   => $this->tenant->getConfig('log_custom_path') ?? storage_path('logs/tenants/' . $this->tenant->public_id . '/custom.log'),
+            'path'   => $this->tenant->getConfig('log_custom_path') ?? $this->getCustomLogPath(),
             'level'  => $this->tenant->getConfig('log_custom_level') ?? 'info',
             'days'   => $this->tenant->getConfig('log_custom_days') ?? 14,
         ]);
+    }
+
+    /**
+     * Configure single log path generator.
+     */
+    public static function withSingleLogPath(Closure $callback): string
+    {
+        static::registerConfigurator('single_log_path', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure daily log path generator.
+     */
+    public static function withDailyLogPath(Closure $callback): string
+    {
+        static::registerConfigurator('daily_log_path', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Configure custom log path generator.
+     */
+    public static function withCustomLogPath(Closure $callback): string
+    {
+        static::registerConfigurator('custom_log_path', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get single log path using configurator or default.
+     */
+    protected function getSingleLogPath(): string
+    {
+        return $this->applyConfigurator('single_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+    }
+
+    /**
+     * Get daily log path using configurator or default.
+     */
+    protected function getDailyLogPath(): string
+    {
+        return $this->applyConfigurator('daily_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+    }
+
+    /**
+     * Get custom log path using configurator or default.
+     */
+    protected function getCustomLogPath(): string
+    {
+        return $this->applyConfigurator('custom_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/custom.log'));
     }
 }

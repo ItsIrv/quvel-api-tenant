@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
-use Exception;
-use Illuminate\Contracts\Redis\Factory as RedisFactory;
-use RuntimeException;
+use Closure;
 
 /**
  * Handles Redis configuration for tenants.
@@ -15,10 +13,6 @@ class RedisConfigPipe extends BasePipe
 {
     public function apply(): void
     {
-        if (!$this->isRedisAvailable()) {
-            return;
-        }
-
         $this->setMany([
             'database.redis.client',
             'database.redis.default.host',
@@ -29,47 +23,27 @@ class RedisConfigPipe extends BasePipe
         if ($this->tenant->hasConfig('database.redis.default.prefix')) {
             $prefix = $this->tenant->getConfig('database.redis.default.prefix');
         } else {
-            $prefix = "tenant_{$this->tenant->public_id}:";
+            $prefix = $this->getDefaultPrefix();
         }
 
         $this->config->set('database.redis.default.prefix', $prefix);
         $this->config->set('database.redis.cache.prefix', $prefix);
-
-        $this->refreshRedisConnections();
     }
 
     /**
-     * Check if Redis is available in the application.
+     * Configure default prefix generator.
      */
-    protected function isRedisAvailable(): bool
+    public static function withDefaultPrefix(Closure $callback): string
     {
-        return app()->bound(RedisFactory::class) &&
-            extension_loaded('redis') &&
-            class_exists(\Illuminate\Support\Facades\Redis::class);
+        static::registerConfigurator('default_prefix', $callback);
+        return static::class;
     }
 
     /**
-     * Refresh Redis connections to pick up new configuration.
+     * Get default prefix using configurator or default.
      */
-    protected function refreshRedisConnections(): void
+    protected function getDefaultPrefix(): string
     {
-        try {
-            if (!$this->isRedisAvailable()) {
-                return;
-            }
-
-            app()->extend(RedisFactory::class, function ($redisFactory, $app) {
-                return new \Illuminate\Redis\RedisManager(
-                    $app,
-                    $app['config']['database.redis.client'] ?? 'phpredis',
-                    $app['config']['database.redis'] ?? []
-                );
-            });
-
-            app()->forgetInstance(RedisFactory::class);
-            app()->forgetInstance('redis');
-        } catch (Exception $e) {
-            throw new RuntimeException('Failed to refresh Redis connections', 0, $e);
-        }
+        return $this->applyConfigurator('default_prefix', "tenant_{$this->tenant->public_id}:");
     }
 }

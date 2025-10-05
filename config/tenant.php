@@ -158,7 +158,7 @@ return [
     | Scoped Models Configuration
     |--------------------------------------------------------------------------
     |
-    | External models (from Laravel or packages) that should have tenant
+    | Models that should have tenant
     | scoping automatically applied. The package will add global scopes
     | and model events to enforce tenant isolation.
     |

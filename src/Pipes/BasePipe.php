@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Contracts\ConfigurationPipe;
 use Quvel\Tenant\Models\Tenant;
@@ -13,6 +14,11 @@ use Quvel\Tenant\Models\Tenant;
  */
 abstract class BasePipe implements ConfigurationPipe
 {
+    /**
+     * Configurator closures for customizing pipe behavior.
+     */
+    protected static array $configurators = [];
+
     protected Tenant $tenant;
     protected ConfigRepository $config;
 
@@ -20,6 +26,14 @@ abstract class BasePipe implements ConfigurationPipe
      * Apply the configuration changes. Override this in child classes.
      */
     abstract public function apply(): void;
+
+    /**
+     * Get the current tenant instance.
+     */
+    public function getTenant(): Tenant
+    {
+        return $this->tenant;
+    }
 
     /**
      * Handle method wrapper that sets context automatically.
@@ -64,5 +78,33 @@ abstract class BasePipe implements ConfigurationPipe
                 $this->setIfExists($tenantKey, $laravelKey);
             }
         }
+    }
+
+    /**
+     * Register a configurator closure.
+     */
+    public static function registerConfigurator(string $key, Closure $callback): void
+    {
+        static::$configurators[$key] = $callback;
+    }
+
+    /**
+     * Apply a configurator or return default value.
+     */
+    protected function applyConfigurator(string $key, string $defaultValue): string
+    {
+        if (isset(static::$configurators[$key])) {
+            return static::$configurators[$key]($this);
+        }
+
+        return $defaultValue;
+    }
+
+    /**
+     * Check if a configurator is registered.
+     */
+    protected function hasConfigurator(string $key): bool
+    {
+        return isset(static::$configurators[$key]);
     }
 }

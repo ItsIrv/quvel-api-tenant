@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Pipes;
 
+use Closure;
 use Exception;
 use Illuminate\Session\SessionManager;
 use Illuminate\Session\Store;
@@ -43,6 +44,13 @@ class SessionConfigPipe extends BasePipe
             $this->config->set('session.connection', $dbConnection);
         }
 
+        $hasDriverOverride = $this->tenant->hasConfig('session.driver');
+
+        if ($hasDriverOverride) {
+            $sessionManager = app(SessionManager::class);
+            $sessionManager->setDefaultDriver($this->config->get('session.driver'));
+        }
+
         if ($oldCookie !== $newCookie) {
             $this->updateSessionManager($newCookie);
         }
@@ -59,7 +67,7 @@ class SessionConfigPipe extends BasePipe
 
         $tenantForCookie = $this->tenant->parent ?? $this->tenant;
 
-        return "tenant_{$tenantForCookie->public_id}_session";
+        return $this->getDefaultCookieName($tenantForCookie);
     }
 
     /**
@@ -113,5 +121,27 @@ class SessionConfigPipe extends BasePipe
         } catch (Exception) {
             throw new RuntimeException('Failed to update session manager');
         }
+    }
+
+    /**
+     * Configure session cookie name generator.
+     */
+    public static function withDefaultCookieName(Closure $callback): string
+    {
+        static::registerConfigurator('default_cookie_name', $callback);
+
+        return static::class;
+    }
+
+    /**
+     * Get default cookie name using configurator or default.
+     */
+    protected function getDefaultCookieName($tenantForCookie): string
+    {
+        if ($this->hasConfigurator('default_cookie_name')) {
+            return static::$configurators['default_cookie_name']($this, $tenantForCookie);
+        }
+
+        return "tenant_{$tenantForCookie->public_id}_session";
     }
 }
