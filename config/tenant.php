@@ -241,4 +241,27 @@ return [
         // Enable tenant-aware database queue with automatic tenant_id column management
         'auto_tenant_id' => env('TENANT_QUEUE_AUTO_TENANT_ID', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware session behavior for Laravel's database session driver.
+    |
+    | When enabled, this automatically:
+    | 1. Adds tenant_id column to sessions table
+    | 2. Isolates sessions per tenant (users can't access other tenant sessions)
+    |
+    | Requirements:
+    | - Database session driver must be configured (config/session.php)
+    | - Sessions table must exist (run migrations after enabling this)
+    |
+    | Note: Only affects the 'database' session driver. Other drivers (file, redis)
+    | rely on different isolation mechanisms.
+    |
+    */
+    'sessions' => [
+        'auto_tenant_id' => env('TENANT_SESSIONS_AUTO_TENANT_ID', false),
+    ],
 ];

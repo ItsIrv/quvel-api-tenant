@@ -314,7 +314,6 @@ class TenantTableManager
     {
         $tables = config('tenant.tables', []);
 
-        // Auto-register queue tables if queue.auto_tenant_id is enabled
         if (config('tenant.queue.auto_tenant_id', false)) {
             $queueTables = [
                 'jobs' => [
@@ -331,8 +330,18 @@ class TenantTableManager
                 ],
             ];
 
-            // Merge with user tables, user config takes precedence
             $tables = array_merge($queueTables, $tables);
+        }
+
+        if (config('tenant.sessions.auto_tenant_id', false)) {
+            $sessionsTables = [
+                'sessions' => [
+                    'after' => 'id',
+                    'cascade_delete' => true,
+                ],
+            ];
+
+            $tables = array_merge($sessionsTables, $tables);
         }
 
         $this->registerMany($tables);

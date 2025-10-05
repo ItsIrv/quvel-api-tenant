@@ -11,8 +11,8 @@ class TenantDatabaseConnector extends DatabaseConnector
     /**
      * Establish a queue connection.
      *
-     * @param  array  $config
-     * @return Queue
+     * @param array $config
+     * @return TenantDatabaseQueue|Queue
      */
     public function connect(array $config): TenantDatabaseQueue|Queue
     {

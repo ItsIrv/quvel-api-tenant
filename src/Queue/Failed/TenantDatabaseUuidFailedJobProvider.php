@@ -31,7 +31,6 @@ class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
             'failed_at' => $failed_at,
         ];
 
-        // Add tenant_id if tenant context is available and enabled in config
         if (config('tenant.queue.auto_tenant_id', true)) {
             $tenant = app(TenantContext::class)->current();
             if ($tenant) {

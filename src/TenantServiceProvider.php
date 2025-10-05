@@ -11,6 +11,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
+use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +24,7 @@ use Quvel\Tenant\Managers\TenantResolverManager;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
+use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
 use Quvel\Tenant\Traits\HandlesTenantModels;
 use RuntimeException;
 
@@ -61,6 +63,7 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->registerTenantQueueConnector();
         $this->registerTenantBatchRepository();
+        $this->registerTenantSessionHandler();
     }
 
     /**
@@ -247,6 +250,26 @@ class TenantServiceProvider extends ServiceProvider
                     $app->make('db')->connection($app->config->get('queue.batching.database')),
                     $app->config->get('queue.batching.table', 'job_batches')
                 );
+            });
+        }
+    }
+
+    /**
+     * Register tenant-aware session handler if enabled.
+     */
+    protected function registerTenantSessionHandler(): void
+    {
+        if (config('tenant.sessions.auto_tenant_id', false)) {
+            $this->app->extend('session', function (SessionManager $manager, $app) {
+                $manager->extend('database', function () use ($app) {
+                    $table = $app['config']['session.table'];
+                    $lifetime = $app['config']['session.lifetime'];
+                    $connection = $app['db']->connection($app['config']['session.connection']);
+
+                    return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
+                });
+
+                return $manager;
             });
         }
     }
