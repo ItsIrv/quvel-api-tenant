@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Contracts\TenantResolver;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Managers\TenantTableManager;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
@@ -163,7 +163,7 @@ class TenantServiceProvider extends ServiceProvider
 
             $modelClass::creating(static function ($model) use ($provider) {
                 if (!isset($model->tenant_id) && !tenant_bypassed()) {
-                    $tenant = app(TenantContext::class)->current();
+                    $tenant = TenantContext::current();
 
                     if ($tenant && $provider->tenantUsesIsolatedDatabase($tenant)) {
                         return;
@@ -193,7 +193,7 @@ class TenantServiceProvider extends ServiceProvider
         }
 
         Context::dehydrating(static function ($context): void {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
 
             if ($tenant) {
                 $context->addHidden('tenant', $tenant);
@@ -204,7 +204,7 @@ class TenantServiceProvider extends ServiceProvider
             if ($context->hasHidden('tenant')) {
                 $tenant = $context->getHidden('tenant');
 
-                app(TenantContext::class)->setCurrent($tenant);
+                TenantContext::setCurrent($tenant);
 
                 app(ConfigurationPipeManager::class)->apply(
                     $tenant,

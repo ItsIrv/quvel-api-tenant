@@ -7,7 +7,7 @@ namespace Quvel\Tenant\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Exceptions\NoTenantException;
 use Quvel\Tenant\Events\TenantScopeApplied;
 use Quvel\Tenant\Events\TenantScopeNoTenantFound;
@@ -41,13 +41,11 @@ class TenantScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        $tenantContext = app(TenantContext::class);
-
-        if ($tenantContext->isBypassed()) {
+        if (TenantContext::isBypassed()) {
             return;
         }
 
-        $tenant = $tenantContext->current();
+        $tenant = TenantContext::current();
 
         if (!$tenant) {
             TenantScopeNoTenantFound::dispatch(get_class($model));

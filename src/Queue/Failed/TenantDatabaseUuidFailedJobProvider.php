@@ -4,7 +4,7 @@ namespace Quvel\Tenant\Queue\Failed;
 
 use Illuminate\Queue\Failed\DatabaseUuidFailedJobProvider;
 use Illuminate\Support\Carbon;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use Throwable;
 
 class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
@@ -32,7 +32,7 @@ class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
         ];
 
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;
             }

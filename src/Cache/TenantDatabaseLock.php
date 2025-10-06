@@ -4,7 +4,7 @@ namespace Quvel\Tenant\Cache;
 
 use Exception;
 use Illuminate\Cache\DatabaseLock;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 
 class TenantDatabaseLock extends DatabaseLock
 {
@@ -22,7 +22,7 @@ class TenantDatabaseLock extends DatabaseLock
         ];
 
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
 
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;
@@ -51,7 +51,7 @@ class TenantDatabaseLock extends DatabaseLock
                 ->where('owner', $this->owner);
 
             if (config('tenant.cache.auto_tenant_id', false)) {
-                $tenant = app(TenantContext::class)->current();
+                $tenant = TenantContext::current();
                 if ($tenant) {
                     $query = $query->where('tenant_id', $tenant->id);
                 }

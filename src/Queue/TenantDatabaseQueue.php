@@ -3,7 +3,7 @@
 namespace Quvel\Tenant\Queue;
 
 use Illuminate\Queue\DatabaseQueue;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 
 class TenantDatabaseQueue extends DatabaseQueue
 {
@@ -28,7 +28,7 @@ class TenantDatabaseQueue extends DatabaseQueue
         ];
 
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
 
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;

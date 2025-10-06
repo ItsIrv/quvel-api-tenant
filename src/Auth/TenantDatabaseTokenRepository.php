@@ -4,7 +4,7 @@ namespace Quvel\Tenant\Auth;
 
 use Illuminate\Auth\Passwords\DatabaseTokenRepository;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use SensitiveParameter;
 
 class TenantDatabaseTokenRepository extends DatabaseTokenRepository
@@ -37,7 +37,7 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
 
         // Add tenant scoping if enabled and tenant context is available
         if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
             }
@@ -58,7 +58,7 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
         $payload = parent::getPayload($email, $token);
 
         if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $payload['tenant_id'] = $tenant->id;
             }
@@ -78,7 +78,7 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
         $query = $this->getTable()->where('email', $email);
 
         if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
             }

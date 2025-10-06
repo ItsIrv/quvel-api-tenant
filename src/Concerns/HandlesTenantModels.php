@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Concerns;
 
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Events\TenantMismatchDetected;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
 
@@ -40,7 +40,7 @@ trait HandlesTenantModels
             return;
         }
 
-        $tenant = app(TenantContext::class)->current();
+        $tenant = TenantContext::current();
 
         if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
             return;

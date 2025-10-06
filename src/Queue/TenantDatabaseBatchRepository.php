@@ -6,7 +6,7 @@ use Illuminate\Bus\Batch;
 use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Str;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 
 class TenantDatabaseBatchRepository extends DatabaseBatchRepository
 {
@@ -34,7 +34,7 @@ class TenantDatabaseBatchRepository extends DatabaseBatchRepository
         ];
 
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;
             }

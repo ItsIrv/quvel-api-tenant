@@ -3,7 +3,7 @@
 namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\DatabaseSessionHandler;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 
 class TenantDatabaseSessionHandler extends DatabaseSessionHandler
 {
@@ -15,7 +15,7 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
         $payload = $this->getDefaultPayload($data);
 
         if (config('tenant.sessions.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $payload['tenant_id'] = $tenant->id;
             }
@@ -42,7 +42,7 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
         $session = $this->getQuery()->where('id', $sessionId);
 
         if (config('tenant.sessions.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $session = $session->where('tenant_id', $tenant->id);
             }
