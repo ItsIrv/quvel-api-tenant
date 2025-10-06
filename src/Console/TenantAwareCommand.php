@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Console;
 
 use Illuminate\Console\Command;
-use Quvel\Tenant\Console\Concerns\TenantAware;
+use Quvel\Tenant\Console\Concerns\HasTenantCommands;
 
 abstract class TenantAwareCommand extends Command
 {
-    use TenantAware;
+    use HasTenantCommands;
 
     public function __construct()
     {

@@ -20,7 +20,7 @@ use Symfony\Component\Console\Input\InputOption;
  *
  * @mixin Command
  */
-trait TenantAware
+trait HasTenantCommands
 {
     use BaseTenantAware;
     protected function addTenantOptions(): void

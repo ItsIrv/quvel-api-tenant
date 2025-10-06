@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Cache\Concerns;
 
-use Cache;
+use Illuminate\Support\Facades\Cache;
 use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
 
 /**
@@ -24,7 +24,7 @@ use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
  *    Cache::many($keys);
  *
  * 3. Conditional tenant scoping:
- *    $key = $this->shouldUseTenantCache()
+ *    $key = $this->hasTenantContext()
  *        ? $this->tenantKey('config')
  *        : 'global.config';
  *    Cache::put($key, $data);
@@ -34,7 +34,7 @@ use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
  *        return $this->performExpensiveCalculation();
  *    });
  */
-trait TenantAware
+trait HasTenantCache
 {
     use BaseTenantAware;
 
@@ -92,14 +92,6 @@ trait TenantAware
         return $tenant->getConfig('cache.default_ttl', $default);
     }
 
-    /**
-     * Check if the current operation should use tenant-scoped cache.
-     * Override this method to implement custom logic.
-     */
-    protected function shouldUseTenantCache(): bool
-    {
-        return $this->hasTenantContext();
-    }
 
     /**
      * Flush all cache for the current tenant.
