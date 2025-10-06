@@ -304,6 +304,9 @@ Enable automatic tenant isolation for Laravel services. Each service adds `tenan
 'sessions' => ['auto_tenant_id' => true],        // Database sessions
 'cache' => ['auto_tenant_id' => true],           // Database cache & locks
 'password_reset_tokens' => ['auto_tenant_id' => true], // Password resets
+'broadcasting' => ['auto_tenant_id' => true],    // Broadcast channels
+'mail' => ['auto_tenant_mail' => true],          // Mail configurations
+'filesystems' => ['auto_tenant_scoping' => true], // File storage
 'preserve_context' => true,                      // Queue context preservation
 ```
 
@@ -313,11 +316,21 @@ app(\Quvel\Tenant\Managers\TenantTableManager::class)->processTables();
 ```
 
 **What gets isolated:**
-- **Queues**: Jobs maintain tenant context automatically
-- **Sessions**: Complete session isolation between tenants
-- **Cache**: Cache entries and locks are tenant-scoped
+- **Queues**: Jobs maintain tenant context automatically (database driver)
+- **Sessions**: Complete session isolation (database, file, redis, memcached drivers)
+- **Cache**: Cache entries and locks are tenant-scoped (database driver) or prefixed (redis, memcached)
 - **Password Resets**: Tokens isolated per tenant
+- **Broadcasting**: Channel names automatically prefixed (log, pusher, reverb drivers)
+- **Mail**: Tenant-specific from addresses and configurations
+- **Filesystems**: File paths automatically scoped to tenant folders
 - **Context**: Tenant preserved across async operations
+
+**Supported Drivers:**
+- **Cache**: database, redis, memcached, file, array
+- **Sessions**: database, file, redis, memcached
+- **Broadcasting**: log, pusher, reverb
+- **Mail**: smtp, mailgun, postmark, ses, sendmail
+- **Filesystems**: local, s3, ftp, sftp
 
 No code changes required - everything works automatically once enabled.
 
