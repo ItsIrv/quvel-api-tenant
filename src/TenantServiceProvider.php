@@ -68,8 +68,11 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantBatchRepository();
         $this->registerTenantSessionHandler();
         $this->registerTenantCacheStore();
+        $this->registerTenantCacheManager();
         $this->registerTenantPasswordResetTokenRepository();
+        $this->registerTenantFilesystemManager();
         $this->registerTenantMailManager();
+        $this->registerFacades();
     }
 
     /**
@@ -276,6 +279,39 @@ class TenantServiceProvider extends ServiceProvider
                     return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
                 });
 
+                $manager->extend('file', function () use ($app) {
+                    $path = $app['config']['session.files'];
+                    $lifetime = $app['config']['session.lifetime'];
+
+                    return new Session\TenantFileSessionHandler(
+                        $path,
+                        $lifetime,
+                        $app->make(TenantContext::class)
+                    );
+                });
+
+                $manager->extend('redis', function () use ($app) {
+                    $cache = $app['cache']->store($app['config']['session.store']);
+                    $lifetime = $app['config']['session.lifetime'];
+
+                    return new Session\TenantRedisSessionHandler(
+                        $cache,
+                        $lifetime,
+                        $app->make(TenantContext::class)
+                    );
+                });
+
+                $manager->extend('memcached', function () use ($app) {
+                    $cache = $app['cache']->store($app['config']['session.store']);
+                    $lifetime = $app['config']['session.lifetime'];
+
+                    return new Session\TenantMemcachedSessionHandler(
+                        $cache,
+                        $lifetime,
+                        $app->make(TenantContext::class)
+                    );
+                });
+
                 return $manager;
             });
         }
@@ -302,6 +338,21 @@ class TenantServiceProvider extends ServiceProvider
                 });
 
                 return $manager;
+            });
+        }
+    }
+
+    /**
+     * Register tenant-aware cache manager for automatic key scoping across all drivers.
+     */
+    protected function registerTenantCacheManager(): void
+    {
+        if (config('tenant.cache.auto_tenant_scoping', false)) {
+            $this->app->extend('cache', function ($manager, $app) {
+                return new Cache\TenantCacheManager(
+                    $app,
+                    $app->make(TenantContext::class)
+                );
             });
         }
     }
@@ -359,6 +410,21 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register tenant-aware filesystem manager if enabled.
+     */
+    protected function registerTenantFilesystemManager(): void
+    {
+        if (config('tenant.filesystems.auto_tenant_scoping', false)) {
+            $this->app->extend('filesystem', function ($manager, $app) {
+                return new Filesystem\TenantFilesystemManager(
+                    $app,
+                    $app->make(TenantContext::class)
+                );
+            });
+        }
+    }
+
+    /**
      * Register tenant-aware mail manager if enabled.
      */
     protected function registerTenantMailManager(): void
@@ -371,5 +437,13 @@ class TenantServiceProvider extends ServiceProvider
                 );
             });
         }
+    }
+
+    /**
+     * Register tenant facades.
+     */
+    protected function registerFacades(): void
+    {
+        $this->app->alias(TenantContext::class, 'tenant.context');
     }
 }

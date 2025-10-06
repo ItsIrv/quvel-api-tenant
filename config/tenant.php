@@ -360,4 +360,23 @@ return [
     'mail' => [
         'auto_tenant_mail' => env('TENANT_MAIL_AUTO_TENANT', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filesystem Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware filesystem behavior.
+    |
+    | When auto_tenant_scoping is enabled, ALL filesystem operations through
+    | the Storage facade automatically prefix paths with tenant folders
+    | ensuring complete file isolation between tenants.
+    |
+    | For manual control, use the HasTenantStorage trait in your classes
+    | or use the tenant_storage_*() helper functions for selective scoping.
+    |
+    */
+    'filesystems' => [
+        'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', false),
+    ],
 ];
