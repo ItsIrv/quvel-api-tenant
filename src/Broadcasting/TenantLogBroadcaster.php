@@ -25,6 +25,7 @@ class TenantLogBroadcaster extends LogBroadcaster
     public function broadcast(array $channels, $event, array $payload = []): void
     {
         $channels = $this->formatChannels($channels);
+
         parent::broadcast($channels, $event, $payload);
     }
 
