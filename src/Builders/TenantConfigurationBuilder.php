@@ -22,7 +22,7 @@ class TenantConfigurationBuilder
     /**
      * Set a config value using dot notation.
      */
-    protected function setConfig(string $key, mixed $value): self
+    public function setConfig(string $key, mixed $value): self
     {
         data_set($this->config, $key, $value);
 

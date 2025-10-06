@@ -29,12 +29,6 @@ class CoreConfigPipe extends BasePipe
             'frontend.url',
             'frontend.internal_api_url',
             'frontend.capacitor_scheme',
-            'broadcasting.connections.pusher.key',
-            'broadcasting.connections.pusher.secret',
-            'broadcasting.connections.pusher.app_id',
-            'broadcasting.connections.pusher.options.cluster',
-            'recaptcha_secret_key',
-            'recaptcha_site_key',
         ]);
 
         $this->configureCors();

@@ -379,4 +379,19 @@ return [
     'filesystems' => [
         'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Interface Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the optional admin interface for tenant management.
+    |
+    | When enable_ui is true, admin routes are registered for creating and
+    | managing tenants. This should be disabled in production for security.
+    |
+    */
+    'admin' => [
+        'enable_ui' => env('TENANT_ADMIN_ENABLE_UI', false),
+    ],
 ];

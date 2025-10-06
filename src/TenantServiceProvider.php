@@ -61,6 +61,10 @@ class TenantServiceProvider extends ServiceProvider
             return new ConfigurationPipeManager();
         });
 
+        $this->app->singleton(Services\TenantPresetService::class, function () {
+            return new Services\TenantPresetService();
+        });
+
         $this->app->scoped(TenantContext::class, function () {
             return new TenantContext();
         });
@@ -97,6 +101,11 @@ class TenantServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../database/migrations/' => database_path('migrations'),
             ], 'tenant-migrations');
+        }
+
+        // Register view namespace for admin UI
+        if (config('tenant.admin.enable_ui', false)) {
+            $this->loadViewsFrom(__DIR__.'/../resources/views', 'tenant');
         }
     }
 
@@ -145,6 +154,12 @@ class TenantServiceProvider extends ServiceProvider
         Route::prefix('tenant-info')
             ->name('tenant.')
             ->group(__DIR__.'/../routes/tenant.php');
+
+        // Register admin routes if enabled
+        if (config('tenant.admin.enable_ui', false)) {
+            Route::middleware(config('tenant.middleware.internal_request'))
+                ->group(__DIR__.'/../routes/tenant-admin.php');
+        }
     }
 
     /**
