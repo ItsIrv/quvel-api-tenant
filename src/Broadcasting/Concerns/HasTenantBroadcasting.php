@@ -56,31 +56,14 @@ trait HasTenantBroadcasting
      */
     protected function tenantChannel(object|string $channel): object|string
     {
-        $tenant = $this->getCurrentTenant();
-        if (!$tenant) {
-            return $channel;
-        }
-
         $channelName = is_object($channel) ? $channel->name : $channel;
-        $prefix = "tenant.$tenant->public_id.";
-
-        if (str_starts_with($channelName, 'tenant.')) {
-            return $channel;
-        }
-
-        if (str_starts_with($channelName, 'presence-')) {
-            $newName = 'presence-' . $prefix . substr($channelName, 9);
-        } elseif (str_starts_with($channelName, 'private-')) {
-            $newName = 'private-' . $prefix . substr($channelName, 8);
-        } else {
-            $newName = $prefix . $channelName;
-        }
+        $prefixedName = tenant_channel($channelName);
 
         if (is_object($channel)) {
-            return new $channel($newName);
+            return new $channel($prefixedName);
         }
 
-        return $newName;
+        return $prefixedName;
     }
 
     /**
@@ -91,7 +74,7 @@ trait HasTenantBroadcasting
      */
     protected function tenantPresenceChannel(string $channel): string
     {
-        return $this->tenantChannel('presence-' . $channel);
+        return tenant_channel('presence-' . $channel);
     }
 
     /**
@@ -102,7 +85,7 @@ trait HasTenantBroadcasting
      */
     protected function tenantPrivateChannel(string $channel): string
     {
-        return $this->tenantChannel('private-' . $channel);
+        return tenant_channel('private-' . $channel);
     }
 
 }

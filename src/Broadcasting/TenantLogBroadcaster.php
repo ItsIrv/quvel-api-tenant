@@ -37,6 +37,10 @@ class TenantLogBroadcaster extends LogBroadcaster
             $channelName = is_object($channel) ? $channel->name : $channel;
             $prefixedName = tenant_channel($channelName);
 
+            if (str_starts_with($prefixedName, 'private-')) {
+                $prefixedName = substr($prefixedName, 8);
+            }
+
             return is_object($channel) ?
                 new $channel($prefixedName) :
                 $prefixedName;

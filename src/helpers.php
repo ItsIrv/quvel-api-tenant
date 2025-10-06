@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Mail\Mailer;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Models\Tenant;
 
 if (!function_exists('tenant')) {
@@ -12,7 +12,7 @@ if (!function_exists('tenant')) {
      */
     function tenant(): ?Tenant
     {
-        return app(TenantContext::class)->current();
+        return TenantContext::current();
     }
 }
 
@@ -52,7 +52,7 @@ if (!function_exists('tenant_bypassed')) {
      */
     function tenant_bypassed(): bool
     {
-        return app(TenantContext::class)->isBypassed();
+        return TenantContext::isBypassed();
     }
 }
 
@@ -62,14 +62,13 @@ if (!function_exists('with_tenant')) {
      */
     function with_tenant(?Tenant $tenant, callable $callback): mixed
     {
-        $context = app(TenantContext::class);
-        $original = $context->current();
+        $original = TenantContext::current();
 
         try {
-            $context->setCurrent($tenant);
+            TenantContext::setCurrent($tenant);
             return $callback();
         } finally {
-            $context->setCurrent($original);
+            TenantContext::setCurrent($original);
         }
     }
 }
@@ -80,15 +79,14 @@ if (!function_exists('without_tenant')) {
      */
     function without_tenant(callable $callback): mixed
     {
-        $context = app(TenantContext::class);
-        $wasBypassed = $context->isBypassed();
+        $wasBypassed = TenantContext::isBypassed();
 
         try {
-            $context->bypass();
+            TenantContext::bypass();
             return $callback();
         } finally {
             if (!$wasBypassed) {
-                $context->clearBypassed();
+                TenantContext::clearBypassed();
             }
         }
     }
@@ -108,7 +106,8 @@ if (!function_exists('tenant_channel')) {
 
         $prefix = "tenant.$tenant->public_id.";
 
-        if (str_starts_with($channel, 'tenant.')) {
+        if (str_starts_with($channel, 'tenant.') ||
+            str_contains($channel, "tenant.$tenant->public_id.")) {
             return $channel;
         }
 
@@ -220,5 +219,333 @@ if (!function_exists('tenant_model')) {
     function tenant_model(): mixed
     {
         return app(config('tenant.model'));
+    }
+}
+
+if (!function_exists('tenant_event')) {
+    /**
+     * Dispatch an event with tenant context.
+     */
+    function tenant_event(object|string $event, array $payload = [], bool $halt = false): ?array
+    {
+        return event($event, $payload, $halt);
+    }
+}
+
+if (!function_exists('tenant_event_name')) {
+    /**
+     * Get a tenant-scoped event name.
+     */
+    function tenant_event_name(string $eventName): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $eventName;
+        }
+
+        return "tenant.$tenant->public_id.$eventName";
+    }
+}
+
+if (!function_exists('with_tenant_events')) {
+    /**
+     * Execute callback with tenant-aware event context.
+     */
+    function with_tenant_events(?Tenant $tenant, callable $callback): mixed
+    {
+        return with_tenant($tenant, $callback);
+    }
+}
+
+if (!function_exists('tenant_event_data')) {
+    /**
+     * Get tenant context data for events.
+     */
+    function tenant_event_data(): array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return [];
+        }
+
+        return [
+            'tenant_id' => $tenant->id,
+            'tenant_public_id' => $tenant->public_id,
+            'tenant_name' => $tenant->name,
+        ];
+    }
+}
+
+if (!function_exists('tenant_cache_key')) {
+    /**
+     * Get a tenant-scoped cache key.
+     */
+    function tenant_cache_key(string $key): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $key;
+        }
+
+        return "tenant.$tenant->public_id.$key";
+    }
+}
+
+if (!function_exists('tenant_cache_tags')) {
+    /**
+     * Get tenant-scoped cache tags.
+     */
+    function tenant_cache_tags(array $tags = []): array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $tags;
+        }
+
+        $tenantTag = "tenant.$tenant->public_id";
+
+        return array_merge([$tenantTag], $tags);
+    }
+}
+
+if (!function_exists('tenant_cache_remember')) {
+    /**
+     * Remember a value in cache with tenant scoping.
+     */
+    function tenant_cache_remember(string $key, $ttl, Closure $callback): mixed
+    {
+        return Cache::remember(tenant_cache_key($key), $ttl, $callback);
+    }
+}
+
+if (!function_exists('tenant_cache_get')) {
+    /**
+     * Get a value from cache with tenant scoping.
+     */
+    function tenant_cache_get(string $key, mixed $default = null): mixed
+    {
+        return Cache::get(tenant_cache_key($key), $default);
+    }
+}
+
+if (!function_exists('tenant_cache_put')) {
+    /**
+     * Put a value in cache with tenant scoping.
+     */
+    function tenant_cache_put(string $key, mixed $value, $ttl = null): bool
+    {
+        return Cache::put(tenant_cache_key($key), $value, $ttl);
+    }
+}
+
+if (!function_exists('tenant_cache_forget')) {
+    /**
+     * Remove a value from cache with tenant scoping.
+     */
+    function tenant_cache_forget(string $key): bool
+    {
+        return Cache::forget(tenant_cache_key($key));
+    }
+}
+
+if (!function_exists('tenant_cache_flush')) {
+    /**
+     * Flush all cache for the current tenant.
+     * Only works with tag-capable cache drivers (Redis, Memcached).
+     */
+    function tenant_cache_flush(): bool
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return false;
+        }
+
+        // Check if the cache driver supports tags
+        $driver = config('cache.default');
+        $tagCapableDrivers = ['redis', 'memcached'];
+
+        if (!in_array($driver, $tagCapableDrivers, true)) {
+            return false;
+        }
+
+        return Cache::tags(["tenant.$tenant->public_id"])->flush();
+    }
+}
+
+if (!function_exists('tenant_notification_channels')) {
+    /**
+     * Get tenant-specific notification channels.
+     */
+    function tenant_notification_channels(array $defaultChannels): array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $defaultChannels;
+        }
+
+        // Get tenant-specific notification preferences
+        $enabledChannels = $tenant->getConfig('notifications.channels', $defaultChannels);
+
+        // Filter to only enabled channels
+        return array_intersect($defaultChannels, $enabledChannels);
+    }
+}
+
+if (!function_exists('tenant_notification_enabled')) {
+    /**
+     * Check if a specific notification type is enabled for the tenant.
+     */
+    function tenant_notification_enabled(string $type): bool
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return true; // Default to enabled if no tenant context
+        }
+
+        return $tenant->getConfig("notifications.types.$type.enabled", true);
+    }
+}
+
+if (!function_exists('tenant_notification_preferences')) {
+    /**
+     * Get tenant-specific notification preferences.
+     */
+    function tenant_notification_preferences(string $type): array
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return [];
+        }
+
+        return $tenant->getConfig("notifications.preferences.$type", []);
+    }
+}
+
+if (!function_exists('tenant_notification_data')) {
+    /**
+     * Get tenant context data for database notifications.
+     */
+    function tenant_notification_data(array $data = []): array
+    {
+        $tenantData = tenant_event_data(); // Reuse the event data helper
+
+        return array_merge($data, [
+            'tenant_context' => $tenantData,
+        ]);
+    }
+}
+
+if (!function_exists('tenant_storage_path')) {
+    /**
+     * Get a tenant-scoped storage path.
+     */
+    function tenant_storage_path(string $path = ''): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return $path;
+        }
+
+        $tenantFolder = "tenant-$tenant->public_id";
+
+        return $path ? "$tenantFolder/$path" : $tenantFolder;
+    }
+}
+
+if (!function_exists('tenant_storage_disk')) {
+    /**
+     * Get the tenant-specific disk name.
+     */
+    function tenant_storage_disk(): string
+    {
+        $tenant = tenant();
+
+        if (!$tenant) {
+            return config('filesystems.default');
+        }
+
+        return $tenant->getConfig('filesystems.default', config('filesystems.default'));
+    }
+}
+
+if (!function_exists('tenant_storage_put')) {
+    /**
+     * Store a file in tenant-scoped storage.
+     */
+    function tenant_storage_put(string $path, mixed $contents, mixed $options = []): bool
+    {
+        return Storage::disk(tenant_storage_disk())->put(tenant_storage_path($path), $contents, $options);
+    }
+}
+
+if (!function_exists('tenant_storage_get')) {
+    /**
+     * Get the contents of a file from tenant-scoped storage.
+     */
+    function tenant_storage_get(string $path): string
+    {
+        return Storage::disk(tenant_storage_disk())->get(tenant_storage_path($path));
+    }
+}
+
+if (!function_exists('tenant_storage_exists')) {
+    /**
+     * Check if a file exists in tenant-scoped storage.
+     */
+    function tenant_storage_exists(string $path): bool
+    {
+        return Storage::disk(tenant_storage_disk())->exists(tenant_storage_path($path));
+    }
+}
+
+if (!function_exists('tenant_storage_delete')) {
+    /**
+     * Delete a file from tenant-scoped storage.
+     */
+    function tenant_storage_delete(string|array $paths): bool
+    {
+        $disk = Storage::disk(tenant_storage_disk());
+
+        if (is_array($paths)) {
+            $tenantPaths = array_map('tenant_storage_path', $paths);
+            return $disk->delete($tenantPaths);
+        }
+
+        return $disk->delete(tenant_storage_path($paths));
+    }
+}
+
+if (!function_exists('tenant_storage_url')) {
+    /**
+     * Get a URL for a file in tenant-scoped storage.
+     */
+    function tenant_storage_url(string $path): string
+    {
+        return Storage::disk(tenant_storage_disk())->url(tenant_storage_path($path));
+    }
+}
+
+if (!function_exists('tenant_storage_temporary_url')) {
+    /**
+     * Get a temporary URL for a file in tenant-scoped storage.
+     */
+    function tenant_storage_temporary_url(string $path, DateTimeInterface $expiration, array $options = []): string
+    {
+        $disk = Storage::disk(tenant_storage_disk());
+
+        if (!method_exists($disk, 'temporaryUrl')) {
+            throw new RuntimeException("Disk [" . tenant_storage_disk() . "] does not support temporary URLs.");
+        }
+
+        return $disk->temporaryUrl(tenant_storage_path($path), $expiration, $options);
     }
 }

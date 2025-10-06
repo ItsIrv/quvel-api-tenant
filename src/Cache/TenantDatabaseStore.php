@@ -6,21 +6,20 @@ use Illuminate\Cache\DatabaseStore;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;
 use Quvel\Tenant\Facades\TenantContext;
-use RuntimeException;
 
 class TenantDatabaseStore extends DatabaseStore implements LockProvider
 {
     /**
      * Store an item in the cache for a given number of seconds.
      *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  int  $seconds
+     * @param string $key
+     * @param mixed $value
+     * @param int $seconds
      * @return bool
      */
     public function put($key, $value, $seconds)
     {
-        $key = $this->prefix.$key;
+        $key = $this->prefix . $key;
         $value = $this->serialize($value);
         $expiration = $this->getTime() + $seconds;
 
@@ -36,12 +35,12 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;
             } else {
-                throw new RuntimeException('Cache operation requires tenant context but none is available.');
+                $record['tenant_id'] = null;
             }
         }
 
         try {
-            return (bool) $this->table()->upsert($record, ['key'], ['value', 'expiration']);
+            return (bool)$this->table()->upsert($record, ['key'], ['value', 'expiration']);
         } catch (Exception $e) {
             $this->handleWriteException($e);
 
@@ -52,12 +51,12 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     /**
      * Retrieve an item from the cache by key.
      *
-     * @param  string|array  $key
+     * @param string|array $key
      * @return mixed
      */
     public function get($key)
     {
-        $prefixed = $this->prefix.$key;
+        $prefixed = $this->prefix . $key;
 
         $cache = $this->table()->where('key', '=', $prefixed);
 
@@ -66,7 +65,8 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
             if ($tenant) {
                 $cache = $cache->where('tenant_id', $tenant->id);
             } else {
-                throw new RuntimeException('Cache operation requires tenant context but none is available.');
+                // For operations without tenant context, only show system-level cache
+                $cache = $cache->whereNull('tenant_id');
             }
         }
 
@@ -88,19 +88,20 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     /**
      * Remove an item from the cache.
      *
-     * @param  string  $key
+     * @param string $key
      * @return bool
      */
     public function forget($key)
     {
-        $query = $this->table()->where('key', '=', $this->prefix.$key);
+        $query = $this->table()->where('key', '=', $this->prefix . $key);
 
         if (config('tenant.cache.auto_tenant_id', false)) {
             $tenant = TenantContext::current();
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
             } else {
-                throw new RuntimeException('Cache operation requires tenant context but none is available.');
+                // For operations without tenant context, only affect system-level cache
+                $query = $query->whereNull('tenant_id');
             }
         }
 
@@ -122,7 +123,8 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
             } else {
-                throw new RuntimeException('Cache operation requires tenant context but none is available.');
+                // For operations without tenant context, only flush system-level cache
+                $query = $query->whereNull('tenant_id');
             }
         }
 
@@ -132,23 +134,23 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     /**
      * Get a lock instance.
      *
-     * @param  string  $name
-     * @param  int  $seconds
-     * @param  string|null  $owner
+     * @param string $name
+     * @param int $seconds
+     * @param string|null $owner
      * @return Lock
      */
     public function lock($name, $seconds = 0, $owner = null)
     {
         return new TenantDatabaseLock(
-            $this->connection, $this->lockTable, $this->prefix.$name, $seconds, $owner
+            $this->connection, $this->lockTable, $this->prefix . $name, $seconds, $owner
         );
     }
 
     /**
      * Restore a lock instance using the owner identifier.
      *
-     * @param  string  $name
-     * @param  string  $owner
+     * @param string $name
+     * @param string $owner
      * @return Lock
      */
     public function restoreLock($name, $owner)
