@@ -7,7 +7,8 @@ namespace Quvel\Tenant\Console\Concerns;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
+use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -21,6 +22,7 @@ use Symfony\Component\Console\Input\InputOption;
  */
 trait TenantAware
 {
+    use BaseTenantAware;
     protected function addTenantOptions(): void
     {
         $this->getDefinition()->addOptions([
@@ -95,11 +97,10 @@ trait TenantAware
 
     protected function executeWithTenant($tenant, $callback): int
     {
-        $tenantContext = app(TenantContext::class);
-        $originalTenant = $tenantContext->current();
+        $originalTenant = TenantContext::current();
 
         try {
-            $tenantContext->setCurrent($tenant);
+            TenantContext::setCurrent($tenant);
 
             if ($this->shouldApplyTenantConfig()) {
                 app(ConfigurationPipeManager::class)->apply($tenant, app(ConfigRepository::class));
@@ -117,7 +118,7 @@ trait TenantAware
             }
             return 1;
         } finally {
-            $tenantContext->setCurrent($originalTenant);
+            TenantContext::setCurrent($originalTenant);
         }
     }
 
@@ -142,10 +143,6 @@ trait TenantAware
         return $tenant;
     }
 
-    protected function getCurrentTenant(): mixed
-    {
-        return app(TenantContext::class)->current();
-    }
 
     protected function requiresTenant(): bool
     {

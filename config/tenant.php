@@ -252,18 +252,27 @@ return [
     | Session Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure tenant-aware session behavior for Laravel's database session driver.
+    | Configure tenant-aware session behavior for Laravel session drivers.
     |
     | When enabled, this automatically:
-    | 1. Adds tenant_id column to sessions table
-    | 2. Isolates sessions per tenant (users can't access other tenant sessions)
+    | 1. Database: Adds tenant_id column and scopes queries by tenant
+    | 2. File: Creates tenant-specific subdirectories for session files
+    | 3. Redis: Prefixes session keys with tenant ID
+    | 4. Registers ValidateTenantSession middleware for cross-tenant protection
+    |
+    | Supported & Tested Drivers: database, file, redis
+    | Unsupported: memcached (implementation exists but untested)
+    |
+    | Security Features:
+    | - Prevents cross-tenant session access
+    | - Validates session tenant_id matches current tenant
+    | - Automatically invalidates sessions from different tenants
+    | - Logs out users when tenant context changes
     |
     | Requirements:
-    | - Database session driver must be configured (config/session.php)
-    | - Sessions table must exist (run migrations after enabling this)
-    |
-    | Note: Only affects the 'database' session driver. Other drivers (file, redis)
-    | rely on different isolation mechanisms.
+    | - Session driver must be configured (config/session.php)
+    | - For database: sessions table must exist with tenant_id column
+    | - Add 'tenant.session' middleware to protected routes
     |
     */
     'sessions' => [

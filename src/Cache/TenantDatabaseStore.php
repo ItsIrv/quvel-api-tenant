@@ -3,8 +3,10 @@
 namespace Quvel\Tenant\Cache;
 
 use Illuminate\Cache\DatabaseStore;
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockProvider;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Facades\TenantContext;
+use RuntimeException;
 
 class TenantDatabaseStore extends DatabaseStore implements LockProvider
 {
@@ -28,17 +30,18 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
             'expiration' => $expiration,
         ];
 
-        // Add tenant_id if tenant context is available
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
+
             if ($tenant) {
                 $record['tenant_id'] = $tenant->id;
+            } else {
+                throw new RuntimeException('Cache operation requires tenant context but none is available.');
             }
         }
 
         try {
-            // Use upsert to handle duplicates properly
-            return $this->table()->upsert($record, ['key'], ['value', 'expiration']);
+            return (bool) $this->table()->upsert($record, ['key'], ['value', 'expiration']);
         } catch (Exception $e) {
             $this->handleWriteException($e);
 
@@ -58,26 +61,25 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         $cache = $this->table()->where('key', '=', $prefixed);
 
-        // Add tenant scoping if enabled and tenant context is available
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $cache = $cache->where('tenant_id', $tenant->id);
+            } else {
+                throw new RuntimeException('Cache operation requires tenant context but none is available.');
             }
         }
 
         $cache = $cache->first();
 
-        // If we don't have a value or it's expired, return null
         if (is_null($cache)) {
-            return;
+            return null;
         }
 
-        // If the expiration time is in the past, delete the entry and return null
         if ($this->getTime() >= $cache->expiration) {
             $this->forget($key);
 
-            return;
+            return null;
         }
 
         return $this->unserialize($cache->value);
@@ -93,11 +95,12 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     {
         $query = $this->table()->where('key', '=', $this->prefix.$key);
 
-        // Add tenant scoping if enabled and tenant context is available
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
+            } else {
+                throw new RuntimeException('Cache operation requires tenant context but none is available.');
             }
         }
 
@@ -113,11 +116,13 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     {
         $query = $this->table();
 
-        // Add tenant scoping if enabled and tenant context is available
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $tenant = app(TenantContext::class)->current();
+            $tenant = TenantContext::current();
+
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
+            } else {
+                throw new RuntimeException('Cache operation requires tenant context but none is available.');
             }
         }
 
@@ -130,7 +135,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
      * @param  string  $name
      * @param  int  $seconds
      * @param  string|null  $owner
-     * @return \Illuminate\Contracts\Cache\Lock
+     * @return Lock
      */
     public function lock($name, $seconds = 0, $owner = null)
     {
@@ -144,7 +149,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
      *
      * @param  string  $name
      * @param  string  $owner
-     * @return \Illuminate\Contracts\Cache\Lock
+     * @return Lock
      */
     public function restoreLock($name, $owner)
     {

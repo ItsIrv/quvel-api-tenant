@@ -7,7 +7,6 @@ namespace Quvel\Tenant\Concerns;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Models\Tenant;
 
 /**
@@ -24,6 +23,8 @@ use Quvel\Tenant\Models\Tenant;
  */
 trait HasTenant
 {
+    use TenantAware;
+
     /**
      * Get the tenant relationship.
      */
@@ -34,21 +35,6 @@ trait HasTenant
         return $this->belongsTo($tenantModel, 'tenant_id');
     }
 
-    /**
-     * Get the current tenant from context.
-     */
-    public function getCurrentTenant()
-    {
-        return app(TenantContext::class)->current();
-    }
-
-    /**
-     * Get the current tenant ID from context.
-     */
-    public function getCurrentTenantId(): ?int
-    {
-        return $this->getCurrentTenant()?->id;
-    }
 
     /**
      * Check if this model belongs to the current tenant.
