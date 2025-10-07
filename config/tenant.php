@@ -114,17 +114,17 @@ return [
     */
     'pipes' => [
         \Quvel\Tenant\Pipes\CoreConfigPipe::class,
-        \Quvel\Tenant\Pipes\BroadcastingConfigPipe::class,
-        \Quvel\Tenant\Pipes\CacheConfigPipe::class,
-        \Quvel\Tenant\Pipes\DatabaseConfigPipe::class,
-        \Quvel\Tenant\Pipes\FilesystemConfigPipe::class,
+        \Quvel\Tenant\Pipes\ServicesConfigPipe::class,
         \Quvel\Tenant\Pipes\LoggingConfigPipe::class,
         \Quvel\Tenant\Pipes\MailConfigPipe::class,
-        \Quvel\Tenant\Pipes\QueueConfigPipe::class,
         \Quvel\Tenant\Pipes\RedisConfigPipe::class,
+        \Quvel\Tenant\Pipes\BroadcastingConfigPipe::class,
+        \Quvel\Tenant\Pipes\DatabaseConfigPipe::class,
+        \Quvel\Tenant\Pipes\QueueConfigPipe::class,
+        \Quvel\Tenant\Pipes\CacheConfigPipe::class,
+        \Quvel\Tenant\Pipes\FilesystemConfigPipe::class,
         \Quvel\Tenant\Pipes\SessionConfigPipe::class,
-        \Quvel\Tenant\Pipes\ServicesConfigPipe::class,
-        \Quvel\Tenant\Pipes\CoreServicesScopingPipe::class,
+        \Quvel\Tenant\Pipes\QuvelCoreConfigPipe::class,
 
         // Add your custom pipes here
     ],

@@ -291,7 +291,7 @@ public function __invoke($tenant): TenantConfigResource
     \Quvel\Tenant\Pipes\RedisConfigPipe::class,
     \Quvel\Tenant\Pipes\SessionConfigPipe::class,
     \Quvel\Tenant\Pipes\ServicesConfigPipe::class,
-    \Quvel\Tenant\Pipes\CoreServicesScopingPipe::class,
+    \Quvel\Tenant\Pipes\QuvelCoreConfigPipe::class,
 
     // Add your custom pipes here
 ],
@@ -323,7 +323,7 @@ foreach ($this->pipes as $pipe) {
 - **RedisConfigPipe**: Redis connections with tenant prefixing
 - **SessionConfigPipe**: Session drivers and tenant isolation
 - **ServicesConfigPipe**: Third-party APIs (Stripe, PayPal, payment gateways)
-- **CoreServicesScopingPipe**: Enable tenant scoping for various Laravel services
+- **QuvelCoreConfigPipe**: Enable tenant scoping for the Quvel Core package
 
 **Pipe Implementation:**
 ```php
