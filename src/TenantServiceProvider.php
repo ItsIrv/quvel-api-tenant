@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant;
 
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Bus\BatchFactory;
 use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Cache\CacheManager;
@@ -61,10 +62,6 @@ class TenantServiceProvider extends ServiceProvider
             return new ConfigurationPipeManager();
         });
 
-        $this->app->singleton(Services\TenantPresetService::class, function () {
-            return new Services\TenantPresetService();
-        });
-
         $this->app->scoped(TenantContext::class, function () {
             return new TenantContext();
         });
@@ -101,10 +98,14 @@ class TenantServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../database/migrations/' => database_path('migrations'),
             ], 'tenant-migrations');
+
+            $this->publishes([
+                __DIR__.'/../routes/tenant.php' => base_path('routes/tenant-info.php'),
+                __DIR__.'/../routes/tenant-admin.php' => base_path('routes/tenant-admin.php'),
+            ], 'tenant-routes');
         }
 
-        // Register view namespace for admin UI
-        if (config('tenant.admin.enable_ui', false)) {
+        if (config('tenant.admin.enable', false)) {
             $this->loadViewsFrom(__DIR__.'/../resources/views', 'tenant');
         }
     }
@@ -151,13 +152,17 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerRoutes(): void
     {
-        Route::prefix('tenant-info')
-            ->name('tenant.')
-            ->group(__DIR__.'/../routes/tenant.php');
+        if (config('tenant.api.enabled', true)) {
+            Route::prefix(config('tenant.api.prefix', 'tenant-info'))
+                ->name(config('tenant.api.name', 'tenant.'))
+                ->middleware(config('tenant.api.middleware', []))
+                ->group(__DIR__.'/../routes/tenant.php');
+        }
 
-        // Register admin routes if enabled
-        if (config('tenant.admin.enable_ui', false)) {
-            Route::middleware(config('tenant.middleware.internal_request'))
+        if (config('tenant.admin.enable', false)) {
+            Route::prefix(config('tenant.admin.prefix', 'tenant-admin'))
+                ->name(config('tenant.admin.name', 'tenant.admin.'))
+                ->middleware(config('tenant.admin.middleware', ['tenant.is-internal']))
                 ->group(__DIR__.'/../routes/tenant-admin.php');
         }
     }
@@ -245,7 +250,7 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware failed job provider if enabled.
+     * Register a tenant-aware failed job provider if enabled.
      */
     protected function registerTenantFailedJobProvider(): void
     {
@@ -265,7 +270,7 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware batch repository if enabled.
+     * Register a tenant-aware batch repository if enabled.
      */
     protected function registerTenantBatchRepository(): void
     {
@@ -334,12 +339,12 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware cache store if enabled.
+     * Register a tenant-aware cache store if enabled.
      */
     protected function registerTenantCacheStore(): void
     {
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $this->app->extend('cache', function (CacheManager $manager, $app) {
+            $this->app->extend('cache', function (CacheManager $manager) {
                 $manager->extend('database', function ($app, $config) use ($manager) {
                     $connection = $app['db']->connection($config['connection'] ?? null);
                     $table = $config['table'];
@@ -359,7 +364,7 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware cache manager for automatic key scoping across all drivers.
+     * Register a tenant-aware cache manager for automatic key scoping across all drivers.
      */
     protected function registerTenantCacheManager(): void
     {
@@ -386,14 +391,14 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware broadcasting manager if enabled.
+     * Register a tenant-aware broadcasting manager if enabled.
      */
     protected function registerTenantBroadcastingManager(): void
     {
         if (config('tenant.broadcasting.auto_tenant_id', true)) {
-            $manager = $this->app->make(\Illuminate\Broadcasting\BroadcastManager::class);
+            $manager = $this->app->make(BroadcastManager::class);
 
-            $manager->extend('log', function ($app, $config) {
+            $manager->extend('log', function ($app) {
                 return new Broadcasting\TenantLogBroadcaster(
                     $app->make('log'),
                     $app->make(TenantContext::class)

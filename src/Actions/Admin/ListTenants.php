@@ -1,0 +1,21 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Quvel\Tenant\Actions\Admin;
+
+use Quvel\Tenant\Models\Tenant;
+
+class ListTenants
+{
+    /**
+     * List all tenants.
+     */
+    public function execute(): array
+    {
+        return Tenant::select(['id', 'public_id', 'name', 'identifier', 'config', 'created_at'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->toArray();
+    }
+}

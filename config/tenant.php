@@ -99,6 +99,10 @@ return [
     |
     */
     'api' => [
+        'enabled' => env('TENANT_API_ENABLED', true),
+        'prefix' => env('TENANT_API_PREFIX', 'tenant-info'),
+        'name' => env('TENANT_API_NAME', 'tenant.'),
+        'middleware' => [],
         'allow_public_config' => env('TENANT_ALLOW_PUBLIC_CONFIG', false),
         'allow_protected_config' => env('TENANT_ALLOW_PROTECTED_CONFIG', false),
     ],
@@ -109,7 +113,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configuration pipes that apply tenant config to Laravel's runtime config.
-    | Pipes are executed in array order - reorder to change execution sequence.
+    | Pipes are executed in array order - reorder to change an execution sequence.
     |
     */
     'pipes' => [
@@ -134,7 +138,7 @@ return [
     | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |
-    | Define which tables should have tenant_id column added.
+    | Define which tables should have a tenant_id column added.
     | You can use:
     | - true: Use default settings
     | - array: Custom configuration
@@ -291,7 +295,7 @@ return [
     | 2. Isolates cache entries per tenant (tenants can't access other tenant cache)
     |
     | Requirements:
-    | - Database cache driver must be configured (config/cache.php)
+    | - A database cache driver must be configured (config/cache.php)
     | - Cache tables must exist (run migrations after enabling this)
     |
     | Note: Only affects the 'database' cache driver. Other drivers (redis, file)
@@ -310,7 +314,7 @@ return [
     | Configure tenant-aware password reset tokens behavior.
     |
     | When enabled, this automatically:
-    | 1. Adds tenant_id column to password_reset_tokens table
+    | 1. Adds the tenant_id column to the password_reset_tokens table
     | 2. Isolates password reset tokens per tenant
     |
     | Requirements:
@@ -339,7 +343,7 @@ return [
     |
     */
     'broadcasting' => [
-        'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', true),
+        'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', false),
     ],
 
     /*
@@ -387,11 +391,14 @@ return [
     |
     | Configure the optional admin interface for tenant management.
     |
-    | When enable_ui is true, admin routes are registered for creating and
+    | When true, admin routes are registered for creating and
     | managing tenants. This should be disabled in production for security.
     |
     */
     'admin' => [
-        'enable_ui' => env('TENANT_ADMIN_ENABLE_UI', false),
+        'enable' => env('TENANT_ADMIN_ENABLE', false),
+        'prefix' => env('TENANT_ADMIN_PREFIX', 'tenant-admin'),
+        'name' => env('TENANT_ADMIN_NAME', 'tenant.admin.'),
+        'middleware' => ['tenant.is-internal'],
     ],
 ];

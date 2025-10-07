@@ -8,32 +8,43 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
+use Quvel\Tenant\Actions\Admin\GetConfigFields;
+use Quvel\Tenant\Actions\Admin\GetPresetFields;
+use Quvel\Tenant\Actions\Admin\GetPresets;
+use Quvel\Tenant\Actions\Admin\ListTenants;
+use Quvel\Tenant\Actions\Admin\StoreTenant;
+use Quvel\Tenant\Actions\Admin\UpdateTenant;
 use Quvel\Tenant\Models\Tenant;
-use Quvel\Tenant\Services\TenantPresetService;
 
 class TenantController extends Controller
 {
-    public function __construct(
-        private readonly TenantPresetService $presetService
-    ) {}
+
+    /**
+     * Get all available configuration fields.
+     */
+    public function configFields(GetConfigFields $action): JsonResponse
+    {
+        return response()->json([
+            'fields' => $action->execute(),
+        ]);
+    }
 
     /**
      * Get available tenant presets.
      */
-    public function presets(): JsonResponse
+    public function presets(GetPresets $action): JsonResponse
     {
         return response()->json([
-            'presets' => $this->presetService->getAvailablePresets(),
+            'presets' => $action->execute(),
         ]);
     }
 
     /**
      * Get form fields for a specific preset.
      */
-    public function presetFields(string $preset): JsonResponse
+    public function presetFields(string $preset, GetPresetFields $action): JsonResponse
     {
-        $fields = $this->presetService->getPresetFields($preset);
+        $fields = $action->execute($preset);
 
         if (!$fields) {
             return response()->json(['error' => 'Preset not found'], 404);
@@ -46,22 +57,20 @@ class TenantController extends Controller
     }
 
     /**
-     * Create a new tenant using a preset.
+     * Create a new tenant.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, StoreTenant $action): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identifier' => 'required|string|max:255|unique:tenants,identifier',
-            'preset' => ['required', 'string', Rule::in($this->presetService->getPresetNames())],
             'config' => 'array',
         ]);
 
         try {
-            $tenant = $this->presetService->createTenantWithPreset(
+            $tenant = $action->execute(
                 name: $validated['name'],
                 identifier: $validated['identifier'],
-                preset: $validated['preset'],
                 config: $validated['config'] ?? []
             );
 
@@ -72,7 +81,6 @@ class TenantController extends Controller
                     'public_id' => $tenant->public_id,
                     'name' => $tenant->name,
                     'identifier' => $tenant->identifier,
-                    'preset' => $validated['preset'],
                 ],
             ], 201);
 
@@ -95,14 +103,42 @@ class TenantController extends Controller
     /**
      * List all tenants.
      */
-    public function index(): JsonResponse
+    public function index(ListTenants $action): JsonResponse
     {
-        $tenants = Tenant::select(['id', 'public_id', 'name', 'identifier', 'created_at'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         return response()->json([
-            'tenants' => $tenants,
+            'tenants' => $action->execute(),
         ]);
+    }
+
+    /**
+     * Update an existing tenant.
+     */
+    public function update(Request $request, Tenant $tenant, UpdateTenant $action): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'identifier' => 'sometimes|string|max:255|unique:tenants,identifier,' . $tenant->id,
+            'config' => 'sometimes|array',
+        ]);
+
+        try {
+            $updatedTenant = $action->execute($tenant, $validated);
+
+            return response()->json([
+                'success' => true,
+                'tenant' => [
+                    'id' => $updatedTenant->id,
+                    'public_id' => $updatedTenant->public_id,
+                    'name' => $updatedTenant->name,
+                    'identifier' => $updatedTenant->identifier,
+                ],
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

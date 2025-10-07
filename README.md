@@ -852,13 +852,13 @@ $results = $manager->processTables(['jobs', 'failed_jobs', 'job_batches']);
 
 ```php
 'admin' => [
-    'enable_ui' => env('TENANT_ADMIN_ENABLE_UI', false),
+    'enable' => env('TENANT_ADMIN_ENABLE', false),
 ],
 ```
 
 Controls the optional admin interface for tenant management. When enabled, provides a web UI and API endpoints for creating and managing tenants using preset configurations.
 
-**enable_ui**: Enables/disables the admin interface.
+**enable**: Enables/disables the admin interface.
 
 - `false` (default): Admin interface disabled for security
 - `true`: Enables admin routes, views, and API endpoints
@@ -866,7 +866,7 @@ Controls the optional admin interface for tenant management. When enabled, provi
 **How it works:**
 ```php
 // In TenantServiceProvider
-if (config('tenant.admin.enable_ui', false)) {
+if (config('tenant.admin.enable', false)) {
     // Register admin routes with internal middleware protection
     Route::middleware(config('tenant.middleware.internal_request'))
         ->group(__DIR__.'/../routes/tenant-admin.php');
@@ -939,10 +939,10 @@ POST /admin/tenants
 **Environment Configuration:**
 ```php
 // Enable admin interface (development/staging only)
-TENANT_ADMIN_ENABLE_UI=true
+TENANT_ADMIN_ENABLE=true
 
 // Disable admin interface (production - default)
-TENANT_ADMIN_ENABLE_UI=false
+TENANT_ADMIN_ENABLE=false
 ```
 
 **File Structure:**
@@ -950,7 +950,6 @@ TENANT_ADMIN_ENABLE_UI=false
 /resources/views/admin/ui.blade.php  - Main admin interface
 /routes/tenant-admin.php            - Admin route definitions
 /Http/Controllers/TenantController.php - Admin API endpoints
-/Services/TenantPresetService.php   - Preset management logic
 ```
 
 **Use Cases:**
@@ -960,7 +959,6 @@ TENANT_ADMIN_ENABLE_UI=false
 - Tenant configuration management
 
 **Production Recommendations:**
-- Keep `enable_ui = false` in production
+- Keep `enable = false` in production
 - Use programmatic tenant creation instead
 - Implement custom admin interfaces with proper authentication
-- Use the underlying services (`TenantPresetService`, `CreateTenant` action) directly

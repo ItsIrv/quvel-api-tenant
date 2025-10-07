@@ -13,10 +13,12 @@ use Quvel\Tenant\Http\Controllers\TenantController;
 |
 */
 
-Route::prefix('admin/tenants')->name('tenant.admin.')->group(function () {
-    Route::get('ui', [TenantController::class, 'ui'])->name('ui');
+Route::name('tenant.admin.')->group(function () {
+    Route::get('/', [TenantController::class, 'ui'])->name('ui');
+    Route::get('config-fields', [TenantController::class, 'configFields'])->name('config-fields');
     Route::get('presets', [TenantController::class, 'presets'])->name('presets');
     Route::get('presets/{preset}/fields', [TenantController::class, 'presetFields'])->name('presets.fields');
-    Route::get('/', [TenantController::class, 'index'])->name('index');
-    Route::post('/', [TenantController::class, 'store'])->name('store');
+    Route::get('tenants', [TenantController::class, 'index'])->name('index');
+    Route::post('tenants', [TenantController::class, 'store'])->name('store');
+    Route::put('tenants/{tenant}', [TenantController::class, 'update'])->name('update');
 });
