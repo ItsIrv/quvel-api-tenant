@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Events\TenantMiddlewareCompleted;
 use Quvel\Tenant\Contracts\PipelineRegistry;
-use Quvel\Tenant\Managers\TenantResolverManager;
+use Quvel\Tenant\Contracts\ResolutionService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -19,7 +19,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class TenantMiddleware
 {
     public function __construct(
-        protected TenantResolverManager $tenantManager,
+        protected ResolutionService $resolutionService,
         protected TenantContext $tenantContext,
         protected PipelineRegistry $pipelineRegistry
     ) {
@@ -30,13 +30,13 @@ class TenantMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($this->tenantManager->shouldBypass($request)) {
+        if ($this->resolutionService->shouldBypass($request)) {
             $this->tenantContext->bypass();
 
             return $next($request);
         }
 
-        $tenant = $this->tenantManager->resolveTenant($request);
+        $tenant = $this->resolutionService->resolve($request);
 
         if ($tenant === null) {
             $this->handleTenantNotFound($request);

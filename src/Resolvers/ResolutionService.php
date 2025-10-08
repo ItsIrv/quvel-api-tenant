@@ -2,32 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Managers;
+namespace Quvel\Tenant\Resolvers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use InvalidArgumentException;
+use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Events\TenantNotFound;
 use Quvel\Tenant\Events\TenantResolved;
 
 /**
- * Manages tenant resolution, and caching.
+ * Service for resolving tenants from requests with caching support.
  */
-class TenantResolverManager
+class ResolutionService implements ResolutionServiceContract
 {
-    protected readonly TenantResolver $resolver;
     protected $bypassCallback = null;
 
-    public function __construct()
-    {
-        $this->resolver = $this->createResolver();
+    public function __construct(
+        protected TenantResolver $resolver
+    ) {
     }
 
     /**
      * Resolve tenant from request.
      */
-    public function resolveTenant(Request $request)
+    public function resolve(Request $request): mixed
     {
         $identifier = null;
 
@@ -36,7 +35,7 @@ class TenantResolverManager
         }
 
         if ($identifier && config('tenant.resolver.config.cache_enabled', true)) {
-            $tenant = $this->resolveTenantWithCache($identifier, $this->resolver, $request);
+            $tenant = $this->resolveTenantWithCache($identifier, $request);
             $cacheKey = $identifier;
         } else {
             $tenant = $this->resolver->resolve($request);
@@ -63,7 +62,7 @@ class TenantResolverManager
     /**
      * Resolve tenant with caching support.
      */
-    protected function resolveTenantWithCache(string $cacheKey, TenantResolver $resolver, Request $request)
+    protected function resolveTenantWithCache(string $cacheKey, Request $request)
     {
         $cacheTtl = config('tenant.resolver.config.cache_ttl', 0);
 
@@ -71,42 +70,15 @@ class TenantResolverManager
             return Cache::remember(
                 "tenant.$cacheKey",
                 $cacheTtl,
-                static fn() => $resolver->resolve($request)
+                fn() => $this->resolver->resolve($request)
             );
         }
 
-        return $resolver->resolve($request);
+        return $this->resolver->resolve($request);
     }
 
     /**
-     * Get the resolver instance.
-     */
-    public function getResolver(): TenantResolver
-    {
-        return $this->resolver;
-    }
-
-    /**
-     * Create a resolver instance from configuration.
-     */
-    protected function createResolver(): TenantResolver
-    {
-        $resolverClass = config('tenant.resolver.class');
-        $config = config('tenant.resolver.config', []);
-
-        if (!class_exists($resolverClass)) {
-            throw new InvalidArgumentException("Resolver class not found: $resolverClass");
-        }
-
-        if (!is_subclass_of($resolverClass, TenantResolver::class)) {
-            throw new InvalidArgumentException("Resolver must implement TenantResolver interface");
-        }
-
-        return new $resolverClass($config);
-    }
-
-    /**
-     * Set a callback to determine if tenant resolution should be bypassed.
+     * Set a callback to determine if a tenant resolution should be bypassed.
      *
      * @param callable|null $callback Receives Request, returns bool
      */
@@ -116,7 +88,7 @@ class TenantResolverManager
     }
 
     /**
-     * Check if tenant resolution should be bypassed for this request.
+     * Check if the tenant resolution should be bypassed for this request.
      */
     public function shouldBypass(Request $request): bool
     {

@@ -25,7 +25,9 @@ use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
 use Quvel\Tenant\Configuration\TableRegistry;
 use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
-use Quvel\Tenant\Managers\TenantResolverManager;
+use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
+use Quvel\Tenant\Resolvers\ResolverManager;
+use Quvel\Tenant\Resolvers\ResolutionService;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
@@ -53,13 +55,16 @@ class TenantServiceProvider extends ServiceProvider
             TableRegistry::class
         );
 
-        $this->app->singleton(TenantResolverManager::class, function () {
-            return new TenantResolverManager();
+        $this->app->singleton(ResolverManager::class);
+        $this->app->singleton(TenantResolver::class, function ($app) {
+            return $app->make(ResolverManager::class)->driver();
         });
 
-        $this->app->singleton(TenantResolver::class, function ($app) {
-            return $app->make(TenantResolverManager::class)->getResolver();
-        });
+        $this->app->singleton(ResolutionService::class);
+        $this->app->singleton(
+            ResolutionServiceContract::class,
+            ResolutionService::class
+        );
 
         $this->app->singleton(
             PipelineRegistryContract::class,
@@ -231,7 +236,7 @@ class TenantServiceProvider extends ServiceProvider
 
                 TenantContextFacade::setCurrent($tenant);
 
-                foreach (app(\Quvel\Tenant\Contracts\PipelineRegistry::class)->getPipes() as $pipe) {
+                foreach (app(PipelineRegistryContract::class)->getPipes() as $pipe) {
                     $pipe->handle($tenant, config());
                 }
             }

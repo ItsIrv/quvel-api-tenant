@@ -52,9 +52,20 @@ return [
     |
     | Configure how tenants are resolved from requests.
     |
+    | driver: The resolver driver to use (domain, path, etc.)
+    | drivers: Custom resolver driver mappings (optional)
+    | config: Configuration passed to the resolver
+    |
+    | Built-in drivers: domain
+    | Custom drivers can be added via the 'drivers' array or by extending ResolverManager
+    |
     */
     'resolver' => [
-        'class' => env('TENANT_RESOLVER', \Quvel\Tenant\Resolvers\DomainResolver::class),
+        'driver' => env('TENANT_RESOLVER_DRIVER', 'domain'),
+        'drivers' => [
+            // Custom driver mappings (optional)
+            // 'custom' => App\Tenant\Resolvers\CustomResolver::class,
+        ],
         'config' => [
             'cache_enabled' => env('TENANT_RESOLVER_ENABLE_CACHE', false),
             'cache_ttl' => env('TENANT_RESOLVER_CACHE_TTL', 300),
