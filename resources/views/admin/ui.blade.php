@@ -7,16 +7,48 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        .toast.dismissing {
+            animation: slideOut 0.3s ease-out;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2" style="max-width: 400px;"></div>
+
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-8">Tenant Management</h1>
 
-        <!-- Create Tenant Form -->
+        <!-- Create/Edit Tenant Form -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Create New Tenant</h2>
+            <h2 id="form-title" class="text-xl font-semibold mb-4">Create New Tenant</h2>
 
             <form id="tenant-form">
+                <input type="hidden" id="tenant-id" name="tenant_id" value="">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Basic Information -->
                     <div>
@@ -34,8 +66,8 @@
                     </div>
                 </div>
 
-                <!-- Preset Selection -->
-                <div class="mt-6">
+                <!-- Preset Selection (create mode only) -->
+                <div id="preset-container" class="mt-6">
                     <label for="preset" class="block text-sm font-medium text-gray-700 mb-2">Preset</label>
                     <select id="preset" name="preset" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -43,14 +75,24 @@
                     </select>
                 </div>
 
+                <!-- Add Preset Buttons (edit mode only) -->
+                <div id="add-preset-container" class="mt-6 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Add Configuration</label>
+                    <div id="preset-buttons" class="flex flex-wrap gap-2"></div>
+                </div>
+
                 <!-- Dynamic Configuration Fields -->
                 <div id="config-fields" class="mt-6"></div>
 
                 <!-- Submit Button -->
-                <div class="mt-6">
+                <div class="mt-6 flex gap-3">
                     <button type="submit"
                             class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        Create Tenant
+                        <span id="submit-text">Create Tenant</span>
+                    </button>
+                    <button type="button" id="cancel-edit"
+                            class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 hidden">
+                        Cancel
                     </button>
                 </div>
             </form>
@@ -75,6 +117,55 @@
                 }
             });
 
+            // Toast notification function
+            function showToast(message, type = 'success') {
+                const toast = $(`
+                    <div class="toast bg-white rounded-lg shadow-lg p-4 mb-2 flex items-start gap-3 border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'}">
+                        <div class="flex-shrink-0">
+                            ${type === 'success'
+                                ? '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                                : '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+                            }
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">${message}</p>
+                        </div>
+                        <button class="flex-shrink-0 text-gray-400 hover:text-gray-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `);
+
+                // Add close button handler
+                toast.find('button').click(function() {
+                    dismissToast(toast);
+                });
+
+                // Add to container
+                $('#toast-container').append(toast);
+
+                // Auto dismiss after 4 seconds
+                setTimeout(function() {
+                    dismissToast(toast);
+                }, 4000);
+            }
+
+            function dismissToast(toast) {
+                toast.addClass('dismissing');
+                setTimeout(function() {
+                    toast.remove();
+                }, 300);
+            }
+
+            // Setup CSRF token for all AJAX requests
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
             // Load presets on page load
             loadPresets();
             loadTenants();
@@ -96,8 +187,9 @@
             });
 
             function loadPresets() {
-                $.get('/admin/tenants/presets')
+                $.get('presets')
                     .done(function(response) {
+                        window.presetsData = response.presets;
                         const presetSelect = $('#preset');
                         presetSelect.empty().append('<option value="">Select a preset...</option>');
 
@@ -107,45 +199,135 @@
                         });
                     })
                     .fail(function() {
-                        alert('Failed to load presets');
+                        showToast('Failed to load presets', 'error');
                     });
             }
 
             function loadPresetFields(preset) {
-                $.get(`/admin/tenants/presets/${preset}/fields`)
-                    .done(function(response) {
-                        const fieldsContainer = $('#config-fields');
-                        fieldsContainer.empty();
-
-                        if (response.fields && response.fields.length > 0) {
-                            fieldsContainer.append('<h3 class="text-lg font-medium mb-4">Configuration</h3>');
-
-                            const grid = $('<div class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>');
-
-                            response.fields.forEach(function(field) {
-                                const fieldHtml = createFieldHtml(field);
-                                grid.append(fieldHtml);
-                            });
-
-                            fieldsContainer.append(grid);
-                        }
-                    })
-                    .fail(function() {
-                        alert('Failed to load preset fields');
-                    });
+                if (window.presetsData && window.presetsData[preset]) {
+                    renderConfigFields(window.presetsData[preset].fields);
+                } else {
+                    $.get(`presets/${preset}/fields`)
+                        .done(function(response) {
+                            renderConfigFields(response.fields);
+                        })
+                        .fail(function() {
+                            showToast('Failed to load preset fields', 'error');
+                        });
+                }
             }
 
-            function createFieldHtml(field) {
-                const required = field.required ? 'required' : '';
+            function renderConfigFields(fields, values = {}, editMode = false) {
+                console.log('renderConfigFields called');
+                console.log('- fields count:', fields ? fields.length : 0);
+                console.log('- values:', values);
+                console.log('- editMode:', editMode);
+
+                const fieldsContainer = $('#config-fields');
+                fieldsContainer.empty();
+
+                let fieldsToRender = [];
+
+                if (editMode) {
+                    // In edit mode, create fields dynamically from existing config values
+                    const configKeys = getAllConfigKeys(values);
+                    console.log('Found config keys:', configKeys);
+
+                    fieldsToRender = configKeys.map(function(key) {
+                        // Try to find predefined field definition
+                        const predefinedField = fields ? fields.find(f => f.name === key) : null;
+
+                        if (predefinedField) {
+                            return predefinedField;
+                        }
+
+                        // Create a generic field definition
+                        return {
+                            name: key,
+                            label: key.split('.').map(word =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            ).join(' '),
+                            type: 'text',
+                            required: false,
+                            placeholder: '',
+                            description: ''
+                        };
+                    });
+                } else if (fields && fields.length > 0) {
+                    // In create mode, use predefined fields
+                    fieldsToRender = fields;
+                }
+
+                console.log('Fields to render:', fieldsToRender.length);
+
+                if (fieldsToRender.length > 0) {
+                    fieldsContainer.append('<h3 class="text-lg font-medium mb-4">Configuration</h3>');
+
+                    const grid = $('<div class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>');
+
+                    fieldsToRender.forEach(function(field) {
+                        const value = getNestedValue(values, field.name) || '';
+                        const fieldHtml = createFieldHtml(field, value, editMode);
+                        grid.append(fieldHtml);
+                    });
+
+                    fieldsContainer.append(grid);
+                } else if (editMode) {
+                    fieldsContainer.append('<p class="text-gray-500">No configuration fields set. Use "Add Configuration" buttons to add fields.</p>');
+                }
+            }
+
+            function getAllConfigKeys(obj, prefix = '') {
+                let keys = [];
+
+                for (let key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        const fullKey = prefix ? `${prefix}.${key}` : key;
+                        const value = obj[key];
+
+                        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+                            // Recursively get nested keys
+                            keys = keys.concat(getAllConfigKeys(value, fullKey));
+                        } else {
+                            // This is a leaf value
+                            keys.push(fullKey);
+                        }
+                    }
+                }
+
+                return keys;
+            }
+
+            function getNestedValue(obj, path) {
+                return path.split('.').reduce((current, key) => current?.[key], obj);
+            }
+
+            function setNestedValue(obj, path, value) {
+                const keys = path.split('.');
+                const lastKey = keys.pop();
+                const target = keys.reduce((current, key) => {
+                    if (!current[key] || typeof current[key] !== 'object') {
+                        current[key] = {};
+                    }
+                    return current[key];
+                }, obj);
+                target[lastKey] = value;
+            }
+
+            function createFieldHtml(field, value = '', editMode = false) {
+                // In edit mode, fields are not required (allow partial updates)
+                const required = (!editMode && field.required) ? 'required' : '';
                 const placeholder = field.placeholder ? `placeholder="${field.placeholder}"` : '';
+                const escapedValue = $('<div>').text(value).html(); // Escape HTML
 
                 let inputHtml = '';
                 if (field.type === 'textarea') {
                     inputHtml = `<textarea id="config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                          rows="3"></textarea>`;
+                                          rows="3">${escapedValue}</textarea>`;
                 } else {
                     inputHtml = `<input type="${field.type}" id="config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
+                                        value="${escapedValue}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">`;
                 }
 
@@ -153,7 +335,7 @@
                     <div>
                         <label for="config_${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
                             ${field.label}
-                            ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                            ${(!editMode && field.required) ? '<span class="text-red-500">*</span>' : ''}
                         </label>
                         ${inputHtml}
                         ${field.description ? `<p class="text-sm text-gray-500 mt-1">${field.description}</p>` : ''}
@@ -164,40 +346,73 @@
             function createTenant() {
                 const formData = new FormData($('#tenant-form')[0]);
                 const data = {};
+                const tenantId = $('#tenant-id').val();
+                const isEdit = tenantId !== '';
 
                 // Convert FormData to object
                 for (let [key, value] of formData.entries()) {
+                    if (key === 'tenant_id') continue;
                     if (key.startsWith('config[')) {
                         if (!data.config) data.config = {};
                         const configKey = key.match(/config\[(.+)\]/)[1];
-                        data.config[configKey] = value;
+                        // Convert dot notation to nested object
+                        setNestedValue(data.config, configKey, value);
                     } else {
                         data[key] = value;
                     }
                 }
 
-                $.post('/admin/tenants', data)
+                const method = isEdit ? 'PUT' : 'POST';
+                const url = isEdit ? `tenants/${tenantId}` : 'tenants';
+
+                $.ajax({
+                    url: url,
+                    method: method,
+                    contentType: 'application/json',
+                    data: JSON.stringify(data)
+                })
                     .done(function(response) {
                         if (response.success) {
-                            alert('Tenant created successfully!');
-                            $('#tenant-form')[0].reset();
-                            $('#config-fields').empty();
+                            showToast(isEdit ? 'Tenant updated successfully!' : 'Tenant created successfully!', 'success');
+                            if (!isEdit) {
+                                resetForm();
+                            }
                             loadTenants();
                         } else {
-                            alert('Error: ' + response.error);
+                            showToast('Error: ' + response.error, 'error');
                         }
                     })
                     .fail(function(xhr) {
                         if (xhr.responseJSON && xhr.responseJSON.error) {
-                            alert('Error: ' + xhr.responseJSON.error);
+                            showToast('Error: ' + xhr.responseJSON.error, 'error');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showToast('Error: ' + xhr.responseJSON.message, 'error');
                         } else {
-                            alert('Failed to create tenant');
+                            showToast(isEdit ? 'Failed to update tenant' : 'Failed to create tenant', 'error');
                         }
                     });
             }
 
+            function resetForm() {
+                $('#tenant-form')[0].reset();
+                $('#tenant-id').val('');
+                $('#config-fields').empty();
+                $('#form-title').text('Create New Tenant');
+                $('#submit-text').text('Create Tenant');
+                $('#cancel-edit').addClass('hidden');
+                $('#preset-container').show();
+                $('#preset').prop('required', true);
+                $('#add-preset-container').addClass('hidden');
+                window.currentEditConfig = null;
+                window.allConfigFields = null;
+            }
+
+            $('#cancel-edit').click(function() {
+                resetForm();
+            });
+
             function loadTenants() {
-                $.get('/admin/tenants')
+                $.get('tenants')
                     .done(function(response) {
                         const tenantsList = $('#tenants-list');
                         tenantsList.empty();
@@ -211,6 +426,7 @@
                                             <th class="border border-gray-300 px-4 py-2 text-left">Identifier</th>
                                             <th class="border border-gray-300 px-4 py-2 text-left">Public ID</th>
                                             <th class="border border-gray-300 px-4 py-2 text-left">Created</th>
+                                            <th class="border border-gray-300 px-4 py-2 text-left">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -218,18 +434,36 @@
                             `);
 
                             const tbody = table.find('tbody');
-                            response.tenants.forEach(function(tenant) {
-                                tbody.append(`
+                            response.tenants.forEach(function(tenant, index) {
+                                const row = $(`
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2">${tenant.name}</td>
                                         <td class="border border-gray-300 px-4 py-2">${tenant.identifier}</td>
                                         <td class="border border-gray-300 px-4 py-2">${tenant.public_id}</td>
                                         <td class="border border-gray-300 px-4 py-2">${new Date(tenant.created_at).toLocaleDateString()}</td>
+                                        <td class="border border-gray-300 px-4 py-2">
+                                            <button class="edit-tenant bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                                                    data-tenant-index="${index}">
+                                                Edit
+                                            </button>
+                                        </td>
                                     </tr>
                                 `);
+                                tbody.append(row);
                             });
 
                             tenantsList.append(table);
+
+                            // Store tenants data globally
+                            window.tenantsData = response.tenants;
+
+                            // Add edit click handlers
+                            $('.edit-tenant').click(function() {
+                                const index = $(this).data('tenant-index');
+                                const tenant = window.tenantsData[index];
+                                console.log('Edit tenant:', tenant);
+                                editTenant(tenant);
+                            });
                         } else {
                             tenantsList.append('<p class="text-gray-500">No tenants found.</p>');
                         }
@@ -237,6 +471,112 @@
                     .fail(function() {
                         $('#tenants-list').html('<p class="text-red-500">Failed to load tenants</p>');
                     });
+            }
+
+            function editTenant(tenant) {
+                console.log('editTenant called with:', tenant);
+                console.log('tenant.config:', tenant.config);
+
+                $('#tenant-id').val(tenant.id);
+                $('#name').val(tenant.name);
+                $('#identifier').val(tenant.identifier);
+                $('#form-title').text('Edit Tenant');
+                $('#submit-text').text('Update Tenant');
+                $('#cancel-edit').removeClass('hidden');
+
+                // Hide preset selector in edit mode, show add preset buttons
+                $('#preset-container').hide();
+                $('#preset').prop('required', false);
+                $('#add-preset-container').removeClass('hidden');
+
+                // Store current config globally - handle both object and string
+                let config = tenant.config || {};
+                if (typeof config === 'string') {
+                    try {
+                        config = JSON.parse(config);
+                    } catch (e) {
+                        console.error('Failed to parse config:', e);
+                        config = {};
+                    }
+                }
+                window.currentEditConfig = config;
+                console.log('Stored config:', window.currentEditConfig);
+
+                // Load all config fields and render preset buttons
+                $.get('config-fields')
+                    .done(function(response) {
+                        console.log('Config fields loaded:', response.fields.length);
+                        window.allConfigFields = response.fields;
+                        renderConfigFields(response.fields, window.currentEditConfig, true);
+                        renderPresetButtons();
+                    })
+                    .fail(function() {
+                        showToast('Failed to load config fields', 'error');
+                    });
+
+                // Scroll to form
+                $('html, body').animate({
+                    scrollTop: $('#tenant-form').offset().top - 20
+                }, 500);
+            }
+
+            function renderPresetButtons() {
+                if (!window.presetsData) return;
+
+                const container = $('#preset-buttons');
+                container.empty();
+
+                Object.keys(window.presetsData).forEach(function(presetKey) {
+                    const preset = window.presetsData[presetKey];
+                    const button = $(`
+                        <button type="button"
+                                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                data-preset="${presetKey}">
+                            Add ${preset.name} Fields
+                        </button>
+                    `);
+
+                    button.click(function() {
+                        addPresetFields(presetKey);
+                    });
+
+                    container.append(button);
+                });
+            }
+
+            function addPresetFields(presetKey) {
+                if (!window.presetsData || !window.presetsData[presetKey]) return;
+                if (!window.allConfigFields || !window.currentEditConfig) return;
+
+                const preset = window.presetsData[presetKey];
+
+                // Add empty values for preset fields that don't exist in current config
+                preset.fields.forEach(function(field) {
+                    const fieldName = field.name;
+                    const currentValue = getNestedValue(window.currentEditConfig, fieldName);
+
+                    if (currentValue === undefined || currentValue === null || currentValue === '') {
+                        // Set empty value in config so field will show
+                        setNestedValue(window.currentEditConfig, fieldName, '');
+                    }
+                });
+
+                // Re-render fields with updated config
+                renderConfigFields(window.allConfigFields, window.currentEditConfig, true);
+            }
+
+            function setNestedValue(obj, path, value) {
+                const keys = path.split('.');
+                let current = obj;
+
+                for (let i = 0; i < keys.length - 1; i++) {
+                    if (!(keys[i] in current)) {
+                        current[keys[i]] = {};
+                    }
+                    current = current[keys[i]];
+                }
+
+                current[keys[keys.length - 1]] = value;
             }
         });
     </script>

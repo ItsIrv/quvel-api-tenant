@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Middleware to ensure current tenant is marked as internal.
+ * Middleware to ensure the current tenant is marked as internal.
  * Used for endpoints that should only be accessible by internal tenants.
  */
 class RequireInternalTenant

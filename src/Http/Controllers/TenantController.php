@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
 use Quvel\Tenant\Actions\Admin\GetConfigFields;
 use Quvel\Tenant\Actions\Admin\GetPresetFields;
 use Quvel\Tenant\Actions\Admin\GetPresets;
@@ -117,7 +118,11 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'identifier' => 'sometimes|string|max:255|unique:tenants,identifier,' . $tenant->id,
+            'identifier' => [
+                'sometimes',
+                'string',
+                'max:255',
+            ],
             'config' => 'sometimes|array',
         ]);
 

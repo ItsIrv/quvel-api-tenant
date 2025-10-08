@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Actions\Admin;
 
+use Quvel\Tenant\Builders\TenantConfigurationBuilder;
 use Quvel\Tenant\Models\Tenant;
 
 class UpdateTenant
@@ -13,8 +14,28 @@ class UpdateTenant
      */
     public function execute(Tenant $tenant, array $data): Tenant
     {
-        $tenant->update($data);
+        if (isset($data['name'])) {
+            $tenant->name = $data['name'];
+        }
 
-        return $tenant->fresh();
+        if (isset($data['identifier'])) {
+            $tenant->identifier = $data['identifier'];
+        }
+
+        if (isset($data['config'])) {
+            $configBuilder = new TenantConfigurationBuilder();
+
+            foreach ($data['config'] as $key => $value) {
+                if (!empty($value)) {
+                    $configBuilder->setConfig($key, $value);
+                }
+            }
+
+            $tenant->config = $configBuilder->toArray();
+        }
+
+        $tenant->save();
+
+        return $tenant;
     }
 }

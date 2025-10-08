@@ -36,6 +36,7 @@ use RuntimeException;
 class TenantServiceProvider extends ServiceProvider
 {
     use HandlesTenantModels;
+
     /**
      * Register services.
      */
@@ -105,7 +106,7 @@ class TenantServiceProvider extends ServiceProvider
             ], 'tenant-routes');
         }
 
-        if (config('tenant.admin.enable', false)) {
+        if (config('tenant.admin.enabled', false)) {
             $this->loadViewsFrom(__DIR__.'/../resources/views', 'tenant');
         }
     }
@@ -159,7 +160,7 @@ class TenantServiceProvider extends ServiceProvider
                 ->group(__DIR__.'/../routes/tenant.php');
         }
 
-        if (config('tenant.admin.enable', false)) {
+        if (config('tenant.admin.enabled', false)) {
             Route::prefix(config('tenant.admin.prefix', 'tenant-admin'))
                 ->name(config('tenant.admin.name', 'tenant.admin.'))
                 ->middleware(config('tenant.admin.middleware', ['tenant.is-internal']))

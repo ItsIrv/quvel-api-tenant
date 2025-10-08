@@ -102,9 +102,30 @@ return [
         'enabled' => env('TENANT_API_ENABLED', true),
         'prefix' => env('TENANT_API_PREFIX', 'tenant-info'),
         'name' => env('TENANT_API_NAME', 'tenant.'),
-        'middleware' => [],
+        'middleware' => ['tenant.is-internal'],
         'allow_public_config' => env('TENANT_ALLOW_PUBLIC_CONFIG', false),
         'allow_protected_config' => env('TENANT_ALLOW_PROTECTED_CONFIG', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Interface Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the optional admin interface for tenant management.
+    |
+    | When true, admin routes are registered for creating and
+    | managing tenants. This should be disabled in production for security.
+    |
+    */
+    'admin' => [
+        'enabled' => env('TENANT_ADMIN_ENABLE', false),
+        'prefix' => env('TENANT_ADMIN_PREFIX', 'tenant-admin'),
+        'name' => env('TENANT_ADMIN_NAME', 'tenant.admin.'),
+        'middleware' => [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'tenant.is-internal'
+        ],
     ],
 
     /*
@@ -382,23 +403,5 @@ return [
     */
     'filesystems' => [
         'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', false),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Admin Interface Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure the optional admin interface for tenant management.
-    |
-    | When true, admin routes are registered for creating and
-    | managing tenants. This should be disabled in production for security.
-    |
-    */
-    'admin' => [
-        'enable' => env('TENANT_ADMIN_ENABLE', false),
-        'prefix' => env('TENANT_ADMIN_PREFIX', 'tenant-admin'),
-        'name' => env('TENANT_ADMIN_NAME', 'tenant.admin.'),
-        'middleware' => ['tenant.is-internal'],
     ],
 ];

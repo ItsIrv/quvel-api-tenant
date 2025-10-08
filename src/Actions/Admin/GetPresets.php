@@ -15,18 +15,15 @@ class GetPresets
     public function execute(): array
     {
         $presets = PresetDefinitions::all();
-        $result = [];
 
-        foreach ($presets as $key => $preset) {
-            $result[$key] = [
+        return array_map(function ($preset) {
+            return [
                 'name' => $preset['name'],
                 'description' => $preset['description'],
                 'features' => $preset['features'],
                 'fields' => $this->getFieldsWithDefinitions($preset['fields']),
             ];
-        }
-
-        return $result;
+        }, $presets);
     }
 
     /**
