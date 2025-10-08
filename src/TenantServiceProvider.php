@@ -22,7 +22,8 @@ use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
-use Quvel\Tenant\Managers\TenantTableManager;
+use Quvel\Tenant\Configuration\TableRegistry;
+use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Managers\TenantResolverManager;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
@@ -47,9 +48,10 @@ class TenantServiceProvider extends ServiceProvider
             'tenant'
         );
 
-        $this->app->singleton(TenantTableManager::class, function () {
-            return new TenantTableManager();
-        });
+        $this->app->singleton(
+            TableRegistryContract::class,
+            TableRegistry::class
+        );
 
         $this->app->singleton(TenantResolverManager::class, function () {
             return new TenantResolverManager();

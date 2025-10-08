@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
 use Quvel\Tenant\Facades\TenantContext;
-use Quvel\Tenant\Managers\ConfigurationPipeManager;
+use Quvel\Tenant\Contracts\PipelineRegistry;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
@@ -103,7 +103,9 @@ trait HasTenantCommands
             TenantContext::setCurrent($tenant);
 
             if ($this->shouldApplyTenantConfig()) {
-                app(ConfigurationPipeManager::class)->apply($tenant, app(ConfigRepository::class));
+                foreach (app(PipelineRegistry::class)->getPipes() as $pipe) {
+                    $pipe->handle($tenant, config());
+                }
 
                 if ($this->output->isVerbose()) {
                     $this->line("  → Applied tenant configuration pipes");

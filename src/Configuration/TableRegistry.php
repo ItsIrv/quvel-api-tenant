@@ -2,22 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Managers;
+namespace Quvel\Tenant\Configuration;
 
 use Exception;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
+use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Database\TenantTableConfig;
 
 /**
- * Manages adding tenant functionality to database tables.
+ * Registry for managing tenant-aware database tables.
  *
- * This manager provides a simple way to add tenant_id columns and constraints
+ * This registry provides a simple way to add tenant_id columns and constraints
  * to existing database tables based on configuration. It automatically detects
  * which tables need processing and skips those that already have tenant support.
  */
-class TenantTableManager
+class TableRegistry implements TableRegistryContract
 {
     /**
      * Registered tenant-aware tables.
@@ -36,17 +37,17 @@ class TenantTableManager
      *                              If null, processes all configured tables.
      *
      * @return array Results array with table names as keys and status as values:
-     *               - 'processed': Table was successfully updated
+     *               - 'Processed': Table was successfully updated
      *               - 'skipped_missing': Table doesn't exist in database
      *               - 'skipped_exists': Table already has tenant_id column
      *               - 'error': Processing failed with error message
      *
      * @example
      * // Process all configured tables
-     * $results = $manager->processTables();
+     * $results = $registry->processTables();
      *
      * // Process only specific tables
-     * $results = $manager->processTables(['users', 'posts']);
+     * $results = $registry->processTables(['users', 'posts']);
      */
     public function processTables(?array $tableNames = null): array
     {
@@ -79,17 +80,17 @@ class TenantTableManager
      *                              If null, processes all configured tables.
      *
      * @return array Results array with table names as keys and status as values:
-     *               - 'processed': Table was successfully updated
+     *               - 'Processed': Table was successfully updated
      *               - 'skipped_missing': Table doesn't exist in database
      *               - 'skipped_no_tenant': Table doesn't have tenant_id column
      *               - 'error': Processing failed with error message
      *
      * @example
      * // Remove tenant support from all configured tables
-     * $results = $manager->removeTenantSupport();
+     * $results = $registry->removeTenantSupport();
      *
      * // Remove tenant support from specific tables only
-     * $results = $manager->removeTenantSupport(['users', 'posts']);
+     * $results = $registry->removeTenantSupport(['users', 'posts']);
      */
     public function removeTenantSupport(?array $tableNames = null): array
     {
@@ -165,7 +166,7 @@ class TenantTableManager
     }
 
     /**
-     * Add tenant support to a table by adding tenant_id column and constraints.
+     * Add tenant support to a table by adding a tenant_id column and constraints.
      *
      * @param string $tableName The table to modify
      * @param TenantTableConfig $config The tenant configuration for this table
@@ -203,7 +204,7 @@ class TenantTableManager
     }
 
     /**
-     * Remove tenant support from a table by removing tenant_id column and constraints.
+     * Remove tenant support from a table by removing the tenant_id column and constraints.
      *
      * @param string $tableName The table to modify
      * @param TenantTableConfig $config The tenant configuration for this table
