@@ -11,7 +11,7 @@ class GetConfigFields
     /**
      * Get all available configuration fields.
      */
-    public function execute(): array
+    public function __invoke(): array
     {
         $fields = ConfigFieldDefinitions::all();
         $result = [];

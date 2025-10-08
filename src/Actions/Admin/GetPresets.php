@@ -12,7 +12,7 @@ class GetPresets
     /**
      * Get all available presets with their field definitions.
      */
-    public function execute(): array
+    public function __invoke(): array
     {
         $presets = PresetDefinitions::all();
 

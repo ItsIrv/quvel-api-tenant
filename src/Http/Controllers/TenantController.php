@@ -26,7 +26,7 @@ class TenantController extends Controller
     public function configFields(GetConfigFields $action): JsonResponse
     {
         return response()->json([
-            'fields' => $action->execute(),
+            'fields' => $action(),
         ]);
     }
 
@@ -36,7 +36,7 @@ class TenantController extends Controller
     public function presets(GetPresets $action): JsonResponse
     {
         return response()->json([
-            'presets' => $action->execute(),
+            'presets' => $action(),
         ]);
     }
 
@@ -45,7 +45,7 @@ class TenantController extends Controller
      */
     public function presetFields(string $preset, GetPresetFields $action): JsonResponse
     {
-        $fields = $action->execute($preset);
+        $fields = $action($preset);
 
         if (!$fields) {
             return response()->json(['error' => 'Preset not found'], 404);
@@ -69,7 +69,7 @@ class TenantController extends Controller
         ]);
 
         try {
-            $tenant = $action->execute(
+            $tenant = $action(
                 name: $validated['name'],
                 identifier: $validated['identifier'],
                 config: $validated['config'] ?? []
@@ -107,7 +107,7 @@ class TenantController extends Controller
     public function index(ListTenants $action): JsonResponse
     {
         return response()->json([
-            'tenants' => $action->execute(),
+            'tenants' => $action(),
         ]);
     }
 
@@ -127,7 +127,7 @@ class TenantController extends Controller
         ]);
 
         try {
-            $updatedTenant = $action->execute($tenant, $validated);
+            $updatedTenant = $action($tenant, $validated);
 
             return response()->json([
                 'success' => true,

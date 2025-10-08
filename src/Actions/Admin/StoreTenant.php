@@ -13,7 +13,7 @@ class StoreTenant
     /**
      * Create a new tenant with configuration.
      */
-    public function execute(string $name, string $identifier, array $config = []): Tenant
+    public function __invoke(string $name, string $identifier, array $config = []): Tenant
     {
         $configBuilder = new TenantConfigurationBuilder();
 
@@ -23,7 +23,7 @@ class StoreTenant
             }
         }
 
-        return app(CreateTenant::class)->execute(
+        return app(CreateTenant::class)(
             name: $name,
             identifier: $identifier,
             configBuilder: $configBuilder

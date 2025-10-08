@@ -12,7 +12,7 @@ use Quvel\Tenant\Builders\TenantConfigurationBuilder;
  */
 class CreateTenant
 {
-    public function execute(
+    public function __invoke(
         string $name,
         string $identifier,
         TenantConfigurationBuilder $configBuilder,

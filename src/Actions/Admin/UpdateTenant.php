@@ -12,7 +12,7 @@ class UpdateTenant
     /**
      * Update an existing tenant.
      */
-    public function execute(Tenant $tenant, array $data): Tenant
+    public function __invoke(Tenant $tenant, array $data): Tenant
     {
         if (isset($data['name'])) {
             $tenant->name = $data['name'];

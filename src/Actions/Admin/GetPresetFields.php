@@ -12,7 +12,7 @@ class GetPresetFields
     /**
      * Get field definitions for a specific preset.
      */
-    public function execute(string $preset): ?array
+    public function __invoke(string $preset): ?array
     {
         $presetData = PresetDefinitions::get($preset);
 
