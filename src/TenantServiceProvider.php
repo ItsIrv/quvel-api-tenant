@@ -8,7 +8,6 @@ use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Bus\BatchFactory;
 use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Cache\CacheManager;
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Queue\QueueManager;
@@ -18,12 +17,13 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
+use Quvel\Tenant\Configuration\PipelineRegistry;
+use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
 use Quvel\Tenant\Managers\TenantTableManager;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
-use Quvel\Tenant\Managers\ConfigurationPipeManager;
 use Quvel\Tenant\Managers\TenantResolverManager;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
@@ -59,9 +59,10 @@ class TenantServiceProvider extends ServiceProvider
             return $app->make(TenantResolverManager::class)->getResolver();
         });
 
-        $this->app->singleton(ConfigurationPipeManager::class, function () {
-            return new ConfigurationPipeManager();
-        });
+        $this->app->singleton(
+            PipelineRegistryContract::class,
+            PipelineRegistry::class
+        );
 
         $this->app->scoped(TenantContext::class, function () {
             return new TenantContext();
@@ -222,16 +223,15 @@ class TenantServiceProvider extends ServiceProvider
             }
         });
 
-        Context::hydrated(function ($context): void {
+        Context::hydrated(static function ($context): void {
             if ($context->hasHidden('tenant')) {
                 $tenant = $context->getHidden('tenant');
 
                 TenantContextFacade::setCurrent($tenant);
 
-                app(ConfigurationPipeManager::class)->apply(
-                    $tenant,
-                    $this->app->make(ConfigRepository::class)
-                );
+                foreach (app(\Quvel\Tenant\Contracts\PipelineRegistry::class)->getPipes() as $pipe) {
+                    $pipe->handle($tenant, config());
+                }
             }
         });
     }

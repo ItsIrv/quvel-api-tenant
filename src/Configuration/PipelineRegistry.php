@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Managers;
+namespace Quvel\Tenant\Configuration;
 
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Collection;
+use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
 use Quvel\Tenant\Pipes\BasePipe;
 
 /**
- * Manages configuration handlers for applying tenant config to Laravel.
+ * Registry for configuration pipes that apply tenant config to Laravel.
  */
-class ConfigurationPipeManager
+class PipelineRegistry implements PipelineRegistryContract
 {
     /**
      * @var Collection<int, BasePipe>
@@ -59,16 +59,6 @@ class ConfigurationPipeManager
         }
 
         return $this;
-    }
-
-    /**
-     * Apply tenant configuration through all pipes.
-     */
-    public function apply($tenant, ConfigRepository $config): void
-    {
-        foreach ($this->pipes as $pipe) {
-            $pipe->handle($tenant, $config);
-        }
     }
 
     /**

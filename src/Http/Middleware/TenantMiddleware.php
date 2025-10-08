@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Events\TenantMiddlewareCompleted;
-use Quvel\Tenant\Managers\ConfigurationPipeManager;
+use Quvel\Tenant\Contracts\PipelineRegistry;
 use Quvel\Tenant\Managers\TenantResolverManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -21,7 +21,7 @@ class TenantMiddleware
     public function __construct(
         protected TenantResolverManager $tenantManager,
         protected TenantContext $tenantContext,
-        protected ConfigurationPipeManager $configPipeline
+        protected PipelineRegistry $pipelineRegistry
     ) {
     }
 
@@ -43,7 +43,10 @@ class TenantMiddleware
         }
 
         $this->tenantContext->setCurrent($tenant);
-        $this->configPipeline->apply($tenant, config());
+
+        foreach ($this->pipelineRegistry->getPipes() as $pipe) {
+            $pipe->handle($tenant, config());
+        }
 
         TenantMiddlewareCompleted::dispatch($tenant, $request);
 
