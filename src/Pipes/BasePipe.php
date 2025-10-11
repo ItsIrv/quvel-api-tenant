@@ -27,15 +27,7 @@ abstract class BasePipe implements ConfigurationPipe
     abstract public function apply(): void;
 
     /**
-     * Get the current tenant instance.
-     */
-    public function getTenant()
-    {
-        return $this->tenant;
-    }
-
-    /**
-     * Handle method wrapper that sets context automatically.
+     * Handle is a method wrapper that sets context automatically.
      */
     public function handle($tenant, ConfigRepository $config): void
     {

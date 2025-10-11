@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Contracts;
 
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
-
 /**
  * Configuration pipe interface for applying tenant config to Laravel.
  */
@@ -15,9 +13,4 @@ interface ConfigurationPipe
      * Apply tenant configuration changes.
      */
     public function apply(): void;
-
-    /**
-     * Get the current tenant instance.
-     */
-    public function getTenant();
 }
