@@ -22,6 +22,7 @@ class PresetDefinitions
                 ],
                 'fields' => [
                     'app.name',
+                    'app.url',
                     'frontend.url',
                 ],
             ],
@@ -36,6 +37,7 @@ class PresetDefinitions
                 ],
                 'fields' => [
                     'app.name',
+                    'app.url',
                     'frontend.url',
                     'database.connections.mysql.host',
                     'database.connections.mysql.port',

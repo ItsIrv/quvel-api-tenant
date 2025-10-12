@@ -19,6 +19,13 @@ class ConfigFieldDefinitions
                 'placeholder' => 'My Application',
                 'description' => 'Display name for this tenant',
             ],
+            'app.url' => [
+                'label' => 'Application URL',
+                'type' => 'url',
+                'required' => true,
+                'placeholder' => 'https://app.example.com',
+                'description' => 'Main application URL for this tenant',
+            ],
             'frontend.url' => [
                 'label' => 'Frontend URL',
                 'type' => 'url',

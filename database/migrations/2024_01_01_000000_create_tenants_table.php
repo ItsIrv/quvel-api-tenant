@@ -13,7 +13,7 @@ return new class extends Migration
 
         Schema::create($tableName, static function (Blueprint $table) {
             $table->id();
-            $table->string('public_id')->unique();
+            $table->ulid('public_id')->unique();
             $table->string('name');
             $table->string('identifier')->unique();
             $table->foreignIdFor(config('tenant.model', Tenant::class), 'parent_id')

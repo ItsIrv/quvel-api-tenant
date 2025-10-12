@@ -10,11 +10,17 @@ use Quvel\Tenant\Models\Tenant;
 
 class StoreTenant
 {
+    use NormalizesVisibility;
+
     /**
      * Create a new tenant with configuration.
      */
     public function __invoke(string $name, string $identifier, array $config = []): Tenant
     {
+        if (isset($config['__visibility']) && is_array($config['__visibility'])) {
+            $config['__visibility'] = $this->normalizeVisibility($config['__visibility']);
+        }
+
         $configBuilder = new TenantConfigurationBuilder();
 
         foreach ($config as $key => $value) {

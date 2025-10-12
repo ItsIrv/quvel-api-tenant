@@ -9,6 +9,7 @@ use Quvel\Tenant\Models\Tenant;
 
 class UpdateTenant
 {
+    use NormalizesVisibility;
     /**
      * Update an existing tenant.
      */
@@ -23,6 +24,10 @@ class UpdateTenant
         }
 
         if (isset($data['config'])) {
+            if (isset($data['config']['__visibility']) && is_array($data['config']['__visibility'])) {
+                $data['config']['__visibility'] = $this->normalizeVisibility($data['config']['__visibility']);
+            }
+
             $configBuilder = new TenantConfigurationBuilder();
 
             foreach ($data['config'] as $key => $value) {

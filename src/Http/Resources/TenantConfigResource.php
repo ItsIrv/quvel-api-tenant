@@ -6,11 +6,12 @@ namespace Quvel\Tenant\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Quvel\Tenant\Models\Tenant;
 
 /**
  * Handles visibility filtering and metadata generation.
  *
- * @property mixed $resource
+ * @property Tenant $resource
  */
 class TenantConfigResource extends JsonResource
 {
@@ -31,12 +32,25 @@ class TenantConfigResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $config = $this->getFilteredConfig();
+
         return [
             'id' => $this->resource->public_id,
             'name' => $this->resource->name,
             'identifier' => $this->resource->identifier,
-            'parent_id' => $this->resource->parent?->public_id,
-            'config' => $this->getFilteredConfig(),
+            'parent' => $this->when((bool) $this->resource->parent, function () {
+                $parentConfig = $this->getParentFilteredConfig();
+
+                return [
+                    'id' => $this->resource->parent->public_id,
+                    'name' => $this->resource->parent->name,
+                    'identifier' => $this->resource->parent->identifier,
+                    'config' => $parentConfig,
+                    '__visibility' => data_get($this->resource->parent->config, '__visibility', []),
+                ];
+            }),
+            'config' => $config,
+            '__visibility' => data_get($this->resource->config, '__visibility', []),
         ];
     }
 
@@ -48,6 +62,22 @@ class TenantConfigResource extends JsonResource
         return match ($this->visibilityLevel) {
             'public' => $this->resource->getPublicConfig(),
             'protected' => $this->resource->getProtectedConfig(),
+            default => [],
+        };
+    }
+
+    /**
+     * Get parent's filtered config based on visibility level.
+     */
+    protected function getParentFilteredConfig(): array
+    {
+        if (!$this->resource->parent) {
+            return [];
+        }
+
+        return match ($this->visibilityLevel) {
+            'public' => $this->resource->parent->getPublicConfig(),
+            'protected' => $this->resource->parent->getProtectedConfig(),
             default => [],
         };
     }

@@ -56,12 +56,14 @@ class TenantsCache
     }
 
     /**
-     * Fetch all active tenants from database.
+     * Fetch all active tenants from the database.
      */
     protected function fetchAllTenants(): Collection
     {
         $tenantModel = $this->config->get('tenant.model');
 
-        return $tenantModel::where('is_active', true)->get();
+        return $tenantModel::where('is_active', true)
+            ->with('parent')
+            ->get();
     }
 }

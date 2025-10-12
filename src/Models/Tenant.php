@@ -33,11 +33,9 @@ class Tenant extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public function __construct(array $attributes = [])
+    public function getTable()
     {
-        parent::__construct($attributes);
-
-        $this->setTable(config('tenant.table_name', 'tenants'));
+        return config('tenant.table_name', 'tenants');
     }
 
     protected $fillable = [
@@ -78,6 +76,7 @@ class Tenant extends Model
     {
         return static::where('identifier', $identifier)
             ->where('is_active', true)
+            ->with('parent')
             ->first();
     }
 
@@ -133,7 +132,7 @@ class Tenant extends Model
     }
 
     /**
-     * Check if config key exists.
+     * Check if a config key exists.
      */
     public function hasConfig(string $key): bool
     {
@@ -203,23 +202,61 @@ class Tenant extends Model
 
     /**
      * Get config filtered by visibility level.
+     * Loops through the visibility tree and pulls matching config values (more efficient).
      */
     public function getConfigByVisibility(ConfigVisibility $minVisibility): array
     {
         $config = $this->getResolvedConfig();
         $visibility = data_get($this->config, '__visibility', []);
+
+        return $this->filterByVisibilityKeys($visibility, $config, $minVisibility);
+    }
+
+    /**
+     * Recursively filter by looping through the visibility tree.
+     * More efficient since we only check explicitly visible keys.
+     */
+    protected function filterByVisibilityKeys(array $visibility, array $config, ConfigVisibility $minVisibility): array
+    {
         $filtered = [];
 
-        foreach ($config as $key => $value) {
-            $keyVisibility = ConfigVisibility::tryFrom($visibility[$key] ?? '') ?? ConfigVisibility::PRIVATE;
+        foreach ($visibility as $key => $visValue) {
+            if (is_array($visValue)) {
+                $childConfig = $config[$key] ?? [];
 
-            // Include if visibility level is >= minimum required
-            if ($this->isVisibilityAllowed($keyVisibility, $minVisibility)) {
-                data_set($filtered, $key, $value);
+                if (is_array($childConfig)) {
+                    $filteredChild = $this->filterByVisibilityKeys($visValue, $childConfig, $minVisibility);
+
+                    if (!empty($filteredChild)) {
+                        $filtered[$key] = $filteredChild;
+                    }
+                }
+            } else {
+                $vis = ConfigVisibility::tryFrom($visValue) ?? ConfigVisibility::PRIVATE;
+
+                if ($this->isVisibilityAllowed($vis, $minVisibility)) {
+                    $filtered[$key] = $config[$key] ?? null;
+                }
             }
         }
 
         return $filtered;
+    }
+
+    /**
+     * Check if a value is a leaf (actual config value) vs a branch (nested structure).
+     */
+    protected function isLeafValue(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return true;
+        }
+
+        if (empty($value)) {
+            return true;
+        }
+
+        return array_is_list($value);
     }
 
     /**
@@ -231,7 +268,7 @@ class Tenant extends Model
     }
 
     /**
-     * Get protected configuration (PUBLIC + PROTECTED visibility).
+     * Get protected configuration (PUBLIC and PROTECTED visibility).
      */
     public function getProtectedConfig(): array
     {

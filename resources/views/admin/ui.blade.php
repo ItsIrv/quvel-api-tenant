@@ -272,9 +272,26 @@
                     });
 
                     fieldsContainer.append(grid);
+
+                    // Attach visibility dropdown change handlers
+                    attachVisibilityHandlers();
                 } else if (editMode) {
                     fieldsContainer.append('<p class="text-gray-500">No configuration fields set. Use "Add Configuration" buttons to add fields.</p>');
                 }
+            }
+
+            function attachVisibilityHandlers() {
+                const visibilityInfo = {
+                    'PRIVATE': '🔒 Private: Laravel only',
+                    'PROTECTED': '🛡️ Protected: Laravel + SSR',
+                    'PUBLIC': '🌐 Public: Laravel + SSR + Browser'
+                };
+
+                $('select[name^="visibility["]').on('change', function() {
+                    const fieldName = $(this).attr('name').match(/visibility\[(.+)\]/)[1];
+                    const value = $(this).val();
+                    $(`#visibility_info_${fieldName.replace(/\./g, '\\.')}`).text(visibilityInfo[value]);
+                });
             }
 
             function getAllConfigKeys(obj, prefix = '') {
@@ -282,6 +299,8 @@
 
                 for (let key in obj) {
                     if (obj.hasOwnProperty(key)) {
+                        if (key === '__visibility') continue;
+
                         const fullKey = prefix ? `${prefix}.${key}` : key;
                         const value = obj[key];
 
@@ -314,11 +333,17 @@
                 target[lastKey] = value;
             }
 
+            const MANDATORY_FIELDS = ['app.name', 'app.url', 'frontend.url'];
+
             function createFieldHtml(field, value = '', editMode = false) {
-                // In edit mode, fields are not required (allow partial updates)
-                const required = (!editMode && field.required) ? 'required' : '';
+                const isMandatory = MANDATORY_FIELDS.includes(field.name);
+                const required = (!editMode && (field.required || isMandatory)) ? 'required' : '';
                 const placeholder = field.placeholder ? `placeholder="${field.placeholder}"` : '';
                 const escapedValue = $('<div>').text(value).html(); // Escape HTML
+
+                const currentVisibility = window.currentEditConfig && window.currentEditConfig.__visibility
+                    ? (getNestedValue(window.currentEditConfig.__visibility, field.name) || 'PRIVATE')
+                    : 'PRIVATE';
 
                 let inputHtml = '';
                 if (field.type === 'textarea') {
@@ -331,14 +356,35 @@
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">`;
                 }
 
+                const visibilityInfo = {
+                    'PRIVATE': '🔒 Private: Laravel only',
+                    'PROTECTED': '🛡️ Protected: Laravel + SSR',
+                    'PUBLIC': '🌐 Public: Laravel + SSR + Browser'
+                };
+
                 return `
-                    <div>
+                    <div class="border border-gray-200 p-4 rounded-lg">
                         <label for="config_${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
                             ${field.label}
-                            ${(!editMode && field.required) ? '<span class="text-red-500">*</span>' : ''}
+                            ${(isMandatory || (!editMode && field.required)) ? '<span class="text-red-500">*</span>' : ''}
+                            ${isMandatory ? '<span class="text-xs text-red-600 ml-1">(Required)</span>' : ''}
                         </label>
                         ${inputHtml}
                         ${field.description ? `<p class="text-sm text-gray-500 mt-1">${field.description}</p>` : ''}
+
+                        <!-- Visibility selector -->
+                        <div class="mt-3">
+                            <label for="visibility_${field.name}" class="block text-xs font-medium text-gray-600 mb-1">Visibility Level</label>
+                            <select id="visibility_${field.name}" name="visibility[${field.name}]"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="PRIVATE" ${currentVisibility === 'PRIVATE' ? 'selected' : ''}>Private (Laravel only)</option>
+                                <option value="PROTECTED" ${currentVisibility === 'PROTECTED' ? 'selected' : ''}>Protected (Laravel + SSR)</option>
+                                <option value="PUBLIC" ${currentVisibility === 'PUBLIC' ? 'selected' : ''}>Public (Laravel + SSR + Browser)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1" id="visibility_info_${field.name}">
+                                ${visibilityInfo[currentVisibility]}
+                            </p>
+                        </div>
                     </div>
                 `;
             }
@@ -346,6 +392,7 @@
             function createTenant() {
                 const formData = new FormData($('#tenant-form')[0]);
                 const data = {};
+                const flatVisibility = {};
                 const tenantId = $('#tenant-id').val();
                 const isEdit = tenantId !== '';
 
@@ -357,9 +404,30 @@
                         const configKey = key.match(/config\[(.+)\]/)[1];
                         // Convert dot notation to nested object
                         setNestedValue(data.config, configKey, value);
+                    } else if (key.startsWith('visibility[')) {
+                        const visibilityKey = key.match(/visibility\[(.+)\]/)[1];
+                        // Only store non-PRIVATE values (PRIVATE is default)
+                        if (value !== 'PRIVATE') {
+                            flatVisibility[visibilityKey] = value;
+                        }
                     } else {
                         data[key] = value;
                     }
+                }
+
+                // Validate mandatory fields
+                for (const field of MANDATORY_FIELDS) {
+                    const fieldValue = getNestedValue(data.config || {}, field);
+                    if (!fieldValue || fieldValue.trim() === '') {
+                        showToast(`Mandatory field "${field}" is required`, 'error');
+                        return;
+                    }
+                }
+
+                // Add flat visibility to config (backend will convert)
+                if (Object.keys(flatVisibility).length > 0) {
+                    if (!data.config) data.config = {};
+                    data.config.__visibility = flatVisibility;
                 }
 
                 const method = isEdit ? 'PUT' : 'POST';

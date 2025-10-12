@@ -62,7 +62,10 @@ class TenantConfigController
 
         if ($tenant->isInternal() && $request->hasHeader('X-Tenant-ID')) {
             $tenantModel = config('tenant.model');
-            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-ID'))->first();
+            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-ID'))
+                ->with('parent')
+                ->first();
+
             if ($targetTenant) {
                 $tenant = $targetTenant;
             }
