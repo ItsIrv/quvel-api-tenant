@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Actions\Admin;
+namespace Quvel\Tenant\Admin\Actions;
 
 use Quvel\Tenant\Data\ConfigFieldDefinitions;
 

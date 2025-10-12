@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Quvel\Tenant\Http\Controllers\TenantController;
-use Quvel\Tenant\Models\Tenant;
+use Quvel\Tenant\Admin\Http\Controllers\TenantAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,10 +13,10 @@ use Quvel\Tenant\Models\Tenant;
 |
 */
 
-Route::get('/', [TenantController::class, 'ui'])->name('ui');
-Route::get('config-fields', [TenantController::class, 'configFields'])->name('config-fields');
-Route::get('presets', [TenantController::class, 'presets'])->name('presets');
-Route::get('presets/{preset}/fields', [TenantController::class, 'presetFields'])->name('presets.fields');
-Route::get('tenants', [TenantController::class, 'index'])->name('index');
-Route::post('tenants', [TenantController::class, 'store'])->name('store');
-Route::put('tenants/{tenant}', [TenantController::class, 'update'])->name('update');
+Route::get('/', [TenantAdminController::class, 'ui'])->name('ui');
+Route::get('config-fields', [TenantAdminController::class, 'configFields'])->name('config-fields');
+Route::get('presets', [TenantAdminController::class, 'presets'])->name('presets');
+Route::get('presets/{preset}/fields', [TenantAdminController::class, 'presetFields'])->name('presets.fields');
+Route::get('tenants', [TenantAdminController::class, 'index'])->name('index');
+Route::post('tenants', [TenantAdminController::class, 'store'])->name('store');
+Route::put('tenants/{tenant}', [TenantAdminController::class, 'update'])->name('update');

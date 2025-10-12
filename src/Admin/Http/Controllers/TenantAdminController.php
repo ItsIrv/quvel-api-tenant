@@ -2,22 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Http\Controllers;
+namespace Quvel\Tenant\Admin\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
-use Quvel\Tenant\Actions\Admin\GetConfigFields;
-use Quvel\Tenant\Actions\Admin\GetPresetFields;
-use Quvel\Tenant\Actions\Admin\GetPresets;
-use Quvel\Tenant\Actions\Admin\ListTenants;
-use Quvel\Tenant\Actions\Admin\StoreTenant;
-use Quvel\Tenant\Actions\Admin\UpdateTenant;
+use Quvel\Tenant\Admin\Actions\GetConfigFields;
+use Quvel\Tenant\Admin\Actions\GetPresetFields;
+use Quvel\Tenant\Admin\Actions\GetPresets;
+use Quvel\Tenant\Admin\Actions\ListTenants;
+use Quvel\Tenant\Admin\Actions\StoreTenant;
+use Quvel\Tenant\Admin\Actions\UpdateTenant;
 use Quvel\Tenant\Models\Tenant;
 
-class TenantController extends Controller
+class TenantAdminController extends Controller
 {
 
     /**

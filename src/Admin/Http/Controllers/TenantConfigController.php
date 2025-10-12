@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Http\Controllers;
+namespace Quvel\Tenant\Admin\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
