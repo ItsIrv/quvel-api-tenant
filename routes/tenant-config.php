@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Quvel\Tenant\Admin\Http\Controllers\TenantConfigController;
+use Quvel\Tenant\Config\Http\Controllers\TenantConfigController;
 
 /*
 |--------------------------------------------------------------------------

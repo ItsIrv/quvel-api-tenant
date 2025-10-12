@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Actions;
+namespace Quvel\Tenant\Config\Actions;
 
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

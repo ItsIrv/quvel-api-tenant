@@ -109,7 +109,7 @@ class TenantServiceProvider extends ServiceProvider
             ], 'tenant-migrations');
 
             $this->publishes([
-                __DIR__.'/../routes/tenant.php' => base_path('routes/tenant-info.php'),
+                __DIR__ . '/../routes/tenant-config.php' => base_path('routes/tenant-info.php'),
                 __DIR__.'/../routes/tenant-admin.php' => base_path('routes/tenant-admin.php'),
             ], 'tenant-routes');
         }
@@ -165,7 +165,7 @@ class TenantServiceProvider extends ServiceProvider
             Route::prefix(config('tenant.api.prefix', 'tenant-info'))
                 ->name(config('tenant.api.name', 'tenant.'))
                 ->middleware(config('tenant.api.middleware', []))
-                ->group(__DIR__.'/../routes/tenant.php');
+                ->group(__DIR__ . '/../routes/tenant-config.php');
         }
 
         if (config('tenant.admin.enabled', false)) {

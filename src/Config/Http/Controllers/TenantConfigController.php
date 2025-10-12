@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Admin\Http\Controllers;
+namespace Quvel\Tenant\Config\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Quvel\Tenant\Actions\TenantProtectedConfig;
-use Quvel\Tenant\Actions\TenantPublicConfig;
-use Quvel\Tenant\Actions\TenantsCache;
+use Quvel\Tenant\Config\Actions\TenantProtectedConfig;
+use Quvel\Tenant\Config\Actions\TenantPublicConfig;
+use Quvel\Tenant\Config\Actions\TenantsCache;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

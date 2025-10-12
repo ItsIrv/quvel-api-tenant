@@ -19,6 +19,7 @@ Configures which model class to use for tenant operations. This allows you to ex
 - Enables model customization without modifying package code
 
 **Usage example:**
+
 ```php
 // Custom tenant model
 class CustomTenant extends \Quvel\Tenant\Models\Tenant
