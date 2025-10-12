@@ -21,9 +21,19 @@ class PresetDefinitions
                     'Basic configuration',
                 ],
                 'fields' => [
+                    // Required
                     'app.name',
                     'app.url',
                     'frontend.url',
+                    // Optional app
+                    'app.env',
+                    'app.debug',
+                    'app.timezone',
+                    'app.locale',
+                    'app.fallback_locale',
+                    // Optional frontend
+                    'frontend.internal_api_url',
+                    'frontend.capacitor_scheme',
                 ],
             ],
             'isolated_database' => [
@@ -36,9 +46,20 @@ class PresetDefinitions
                     'Scalable architecture',
                 ],
                 'fields' => [
+                    // Basic fields (required)
                     'app.name',
                     'app.url',
                     'frontend.url',
+                    // Basic fields (optional app)
+                    'app.env',
+                    'app.debug',
+                    'app.timezone',
+                    'app.locale',
+                    'app.fallback_locale',
+                    // Basic fields (optional frontend)
+                    'frontend.internal_api_url',
+                    'frontend.capacitor_scheme',
+                    // Database fields
                     'database.connections.mysql.host',
                     'database.connections.mysql.port',
                     'database.connections.mysql.database',

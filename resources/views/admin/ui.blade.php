@@ -34,6 +34,32 @@
         .toast.dismissing {
             animation: slideOut 0.3s ease-out;
         }
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .config-tab-button {
+            transition: all 0.2s ease;
+        }
+        .config-tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .config-tab-content {
+            display: none;
+        }
+        .config-tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -43,66 +69,117 @@
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-8">Tenant Management</h1>
 
-        <!-- Create/Edit Tenant Form -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 id="form-title" class="text-xl font-semibold mb-4">Create New Tenant</h2>
-
-            <form id="tenant-form">
-                <input type="hidden" id="tenant-id" name="tenant_id" value="">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Basic Information -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Tenant Name</label>
-                        <input type="text" id="name" name="name" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="My Tenant">
-                    </div>
-
-                    <div>
-                        <label for="identifier" class="block text-sm font-medium text-gray-700 mb-2">Identifier</label>
-                        <input type="text" id="identifier" name="identifier" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="my-tenant">
-                    </div>
-                </div>
-
-                <!-- Preset Selection (create mode only) -->
-                <div id="preset-container" class="mt-6">
-                    <label for="preset" class="block text-sm font-medium text-gray-700 mb-2">Preset</label>
-                    <select id="preset" name="preset" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select a preset...</option>
-                    </select>
-                </div>
-
-                <!-- Add Preset Buttons (edit mode only) -->
-                <div id="add-preset-container" class="mt-6 hidden">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Add Configuration</label>
-                    <div id="preset-buttons" class="flex flex-wrap gap-2"></div>
-                </div>
-
-                <!-- Dynamic Configuration Fields -->
-                <div id="config-fields" class="mt-6"></div>
-
-                <!-- Submit Button -->
-                <div class="mt-6 flex gap-3">
-                    <button type="submit"
-                            class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <span id="submit-text">Create Tenant</span>
-                    </button>
-                    <button type="button" id="cancel-edit"
-                            class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 hidden">
-                        Cancel
-                    </button>
-                </div>
-            </form>
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-t-lg shadow-md">
+            <div class="flex border-b border-gray-200">
+                <button type="button" class="tab-button active px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-300" data-tab="list">
+                    List
+                </button>
+                <button type="button" class="tab-button px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-300" data-tab="create">
+                    Create New
+                </button>
+                <button type="button" class="tab-button px-6 py-3 font-medium text-gray-700 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-300 hidden" data-tab="edit" id="edit-tab-button">
+                    Edit
+                </button>
+            </div>
         </div>
 
-        <!-- Existing Tenants -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Existing Tenants</h2>
-            <div id="tenants-list">
-                <p class="text-gray-500">Loading tenants...</p>
+        <!-- Tab Content -->
+        <div class="bg-white rounded-b-lg shadow-md">
+            <!-- List Tab -->
+            <div class="tab-content active p-6" id="list-tab">
+                <h2 class="text-xl font-semibold mb-4">Existing Tenants</h2>
+                <div id="tenants-list">
+                    <p class="text-gray-500">Loading tenants...</p>
+                </div>
+            </div>
+
+            <!-- Create Tab -->
+            <div class="tab-content p-6" id="create-tab">
+                <h2 class="text-xl font-semibold mb-4">Create New Tenant</h2>
+                <form id="create-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Basic Information -->
+                        <div>
+                            <label for="create-name" class="block text-sm font-medium text-gray-700 mb-2">Tenant Name</label>
+                            <input type="text" id="create-name" name="name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="My Tenant">
+                        </div>
+
+                        <div>
+                            <label for="create-identifier" class="block text-sm font-medium text-gray-700 mb-2">Identifier</label>
+                            <input type="text" id="create-identifier" name="identifier" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="my-tenant">
+                        </div>
+                    </div>
+
+                    <!-- Preset Selection -->
+                    <div class="mt-6">
+                        <label for="create-preset" class="block text-sm font-medium text-gray-700 mb-2">Preset</label>
+                        <select id="create-preset" name="preset" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select a preset...</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Configuration Fields -->
+                    <div id="create-config-fields" class="mt-6"></div>
+
+                    <!-- Submit Button -->
+                    <div class="mt-6">
+                        <button type="submit"
+                                class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Create Tenant
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Edit Tab -->
+            <div class="tab-content p-6" id="edit-tab">
+                <h2 class="text-xl font-semibold mb-4">Edit Tenant</h2>
+                <form id="edit-form">
+                    <input type="hidden" id="edit-tenant-id" name="tenant_id" value="">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Basic Information -->
+                        <div>
+                            <label for="edit-name" class="block text-sm font-medium text-gray-700 mb-2">Tenant Name</label>
+                            <input type="text" id="edit-name" name="name" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="My Tenant">
+                        </div>
+
+                        <div>
+                            <label for="edit-identifier" class="block text-sm font-medium text-gray-700 mb-2">Identifier</label>
+                            <input type="text" id="edit-identifier" name="identifier" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="my-tenant">
+                        </div>
+                    </div>
+
+                    <!-- Add Preset Buttons and Update Button -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Add Configuration</label>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <div id="edit-preset-buttons" class="flex flex-wrap gap-2"></div>
+                            <div class="flex gap-2 ml-auto">
+                                <button type="submit"
+                                        class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Update Tenant
+                                </button>
+                                <button type="button" id="cancel-edit"
+                                        class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Configuration Fields -->
+                    <div id="edit-config-fields" class="mt-6"></div>
+                </form>
             </div>
         </div>
     </div>
@@ -116,6 +193,22 @@
                     'Accept': 'application/json'
                 }
             });
+
+            // Tab switching
+            $('.tab-button').click(function() {
+                const targetTab = $(this).data('tab');
+                switchToTab(targetTab);
+            });
+
+            function switchToTab(tabName) {
+                // Update tab buttons
+                $('.tab-button').removeClass('active');
+                $(`.tab-button[data-tab="${tabName}"]`).addClass('active');
+
+                // Update tab content
+                $('.tab-content').removeClass('active');
+                $(`#${tabName}-tab`).addClass('active');
+            }
 
             // Toast notification function
             function showToast(message, type = 'success') {
@@ -170,27 +263,37 @@
             loadPresets();
             loadTenants();
 
-            // Handle preset selection change
-            $('#preset').change(function() {
+            // Handle preset selection change (create form)
+            $('#create-preset').change(function() {
                 const preset = $(this).val();
                 if (preset) {
-                    loadPresetFields(preset);
+                    loadPresetFields(preset, 'create');
                 } else {
-                    $('#config-fields').empty();
+                    $('#create-config-fields').empty();
                 }
             });
 
-            // Handle form submission
-            $('#tenant-form').submit(function(e) {
+            // Handle form submissions
+            $('#create-form').submit(function(e) {
                 e.preventDefault();
-                createTenant();
+                submitTenant('create');
+            });
+
+            $('#edit-form').submit(function(e) {
+                e.preventDefault();
+                submitTenant('edit');
+            });
+
+            // Handle cancel edit
+            $('#cancel-edit').click(function() {
+                switchToTab('list');
             });
 
             function loadPresets() {
                 $.get('presets')
                     .done(function(response) {
                         window.presetsData = response.presets;
-                        const presetSelect = $('#preset');
+                        const presetSelect = $('#create-preset');
                         presetSelect.empty().append('<option value="">Select a preset...</option>');
 
                         Object.keys(response.presets).forEach(function(presetKey) {
@@ -203,13 +306,13 @@
                     });
             }
 
-            function loadPresetFields(preset) {
+            function loadPresetFields(preset, mode) {
                 if (window.presetsData && window.presetsData[preset]) {
-                    renderConfigFields(window.presetsData[preset].fields);
+                    renderConfigFields(window.presetsData[preset].fields, {}, false, mode);
                 } else {
                     $.get(`presets/${preset}/fields`)
                         .done(function(response) {
-                            renderConfigFields(response.fields);
+                            renderConfigFields(response.fields, {}, false, mode);
                         })
                         .fail(function() {
                             showToast('Failed to load preset fields', 'error');
@@ -217,13 +320,14 @@
                 }
             }
 
-            function renderConfigFields(fields, values = {}, editMode = false) {
+            function renderConfigFields(fields, values = {}, editMode = false, mode = 'create') {
                 console.log('renderConfigFields called');
                 console.log('- fields count:', fields ? fields.length : 0);
                 console.log('- values:', values);
                 console.log('- editMode:', editMode);
+                console.log('- mode:', mode);
 
-                const fieldsContainer = $('#config-fields');
+                const fieldsContainer = $(`#${mode}-config-fields`);
                 fieldsContainer.empty();
 
                 let fieldsToRender = [];
@@ -261,36 +365,97 @@
                 console.log('Fields to render:', fieldsToRender.length);
 
                 if (fieldsToRender.length > 0) {
-                    fieldsContainer.append('<h3 class="text-lg font-medium mb-4">Configuration</h3>');
-
-                    const grid = $('<div class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>');
-
+                    // Group fields by 'group' property
+                    const groupedFields = {};
                     fieldsToRender.forEach(function(field) {
-                        const value = getNestedValue(values, field.name) || '';
-                        const fieldHtml = createFieldHtml(field, value, editMode);
-                        grid.append(fieldHtml);
+                        const group = field.group || 'Other';
+                        if (!groupedFields[group]) {
+                            groupedFields[group] = [];
+                        }
+                        groupedFields[group].push(field);
                     });
 
-                    fieldsContainer.append(grid);
+                    const groups = Object.keys(groupedFields);
+                    console.log('Field groups:', groups);
+
+                    if (groups.length > 1) {
+                        // Multiple groups - render tabbed interface
+                        fieldsContainer.append('<h3 class="text-lg font-medium mb-4">Configuration</h3>');
+
+                        // Create tab buttons
+                        const tabButtons = $('<div class="flex gap-2 mb-4 border-b border-gray-200"></div>');
+                        groups.forEach(function(group, index) {
+                            const button = $(`
+                                <button type="button"
+                                        class="config-tab-button px-4 py-2 rounded-t-md ${index === 0 ? 'active' : 'bg-gray-100 hover:bg-gray-200'}"
+                                        data-config-tab="${mode}-${group}">
+                                    ${group}
+                                </button>
+                            `);
+                            tabButtons.append(button);
+                        });
+                        fieldsContainer.append(tabButtons);
+
+                        // Create tab contents
+                        groups.forEach(function(group, index) {
+                            const tabContent = $(`<div class="config-tab-content ${index === 0 ? 'active' : ''}" id="${mode}-${group}-tab"></div>`);
+                            const grid = $('<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"></div>');
+
+                            groupedFields[group].forEach(function(field) {
+                                const value = getNestedValue(values, field.name) || '';
+                                const fieldHtml = createFieldHtml(field, value, editMode, mode);
+                                grid.append(fieldHtml);
+                            });
+
+                            tabContent.append(grid);
+                            fieldsContainer.append(tabContent);
+                        });
+
+                        // Attach tab click handlers
+                        fieldsContainer.find('.config-tab-button').click(function() {
+                            const targetTab = $(this).data('config-tab');
+                            const group = targetTab.replace(`${mode}-`, '');
+
+                            // Update buttons
+                            fieldsContainer.find('.config-tab-button').removeClass('active').addClass('bg-gray-100');
+                            $(this).removeClass('bg-gray-100').addClass('active');
+
+                            // Update content
+                            fieldsContainer.find('.config-tab-content').removeClass('active');
+                            $(`#${targetTab}-tab`).addClass('active');
+                        });
+                    } else {
+                        // Single group - render without tabs
+                        fieldsContainer.append('<h3 class="text-lg font-medium mb-4">Configuration</h3>');
+                        const grid = $('<div class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>');
+
+                        fieldsToRender.forEach(function(field) {
+                            const value = getNestedValue(values, field.name) || '';
+                            const fieldHtml = createFieldHtml(field, value, editMode, mode);
+                            grid.append(fieldHtml);
+                        });
+
+                        fieldsContainer.append(grid);
+                    }
 
                     // Attach visibility dropdown change handlers
-                    attachVisibilityHandlers();
+                    attachVisibilityHandlers(mode);
                 } else if (editMode) {
                     fieldsContainer.append('<p class="text-gray-500">No configuration fields set. Use "Add Configuration" buttons to add fields.</p>');
                 }
             }
 
-            function attachVisibilityHandlers() {
+            function attachVisibilityHandlers(mode) {
                 const visibilityInfo = {
                     'PRIVATE': '🔒 Private: Laravel only',
                     'PROTECTED': '🛡️ Protected: Laravel + SSR',
                     'PUBLIC': '🌐 Public: Laravel + SSR + Browser'
                 };
 
-                $('select[name^="visibility["]').on('change', function() {
+                $(`#${mode}-config-fields select[name^="visibility["]`).on('change', function() {
                     const fieldName = $(this).attr('name').match(/visibility\[(.+)\]/)[1];
                     const value = $(this).val();
-                    $(`#visibility_info_${fieldName.replace(/\./g, '\\.')}`).text(visibilityInfo[value]);
+                    $(`#${mode}_visibility_info_${fieldName.replace(/\./g, '\\.')}`).text(visibilityInfo[value]);
                 });
             }
 
@@ -335,23 +500,23 @@
 
             const MANDATORY_FIELDS = ['app.name', 'app.url', 'frontend.url'];
 
-            function createFieldHtml(field, value = '', editMode = false) {
+            function createFieldHtml(field, value = '', editMode = false, mode = 'create') {
                 const isMandatory = MANDATORY_FIELDS.includes(field.name);
                 const required = (!editMode && (field.required || isMandatory)) ? 'required' : '';
                 const placeholder = field.placeholder ? `placeholder="${field.placeholder}"` : '';
                 const escapedValue = $('<div>').text(value).html(); // Escape HTML
 
-                const currentVisibility = window.currentEditConfig && window.currentEditConfig.__visibility
-                    ? (getNestedValue(window.currentEditConfig.__visibility, field.name) || 'PRIVATE')
+                const currentVisibility = (mode === 'edit' && window.editConfig && window.editConfig.__visibility)
+                    ? (getNestedValue(window.editConfig.__visibility, field.name) || 'PRIVATE')
                     : 'PRIVATE';
 
                 let inputHtml = '';
                 if (field.type === 'textarea') {
-                    inputHtml = `<textarea id="config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
+                    inputHtml = `<textarea id="${mode}_config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                           rows="3">${escapedValue}</textarea>`;
                 } else {
-                    inputHtml = `<input type="${field.type}" id="config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
+                    inputHtml = `<input type="${field.type}" id="${mode}_config_${field.name}" name="config[${field.name}]" ${required} ${placeholder}
                                         value="${escapedValue}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">`;
                 }
@@ -364,7 +529,7 @@
 
                 return `
                     <div class="border border-gray-200 p-4 rounded-lg">
-                        <label for="config_${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="${mode}_config_${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
                             ${field.label}
                             ${(isMandatory || (!editMode && field.required)) ? '<span class="text-red-500">*</span>' : ''}
                             ${isMandatory ? '<span class="text-xs text-red-600 ml-1">(Required)</span>' : ''}
@@ -374,14 +539,14 @@
 
                         <!-- Visibility selector -->
                         <div class="mt-3">
-                            <label for="visibility_${field.name}" class="block text-xs font-medium text-gray-600 mb-1">Visibility Level</label>
-                            <select id="visibility_${field.name}" name="visibility[${field.name}]"
+                            <label for="${mode}_visibility_${field.name}" class="block text-xs font-medium text-gray-600 mb-1">Visibility Level</label>
+                            <select id="${mode}_visibility_${field.name}" name="visibility[${field.name}]"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="PRIVATE" ${currentVisibility === 'PRIVATE' ? 'selected' : ''}>Private (Laravel only)</option>
                                 <option value="PROTECTED" ${currentVisibility === 'PROTECTED' ? 'selected' : ''}>Protected (Laravel + SSR)</option>
                                 <option value="PUBLIC" ${currentVisibility === 'PUBLIC' ? 'selected' : ''}>Public (Laravel + SSR + Browser)</option>
                             </select>
-                            <p class="text-xs text-gray-500 mt-1" id="visibility_info_${field.name}">
+                            <p class="text-xs text-gray-500 mt-1" id="${mode}_visibility_info_${field.name}">
                                 ${visibilityInfo[currentVisibility]}
                             </p>
                         </div>
@@ -389,17 +554,20 @@
                 `;
             }
 
-            function createTenant() {
-                const formData = new FormData($('#tenant-form')[0]);
+            function submitTenant(mode) {
+                const formId = mode === 'create' ? '#create-form' : '#edit-form';
+                const formData = new FormData($(formId)[0]);
                 const data = {};
                 const flatVisibility = {};
-                const tenantId = $('#tenant-id').val();
-                const isEdit = tenantId !== '';
+                const isEdit = mode === 'edit';
+                const tenantId = isEdit ? $('#edit-tenant-id').val() : null;
 
                 // Convert FormData to object
                 for (let [key, value] of formData.entries()) {
                     if (key === 'tenant_id') continue;
-                    if (key.startsWith('config[')) {
+                    if (key === 'preset') {
+                        data[key] = value;
+                    } else if (key.startsWith('config[')) {
                         if (!data.config) data.config = {};
                         const configKey = key.match(/config\[(.+)\]/)[1];
                         // Convert dot notation to nested object
@@ -442,10 +610,12 @@
                     .done(function(response) {
                         if (response.success) {
                             showToast(isEdit ? 'Tenant updated successfully!' : 'Tenant created successfully!', 'success');
-                            if (!isEdit) {
-                                resetForm();
-                            }
                             loadTenants();
+                            switchToTab('list');
+                            if (!isEdit) {
+                                $(formId)[0].reset();
+                                $(`#${mode}-config-fields`).empty();
+                            }
                         } else {
                             showToast('Error: ' + response.error, 'error');
                         }
@@ -461,23 +631,6 @@
                     });
             }
 
-            function resetForm() {
-                $('#tenant-form')[0].reset();
-                $('#tenant-id').val('');
-                $('#config-fields').empty();
-                $('#form-title').text('Create New Tenant');
-                $('#submit-text').text('Create Tenant');
-                $('#cancel-edit').addClass('hidden');
-                $('#preset-container').show();
-                $('#preset').prop('required', true);
-                $('#add-preset-container').addClass('hidden');
-                window.currentEditConfig = null;
-                window.allConfigFields = null;
-            }
-
-            $('#cancel-edit').click(function() {
-                resetForm();
-            });
 
             function loadTenants() {
                 $.get('tenants')
@@ -545,17 +698,14 @@
                 console.log('editTenant called with:', tenant);
                 console.log('tenant.config:', tenant.config);
 
-                $('#tenant-id').val(tenant.id);
-                $('#name').val(tenant.name);
-                $('#identifier').val(tenant.identifier);
-                $('#form-title').text('Edit Tenant');
-                $('#submit-text').text('Update Tenant');
-                $('#cancel-edit').removeClass('hidden');
+                // Show edit tab
+                $('#edit-tab-button').removeClass('hidden');
+                switchToTab('edit');
 
-                // Hide preset selector in edit mode, show add preset buttons
-                $('#preset-container').hide();
-                $('#preset').prop('required', false);
-                $('#add-preset-container').removeClass('hidden');
+                // Populate form
+                $('#edit-tenant-id').val(tenant.id);
+                $('#edit-name').val(tenant.name);
+                $('#edit-identifier').val(tenant.identifier);
 
                 // Store current config globally - handle both object and string
                 let config = tenant.config || {};
@@ -567,31 +717,26 @@
                         config = {};
                     }
                 }
-                window.currentEditConfig = config;
-                console.log('Stored config:', window.currentEditConfig);
+                window.editConfig = config;
+                console.log('Stored config:', window.editConfig);
 
                 // Load all config fields and render preset buttons
                 $.get('config-fields')
                     .done(function(response) {
                         console.log('Config fields loaded:', response.fields.length);
                         window.allConfigFields = response.fields;
-                        renderConfigFields(response.fields, window.currentEditConfig, true);
+                        renderConfigFields(response.fields, window.editConfig, true, 'edit');
                         renderPresetButtons();
                     })
                     .fail(function() {
                         showToast('Failed to load config fields', 'error');
                     });
-
-                // Scroll to form
-                $('html, body').animate({
-                    scrollTop: $('#tenant-form').offset().top - 20
-                }, 500);
             }
 
             function renderPresetButtons() {
                 if (!window.presetsData) return;
 
-                const container = $('#preset-buttons');
+                const container = $('#edit-preset-buttons');
                 container.empty();
 
                 Object.keys(window.presetsData).forEach(function(presetKey) {
@@ -614,23 +759,23 @@
 
             function addPresetFields(presetKey) {
                 if (!window.presetsData || !window.presetsData[presetKey]) return;
-                if (!window.allConfigFields || !window.currentEditConfig) return;
+                if (!window.allConfigFields || !window.editConfig) return;
 
                 const preset = window.presetsData[presetKey];
 
                 // Add empty values for preset fields that don't exist in current config
                 preset.fields.forEach(function(field) {
                     const fieldName = field.name;
-                    const currentValue = getNestedValue(window.currentEditConfig, fieldName);
+                    const currentValue = getNestedValue(window.editConfig, fieldName);
 
                     if (currentValue === undefined || currentValue === null || currentValue === '') {
                         // Set empty value in config so field will show
-                        setNestedValue(window.currentEditConfig, fieldName, '');
+                        setNestedValue(window.editConfig, fieldName, '');
                     }
                 });
 
                 // Re-render fields with updated config
-                renderConfigFields(window.allConfigFields, window.currentEditConfig, true);
+                renderConfigFields(window.allConfigFields, window.editConfig, true, 'edit');
             }
 
             function setNestedValue(obj, path, value) {
