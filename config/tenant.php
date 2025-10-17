@@ -104,6 +104,12 @@ return [
     | Default settings for tenant config API endpoints.
     | These can be overridden per-tenant using the same config keys.
     |
+    | middleware: Applied to route group. Affects /public and /protected endpoints.
+    |             Remove 'tenant.is-internal' to allow tenant domains to access
+    |             their own config. The /cache endpoint has hardcoded security
+    |             and cannot be accessed from non-internal tenants regardless
+    |             of this setting.
+    |
     | Examples of tenant-specific overrides:
     | - tenant.api.allow_public_config: true/false
     | - tenant.api.allow_protected_config: true/false

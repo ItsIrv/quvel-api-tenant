@@ -36,10 +36,18 @@ class TenantConfigController
 
     /**
      * Get all tenants cache for SSR.
+     * SECURITY: This endpoint MUST only be accessible from internal tenants.
      */
     public function cache(
+        TenantContext $tenantContext,
         TenantsCache $action
     ): AnonymousResourceCollection {
+        $tenant = $tenantContext->current();
+
+        if (!$tenant || !$tenant->isInternal()) {
+            throw new NotFoundHttpException('Endpoint not available');
+        }
+
         return $action();
     }
 
@@ -60,9 +68,9 @@ class TenantConfigController
             throw new NotFoundHttpException('Tenant not found');
         }
 
-        if ($tenant->isInternal() && $request->hasHeader('X-Tenant-ID')) {
+        if ($tenant->isInternal() && $request->hasHeader('X-Tenant-Override')) {
             $tenantModel = config('tenant.model');
-            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-ID'))
+            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-Override'))
                 ->with('parent')
                 ->first();
 

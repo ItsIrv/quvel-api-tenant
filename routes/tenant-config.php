@@ -9,7 +9,10 @@ use Quvel\Tenant\Config\Http\Controllers\TenantConfigController;
 |--------------------------------------------------------------------------
 |
 | These routes provide tenant configuration access for SSR and frontend.
-| Public endpoint requires tenant permission, protected requires internal middleware.
+|
+| /public - Can be called from any tenant domain (uses group middleware)
+| /protected - Can be configured via middleware (uses group middleware)
+| /cache - ALWAYS internal-only (hardcoded security check in controller)
 |
 */
 
@@ -21,5 +24,4 @@ Route::get('/protected', [TenantConfigController::class, 'protected'])
     ->name('tenant.config.protected');
 
 Route::get('/cache', [TenantConfigController::class, 'cache'])
-    ->middleware(config('tenant.middleware.internal_request'))
     ->name('tenant.config.cache');

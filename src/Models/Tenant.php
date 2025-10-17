@@ -132,11 +132,25 @@ class Tenant extends Model
     }
 
     /**
-     * Check if a config key exists.
+     * Check if a config key exists (with parent inheritance).
      */
     public function hasConfig(string $key): bool
     {
-        return data_get($this->config, $key) !== null;
+        $value = data_get($this->config, $key);
+
+        if ($value !== null) {
+            return true;
+        }
+
+        if ($this->parent_id) {
+            $parent = $this->parent;
+
+            if ($parent) {
+                return $parent->hasConfig($key);
+            }
+        }
+
+        return false;
     }
 
     /**
