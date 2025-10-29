@@ -30,9 +30,6 @@ class ResolutionService implements ResolutionServiceContract
     public function resolve(Request $request): mixed
     {
         $resolvers = config('tenant.resolver.resolvers');
-        $identifier = null;
-        $resolverUsed = null;
-
         $identifier = $this->resolver->getIdentifier($request);
         $resolverUsed = $this->resolver;
 
@@ -84,7 +81,7 @@ class ResolutionService implements ResolutionServiceContract
             return Cache::remember(
                 "tenant.$cacheKey",
                 $cacheTtl,
-                fn() => $resolver->resolve($request)
+                static fn() => $resolver->resolve($request)
             );
         }
 

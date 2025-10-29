@@ -39,6 +39,9 @@ class SessionConfigPipe extends BasePipe
         $newCookie = $this->calculateSessionCookie();
         $this->config->set('session.cookie', $newCookie);
 
+        $xsrfCookie = $this->calculateXsrfCookie();
+        $this->config->set('session.xsrf_cookie', $xsrfCookie);
+
         if ($this->config->get('session.driver') === 'database') {
             $dbConnection = $this->config->get('database.default');
             $this->config->set('session.connection', $dbConnection);
@@ -68,6 +71,20 @@ class SessionConfigPipe extends BasePipe
         $tenantForCookie = $this->tenant->parent ?? $this->tenant;
 
         return $this->getDefaultCookieName($tenantForCookie);
+    }
+
+    /**
+     * Calculate XSRF cookie name for tenant isolation.
+     */
+    protected function calculateXsrfCookie(): string
+    {
+        if ($this->tenant->hasConfig('session.xsrf_cookie')) {
+            return $this->tenant->getConfig('session.xsrf_cookie');
+        }
+
+        $tenantForCookie = $this->tenant->parent ?? $this->tenant;
+
+        return "tenant_{$tenantForCookie->public_id}_xsrf";
     }
 
     /**
