@@ -407,4 +407,66 @@ class TableRegistry implements TableRegistryContract
     {
         return count($this->tables);
     }
+
+    /**
+     * Add a tenant_id column to a Blueprint in a migration.
+     *
+     * This method is designed to be called from within a Schema::create or Schema::table
+     * callback to add tenant functionality with fine-grained control.
+     *
+     * @param Blueprint $table The Blueprint instance
+     * @param string $after Column to place tenant_id after (default: 'id')
+     * @param bool $cascadeDelete Whether to cascade on tenant deletion (default: true)
+     * @param array $dropUniques Unique constraints to drop before adding tenant-scoped ones
+     * @param array $tenantUniqueConstraints Unique constraints that should include tenant_id
+     *
+     * @example
+     * Schema::create('posts', function (Blueprint $table) {
+     *     $table->id();
+     *     TableRegistry::addTenantColumn($table);
+     * });
+     *
+     * @example
+     * Schema::create('posts', function (Blueprint $table) {
+     *     $table->id();
+     *     $table->string('slug');
+     *     TableRegistry::addTenantColumn(
+     *         $table,
+     *         after: 'id',
+     *         cascadeDelete: true,
+     *         dropUniques: [['slug']],
+     *         tenantUniqueConstraints: [['slug']]
+     *     );
+     * });
+     */
+    public static function addTenantColumn(
+        Blueprint $table,
+        string $after = 'id',
+        bool $cascadeDelete = true,
+        array $dropUniques = [],
+        array $tenantUniqueConstraints = []
+    ): void {
+        $tenantIdColumn = $table->foreignId('tenant_id')
+            ->after($after)
+            ->constrained('tenants');
+
+        if ($cascadeDelete) {
+            $tenantIdColumn->cascadeOnDelete();
+        }
+
+        $table->index('tenant_id');
+
+        foreach ($dropUniques as $columns) {
+            try {
+                $table->dropUnique($columns);
+            } catch (Exception) {
+                // Constraint might not exist in this context
+            }
+        }
+
+        foreach ($tenantUniqueConstraints as $columns) {
+            $uniqueColumns = array_merge(['tenant_id'], $columns);
+            $table->unique($uniqueColumns);
+        }
+    }
 }

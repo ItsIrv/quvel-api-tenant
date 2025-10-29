@@ -52,16 +52,23 @@ return [
     |
     | Configure how tenants are resolved from requests.
     |
-    | driver: The resolver driver to use (domain, path, etc.)
-    | drivers: Custom resolver driver mappings (optional)
-    | config: Configuration passed to the resolver
+    | resolvers: Array of resolver strategies to try in order (first match wins)
+    | drivers: Custom resolver driver class mappings (optional)
+    | config: Unified caching configuration for identifier resolution
     |
     | Built-in drivers: domain
     | Custom drivers can be added via the 'drivers' array or by extending ResolverManager
     |
+    | Examples:
+    | Single resolver: [['domain' => []]]
+    | Subdomain only: [['domain' => ['mode' => 'subdomain']]]
+    | Fallback chain: [['domain' => ['mode' => 'subdomain']], ['domain' => []]]
+    |
     */
     'resolver' => [
-        'driver' => env('TENANT_RESOLVER_DRIVER', 'domain'),
+        'resolvers' => [
+            ['domain' => []],
+        ],
         'drivers' => [
             // Custom driver mappings (optional)
             // 'custom' => App\Tenant\Resolvers\CustomResolver::class,

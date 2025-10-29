@@ -10,6 +10,7 @@ use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
 use Illuminate\Session\SessionManager;
@@ -26,8 +27,8 @@ use Quvel\Tenant\Configuration\TableRegistry;
 use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
-use Quvel\Tenant\Resolvers\ResolverManager;
-use Quvel\Tenant\Resolvers\ResolutionService;
+use Quvel\Tenant\Resolution\ResolverManager;
+use Quvel\Tenant\Resolution\ResolutionService;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
@@ -57,10 +58,17 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->app->singleton(ResolverManager::class);
         $this->app->singleton(TenantResolver::class, function ($app) {
-            return $app->make(ResolverManager::class)->driver();
+            /** @var ResolverManager $manager */
+            $manager = $app->make(ResolverManager::class);
+            return $manager->driver($manager->getDefaultDriver());
         });
 
-        $this->app->singleton(ResolutionService::class);
+        $this->app->singleton(ResolutionService::class, function ($app) {
+            return new ResolutionService(
+                $app->make(TenantResolver::class),
+                $app->make(ResolverManager::class)
+            );
+        });
         $this->app->singleton(
             ResolutionServiceContract::class,
             ResolutionService::class
@@ -91,6 +99,7 @@ class TenantServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerBlueprintMacros();
         $this->registerTenantMiddleware();
         $this->registerMiddlewareAlias();
         $this->registerRoutes();
@@ -129,6 +138,7 @@ class TenantServiceProvider extends ServiceProvider
             $router = $this->app->make('router');
             $router->aliasMiddleware('tenant', TenantMiddleware::class);
             $router->aliasMiddleware('tenant.is-internal', Http\Middleware\RequireInternalTenant::class);
+            $router->aliasMiddleware('tenant.session', Http\Middleware\ValidateTenantSession::class);
         } catch (BindingResolutionException $e) {
             throw new RuntimeException('Failed to alias tenant middleware', 0 , $e);
         }
@@ -474,5 +484,54 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerFacades(): void
     {
         $this->app->alias(TenantContext::class, 'tenant.context');
+    }
+
+    /**
+     * Register Blueprint macros for tenant columns.
+     */
+    protected function registerBlueprintMacros(): void
+    {
+        /**
+         * Add a tenant_id column to the table with fine-grained control.
+         *
+         * @param string $after Column to place tenant_id after (default: 'id')
+         * @param bool $cascadeDelete Whether to cascade on tenant deletion (default: true)
+         * @param array $dropUniques Unique constraints to drop
+         * @param array $tenantUniqueConstraints Unique constraints that should include tenant_id
+         * @return void
+         *
+         * @example
+         * Schema::create('posts', function (Blueprint $table) {
+         *     $table->id();
+         *     $table->tenantId(); // Simple case
+         * });
+         *
+         * @example
+         * Schema::create('posts', function (Blueprint $table) {
+         *     $table->id();
+         *     $table->string('slug');
+         *     $table->tenantId(
+         *         after: 'id',
+         *         cascadeDelete: true,
+         *         dropUniques: [['slug']],
+         *         tenantUniqueConstraints: [['slug']]
+         *     );
+         * });
+         */
+        Blueprint::macro('tenantId', function (
+            string $after = 'id',
+            bool $cascadeDelete = true,
+            array $dropUniques = [],
+            array $tenantUniqueConstraints = []
+        ) {
+            /** @var Blueprint $this */
+            TableRegistry::addTenantColumn(
+                $this,
+                $after,
+                $cascadeDelete,
+                $dropUniques,
+                $tenantUniqueConstraints
+            );
+        });
     }
 }

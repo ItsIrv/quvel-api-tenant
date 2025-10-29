@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Quvel\Tenant\Contracts\TableRegistry;
+use Quvel\Tenant\Facades\TableRegistry;
 
 return new class extends Migration
 {
@@ -13,9 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $registry = app(TableRegistry::class);
-
-        $registry->processTables();
+        TableRegistry::processTables();
     }
 
     /**
@@ -26,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $registry = app(TableRegistry::class);
-
-        $registry->removeTenantSupport();
+        TableRegistry::removeTenantSupport();
     }
 };

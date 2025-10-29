@@ -33,6 +33,7 @@ class TenantConfigResource extends JsonResource
     public function toArray(Request $request): array
     {
         $config = $this->getFilteredConfig();
+        $config['__visibility'] = data_get($this->resource->config, '__visibility', []);
 
         return [
             'id' => $this->resource->public_id,
@@ -40,17 +41,16 @@ class TenantConfigResource extends JsonResource
             'identifier' => $this->resource->identifier,
             'parent' => $this->when((bool) $this->resource->parent, function () {
                 $parentConfig = $this->getParentFilteredConfig();
+                $parentConfig['__visibility'] = data_get($this->resource->parent->config, '__visibility', []);
 
                 return [
                     'id' => $this->resource->parent->public_id,
                     'name' => $this->resource->parent->name,
                     'identifier' => $this->resource->parent->identifier,
                     'config' => $parentConfig,
-                    '__visibility' => data_get($this->resource->parent->config, '__visibility', []),
                 ];
             }),
             'config' => $config,
-            '__visibility' => data_get($this->resource->config, '__visibility', []),
         ];
     }
 

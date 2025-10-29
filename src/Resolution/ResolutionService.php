@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Resolvers;
+namespace Quvel\Tenant\Resolution;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +19,8 @@ class ResolutionService implements ResolutionServiceContract
     protected $bypassCallback = null;
 
     public function __construct(
-        protected TenantResolver $resolver
+        protected TenantResolver $resolver,
+        protected ResolverManager $manager
     ) {
     }
 
@@ -28,32 +29,45 @@ class ResolutionService implements ResolutionServiceContract
      */
     public function resolve(Request $request): mixed
     {
+        $resolvers = config('tenant.resolver.resolvers');
         $identifier = null;
+        $resolverUsed = null;
 
-        if (method_exists($this->resolver, 'getCacheKey')) {
-            $identifier = $this->resolver->getCacheKey($request);
+        $identifier = $this->resolver->getIdentifier($request);
+        $resolverUsed = $this->resolver;
+
+        if ($identifier === null && count($resolvers) > 1) {
+            for ($i = 1, $iMax = count($resolvers); $i < $iMax; $i++) {
+                $resolverConfig = $resolvers[$i];
+                [$driver, $config] = [array_key_first($resolverConfig), reset($resolverConfig)];
+
+                $resolver = $this->manager->makeResolver($driver, $config);
+                $identifier = $resolver->getIdentifier($request);
+
+                if ($identifier !== null) {
+                    $resolverUsed = $resolver;
+                    break;
+                }
+            }
         }
 
-        if ($identifier && config('tenant.resolver.config.cache_enabled', true)) {
-            $tenant = $this->resolveTenantWithCache($identifier, $request);
+        if ($identifier === null) {
+            TenantNotFound::dispatch($request, get_class($this->resolver), null);
+            return null;
+        }
+
+        if (config('tenant.resolver.config.cache_enabled', true)) {
+            $tenant = $this->resolveTenantWithCache($identifier, $request, $resolverUsed);
             $cacheKey = $identifier;
         } else {
-            $tenant = $this->resolver->resolve($request);
+            $tenant = $resolverUsed->resolve($request);
             $cacheKey = null;
         }
 
         if ($tenant) {
-            TenantResolved::dispatch(
-                $tenant,
-                get_class($this->resolver),
-                $cacheKey
-            );
+            TenantResolved::dispatch($tenant, get_class($resolverUsed), $cacheKey);
         } else {
-            TenantNotFound::dispatch(
-                $request,
-                get_class($this->resolver),
-                $cacheKey,
-            );
+            TenantNotFound::dispatch($request, get_class($resolverUsed), $cacheKey);
         }
 
         return $tenant;
@@ -62,7 +76,7 @@ class ResolutionService implements ResolutionServiceContract
     /**
      * Resolve tenant with caching support.
      */
-    protected function resolveTenantWithCache(string $cacheKey, Request $request)
+    protected function resolveTenantWithCache(string $cacheKey, Request $request, TenantResolver $resolver)
     {
         $cacheTtl = config('tenant.resolver.config.cache_ttl', 0);
 
@@ -70,11 +84,11 @@ class ResolutionService implements ResolutionServiceContract
             return Cache::remember(
                 "tenant.$cacheKey",
                 $cacheTtl,
-                fn() => $this->resolver->resolve($request)
+                fn() => $resolver->resolve($request)
             );
         }
 
-        return $this->resolver->resolve($request);
+        return $resolver->resolve($request);
     }
 
     /**
