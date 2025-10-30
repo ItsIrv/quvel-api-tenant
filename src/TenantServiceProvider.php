@@ -85,6 +85,7 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->registerTenantQueueConnector();
         $this->registerTenantBatchRepository();
+        $this->registerTenantSessionManager();
         $this->registerTenantSessionHandler();
         $this->registerTenantCacheStore();
         $this->registerTenantCacheManager();
@@ -301,6 +302,16 @@ class TenantServiceProvider extends ServiceProvider
                 );
             });
         }
+    }
+
+    /**
+     * Register tenant-aware session manager.
+     */
+    protected function registerTenantSessionManager(): void
+    {
+        $this->app->extend('session', function ($manager, $app) {
+            return new Session\TenantSessionManager($app);
+        });
     }
 
     /**

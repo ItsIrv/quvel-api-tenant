@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Pipes;
 
 use Closure;
-use Exception;
 use Illuminate\Session\SessionManager;
-use Illuminate\Session\Store;
-use RuntimeException;
 
 /**
  * Handles session configuration for tenants.
@@ -17,8 +14,6 @@ class SessionConfigPipe extends BasePipe
 {
     public function apply(): void
     {
-        $oldCookie = $this->config->get('session.cookie');
-
         $this->setMany([
             'session.driver',
             'session.lifetime',
@@ -52,10 +47,6 @@ class SessionConfigPipe extends BasePipe
         if ($hasDriverOverride) {
             $sessionManager = app(SessionManager::class);
             $sessionManager->setDefaultDriver($this->config->get('session.driver'));
-        }
-
-        if ($oldCookie !== $newCookie) {
-            $this->updateSessionManager($newCookie);
         }
     }
 
@@ -120,27 +111,6 @@ class SessionConfigPipe extends BasePipe
     }
 
     /**
-     * Update the session manager with the new cookie name.
-     */
-    protected function updateSessionManager(string $cookieName): void
-    {
-        if (!app()->bound(SessionManager::class)) {
-            return;
-        }
-
-        try {
-            /** @var SessionManager $sessionManager */
-            $sessionManager = app(SessionManager::class);
-
-            /** @var Store $driver */
-            $driver = $sessionManager->driver();
-            $driver->setName($cookieName);
-        } catch (Exception) {
-            throw new RuntimeException('Failed to update session manager');
-        }
-    }
-
-    /**
      * Configure session cookie name generator.
      */
     public static function withDefaultCookieName(Closure $callback): string
@@ -151,7 +121,7 @@ class SessionConfigPipe extends BasePipe
     }
 
     /**
-     * Get default cookie name using configurator or default.
+     * Get the default cookie name using configurator or default.
      */
     protected function getDefaultCookieName($tenantForCookie): string
     {
