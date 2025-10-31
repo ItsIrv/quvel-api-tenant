@@ -24,7 +24,6 @@ class DatabaseConfigPipe extends BasePipe
         $connection = $this->tenant->getConfig('database.default') ?? $this->getDefaultConnection();
 
         $this->setMany([
-            'database.default' => 'database.default',
             "database.connections.$connection.host",
             "database.connections.$connection.port",
             "database.connections.$connection.database",
