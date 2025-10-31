@@ -8,7 +8,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Mail\Mailer;
 use Illuminate\Mail\Message;
-use Quvel\Tenant\Models\Tenant;
+use Quvel\Tenant\Context\TenantContext;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Email;
 
@@ -25,42 +25,60 @@ class TenantMailer extends Mailer
         Factory $views,
         TransportInterface $transport,
         ?Dispatcher $events,
-        protected Tenant $tenant
+        protected TenantContext $tenantContext
     ) {
         parent::__construct($name, $views, $transport, $events);
     }
 
     /**
      * Create a new message instance.
+     *
+     * Overridden to apply tenant-specific from/replyTo/returnPath at message creation time.
      */
     protected function createMessage(): Message
     {
         $message = new Message(new Email());
 
-        $fromAddress = $this->tenant->getConfig('mail.from.address');
-        $fromName = $this->tenant->getConfig('mail.from.name');
+        $tenant = $this->tenantContext->current();
 
-        if ($fromAddress) {
-            $message->from($fromAddress, $fromName);
-        } elseif (!empty($this->from['address'])) {
-            $message->from($this->from['address'], $this->from['name']);
-        }
+        if ($tenant) {
+            $fromAddress = $tenant->getConfig('mail.from.address');
+            $fromName = $tenant->getConfig('mail.from.name');
 
-        $replyToAddress = $this->tenant->getConfig('mail.reply_to.address');
-        $replyToName = $this->tenant->getConfig('mail.reply_to.name');
+            if ($fromAddress) {
+                $message->from($fromAddress, $fromName);
+            } elseif (!empty($this->from['address'])) {
+                $message->from($this->from['address'], $this->from['name']);
+            }
 
-        if ($replyToAddress) {
-            $message->replyTo($replyToAddress, $replyToName);
-        } elseif (!empty($this->replyTo['address'])) {
-            $message->replyTo($this->replyTo['address'], $this->replyTo['name']);
-        }
+            $replyToAddress = $tenant->getConfig('mail.reply_to.address');
+            $replyToName = $tenant->getConfig('mail.reply_to.name');
 
-        $returnPath = $this->tenant->getConfig('mail.return_path');
+            if ($replyToAddress) {
+                $message->replyTo($replyToAddress, $replyToName);
+            } elseif (!empty($this->replyTo['address'])) {
+                $message->replyTo($this->replyTo['address'], $this->replyTo['name']);
+            }
 
-        if ($returnPath) {
-            $message->returnPath($returnPath);
-        } elseif (!empty($this->returnPath['address'])) {
-            $message->returnPath($this->returnPath['address']);
+            $returnPath = $tenant->getConfig('mail.return_path');
+
+            if ($returnPath) {
+                $message->returnPath($returnPath);
+            } elseif (!empty($this->returnPath['address'])) {
+                $message->returnPath($this->returnPath['address']);
+            }
+        } else {
+            if (!empty($this->from['address'])) {
+                $message->from($this->from['address'], $this->from['name']);
+            }
+
+            if (!empty($this->replyTo['address'])) {
+                $message->replyTo($this->replyTo['address'], $this->replyTo['name']);
+            }
+
+            if (!empty($this->returnPath['address'])) {
+                $message->returnPath($this->returnPath['address']);
+            }
         }
 
         return $message;

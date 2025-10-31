@@ -38,26 +38,12 @@ class TenantMailManager extends MailManager
             return parent::resolve($name);
         }
 
-        $tenant = $this->tenantContext->current();
-
-        if (!$tenant) {
-            return parent::resolve($name);
-        }
-
-        $hasMailOverrides = $tenant->hasConfig('mail.from.address') ||
-            $tenant->hasConfig('mail.reply_to.address') ||
-            $tenant->hasConfig('mail.return_path');
-
-        if (!$hasMailOverrides) {
-            return parent::resolve($name);
-        }
-
         $mailer = new TenantMailer(
             $name,
             $this->app['view'],
             $this->createSymfonyTransport($config),
             $this->app['events'],
-            $tenant
+            $this->tenantContext  // Pass context, not tenant instance
         );
 
         if ($this->app->bound('queue')) {
