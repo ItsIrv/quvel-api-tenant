@@ -159,11 +159,26 @@
                         </div>
                     </div>
 
-                    <!-- Add Preset Buttons and Update Button -->
+                    <!-- View Mode Toggle -->
                     <div class="mt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Configuration</label>
+                            <button type="button" id="toggle-json-view"
+                                    class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-sm">
+                                Switch to JSON View
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Preset Buttons and Update Button (Form View Only) -->
+                    <div class="mt-6" id="form-view-controls">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Add Configuration</label>
                         <div class="flex flex-wrap gap-2 items-center">
                             <div id="edit-preset-buttons" class="flex flex-wrap gap-2"></div>
+                            <button type="button" id="add-custom-field"
+                                    class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                                Add Custom Field
+                            </button>
                             <div class="flex gap-2 ml-auto">
                                 <button type="submit"
                                         class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -177,8 +192,47 @@
                         </div>
                     </div>
 
-                    <!-- Dynamic Configuration Fields -->
+                    <!-- Custom Field Input (hidden by default) -->
+                    <div id="custom-field-input" class="mt-4 p-4 bg-gray-50 rounded-lg" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Custom Field Key (use dot notation, e.g., "custom.api.key")</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-field-name"
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="e.g., custom.setting.name">
+                            <button type="button" id="add-custom-field-confirm"
+                                    class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                                Add
+                            </button>
+                            <button type="button" id="add-custom-field-cancel"
+                                    class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Configuration Fields (Form View) -->
                     <div id="edit-config-fields" class="mt-6"></div>
+
+                    <!-- JSON Editor (JSON View) -->
+                    <div id="json-editor-container" class="mt-6" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Raw JSON Configuration</label>
+                        <textarea id="json-editor"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                  rows="20"></textarea>
+                        <p class="text-sm text-gray-500 mt-2">Edit the JSON directly. Changes will be validated when you switch back to form view or submit.</p>
+
+                        <!-- Update Button for JSON View -->
+                        <div class="flex gap-2 mt-4">
+                            <button type="submit"
+                                    class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                Update Tenant
+                            </button>
+                            <button type="button" id="cancel-edit-json"
+                                    class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -287,6 +341,67 @@
             // Handle cancel edit
             $('#cancel-edit').click(function() {
                 switchToTab('list');
+            });
+
+            $('#cancel-edit-json').click(function() {
+                switchToTab('list');
+            });
+
+            // Track current view mode
+            window.isJsonView = false;
+
+            // Handle JSON view toggle
+            $('#toggle-json-view').click(function() {
+                if (!window.isJsonView) {
+                    // Switch to JSON view
+                    switchToJsonView();
+                } else {
+                    // Switch to form view
+                    switchToFormView();
+                }
+            });
+
+            // Handle custom field buttons
+            $('#add-custom-field').click(function() {
+                $('#custom-field-input').slideDown();
+                $('#custom-field-name').focus();
+            });
+
+            $('#add-custom-field-cancel').click(function() {
+                $('#custom-field-input').slideUp();
+                $('#custom-field-name').val('');
+            });
+
+            $('#add-custom-field-confirm').click(function() {
+                const fieldName = $('#custom-field-name').val().trim();
+
+                if (!fieldName) {
+                    showToast('Please enter a field name', 'error');
+                    return;
+                }
+
+                // Validate field name (alphanumeric, dots, underscores)
+                if (!/^[a-zA-Z0-9_.]+$/.test(fieldName)) {
+                    showToast('Field name can only contain letters, numbers, dots, and underscores', 'error');
+                    return;
+                }
+
+                if (!window.editConfig) {
+                    showToast('No tenant config loaded', 'error');
+                    return;
+                }
+
+                // Add empty value for the custom field
+                setNestedValue(window.editConfig, fieldName, '');
+
+                // Re-render fields
+                renderConfigFields(window.allConfigFields, window.editConfig, true, 'edit');
+
+                // Hide and reset the input
+                $('#custom-field-input').slideUp();
+                $('#custom-field-name').val('');
+
+                showToast(`Custom field "${fieldName}" added`, 'success');
             });
 
             function loadPresets() {
@@ -562,24 +677,39 @@
                 const isEdit = mode === 'edit';
                 const tenantId = isEdit ? $('#edit-tenant-id').val() : null;
 
-                // Convert FormData to object
-                for (let [key, value] of formData.entries()) {
-                    if (key === 'tenant_id') continue;
-                    if (key === 'preset') {
-                        data[key] = value;
-                    } else if (key.startsWith('config[')) {
-                        if (!data.config) data.config = {};
-                        const configKey = key.match(/config\[(.+)\]/)[1];
-                        // Convert dot notation to nested object
-                        setNestedValue(data.config, configKey, value);
-                    } else if (key.startsWith('visibility[')) {
-                        const visibilityKey = key.match(/visibility\[(.+)\]/)[1];
-                        // Only store non-PRIVATE values (PRIVATE is default)
-                        if (value !== 'PRIVATE') {
-                            flatVisibility[visibilityKey] = value;
+                // If in JSON view, parse JSON editor content
+                if (isEdit && window.isJsonView) {
+                    try {
+                        const jsonText = $('#json-editor').val();
+                        const parsedConfig = JSON.parse(jsonText);
+
+                        data.name = $('#edit-name').val();
+                        data.identifier = $('#edit-identifier').val();
+                        data.config = parsedConfig;
+                    } catch (e) {
+                        showToast('Invalid JSON: ' + e.message, 'error');
+                        return;
+                    }
+                } else {
+                    // Convert FormData to object (existing logic)
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'tenant_id') continue;
+                        if (key === 'preset') {
+                            data[key] = value;
+                        } else if (key.startsWith('config[')) {
+                            if (!data.config) data.config = {};
+                            const configKey = key.match(/config\[(.+)\]/)[1];
+                            // Convert dot notation to nested object
+                            setNestedValue(data.config, configKey, value);
+                        } else if (key.startsWith('visibility[')) {
+                            const visibilityKey = key.match(/visibility\[(.+)\]/)[1];
+                            // Only store non-PRIVATE values (PRIVATE is default)
+                            if (value !== 'PRIVATE') {
+                                flatVisibility[visibilityKey] = value;
+                            }
+                        } else {
+                            data[key] = value;
                         }
-                    } else {
-                        data[key] = value;
                     }
                 }
 
@@ -592,10 +722,12 @@
                     }
                 }
 
-                // Add flat visibility to config (backend will convert)
-                if (Object.keys(flatVisibility).length > 0) {
-                    if (!data.config) data.config = {};
-                    data.config.__visibility = flatVisibility;
+                // Add flat visibility to config (backend will convert) - only for form view
+                if (!window.isJsonView || !isEdit) {
+                    if (Object.keys(flatVisibility).length > 0) {
+                        if (!data.config) data.config = {};
+                        data.config.__visibility = flatVisibility;
+                    }
                 }
 
                 const method = isEdit ? 'PUT' : 'POST';
@@ -611,8 +743,8 @@
                         if (response.success) {
                             showToast(isEdit ? 'Tenant updated successfully!' : 'Tenant created successfully!', 'success');
                             loadTenants();
-                            switchToTab('list');
                             if (!isEdit) {
+                                switchToTab('list');
                                 $(formId)[0].reset();
                                 $(`#${mode}-config-fields`).empty();
                             }
@@ -790,6 +922,108 @@
                 }
 
                 current[keys[keys.length - 1]] = value;
+            }
+
+            function switchToJsonView() {
+                if (!window.editConfig) {
+                    showToast('No config loaded', 'error');
+                    return;
+                }
+
+                // Update config from form fields before switching
+                updateConfigFromForm();
+
+                // Show JSON editor with formatted config
+                $('#json-editor').val(JSON.stringify(window.editConfig, null, 2));
+                $('#json-editor-container').show();
+                $('#edit-config-fields').hide();
+                $('#form-view-controls').hide();
+                $('#custom-field-input').hide();
+                $('#toggle-json-view').text('Switch to Form View');
+                window.isJsonView = true;
+            }
+
+            function switchToFormView() {
+                // Parse JSON and validate
+                try {
+                    const jsonText = $('#json-editor').val();
+                    const parsedConfig = JSON.parse(jsonText);
+
+                    // Update window.editConfig with parsed JSON
+                    window.editConfig = parsedConfig;
+
+                    // Re-render form fields
+                    renderConfigFields(window.allConfigFields, window.editConfig, true, 'edit');
+
+                    // Show form view
+                    $('#json-editor-container').hide();
+                    $('#edit-config-fields').show();
+                    $('#form-view-controls').show();
+                    $('#toggle-json-view').text('Switch to JSON View');
+                    window.isJsonView = false;
+
+                    showToast('Config loaded from JSON', 'success');
+                } catch (e) {
+                    showToast('Invalid JSON: ' + e.message, 'error');
+                }
+            }
+
+            function updateConfigFromForm() {
+                // Update window.editConfig from form fields
+                const config = {};
+                const visibility = {};
+
+                $('#edit-form').find('[name^="config["]').each(function() {
+                    const name = $(this).attr('name');
+                    const configKey = name.match(/config\[(.+)\]/)[1];
+                    const value = $(this).val();
+                    if (value !== '') {
+                        setNestedValue(config, configKey, value);
+                    }
+                });
+
+                // Collect ALL visibility values (including PRIVATE) and convert to nested structure
+                $('#edit-form').find('[name^="visibility["]').each(function() {
+                    const name = $(this).attr('name');
+                    const visibilityKey = name.match(/visibility\[(.+)\]/)[1];
+                    const value = $(this).val();
+
+                    // Store in nested structure to match input format
+                    if (value !== 'PRIVATE') {
+                        setNestedValue(visibility, visibilityKey, value);
+                    }
+                });
+
+                // Deep merge config to preserve nested structure
+                window.editConfig = deepMerge(window.editConfig, config);
+
+                // Update visibility - replace entirely with new structure
+                if (Object.keys(visibility).length > 0) {
+                    window.editConfig.__visibility = visibility;
+                } else if (window.editConfig.__visibility) {
+                    // If no non-PRIVATE visibility collected, remove __visibility
+                    delete window.editConfig.__visibility;
+                }
+            }
+
+            function deepMerge(target, source) {
+                const output = { ...target };
+
+                for (const key in source) {
+                    if (source.hasOwnProperty(key)) {
+                        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                            if (target[key] && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+                                output[key] = deepMerge(target[key], source[key]);
+                            } else {
+                                output[key] = source[key];
+                            }
+                        } else {
+                            output[key] = source[key];
+                        }
+                    }
+                }
+
+                return output;
             }
         });
     </script>

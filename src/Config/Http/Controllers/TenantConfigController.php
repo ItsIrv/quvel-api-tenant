@@ -74,9 +74,11 @@ class TenantConfigController
                 ->with('parent')
                 ->first();
 
-            if ($targetTenant) {
-                $tenant = $targetTenant;
+            if (!$targetTenant) {
+                throw new NotFoundHttpException('Target tenant not found for override');
             }
+
+            $tenant = $targetTenant;
         }
 
         return $action($tenant);
