@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Broadcasting;
 
 use Illuminate\Broadcasting\Broadcasters\LogBroadcaster;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Log broadcaster that automatically prefixes channels with tenant identifiers.

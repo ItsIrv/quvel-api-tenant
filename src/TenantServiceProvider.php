@@ -20,6 +20,7 @@ use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Configuration\PipelineRegistry;
 use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
+use Quvel\Tenant\Contracts\TenantContext as TenantContextContract;
 use Quvel\Tenant\Contracts\TenantResolver;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
@@ -79,9 +80,14 @@ class TenantServiceProvider extends ServiceProvider
             PipelineRegistry::class
         );
 
-        $this->app->scoped(TenantContext::class, function () {
-            return new TenantContext();
-        });
+        $this->app->scoped(TenantContext::class);
+
+        $this->app->scoped(
+            TenantContextContract::class,
+            TenantContext::class
+        );
+
+        $this->registerAutoResolveTenantModel();
 
         $this->registerTenantQueueConnector();
         $this->registerTenantBatchRepository();
@@ -487,6 +493,36 @@ class TenantServiceProvider extends ServiceProvider
                 );
             });
         }
+    }
+
+    /**
+     * Register automatic tenant model resolution if enabled.
+     *
+     * When enabled, type-hinting the tenant model will automatically resolve
+     * to the current tenant from TenantContext instead of creating a new instance.
+     */
+    protected function registerAutoResolveTenantModel(): void
+    {
+        if (!config('tenant.auto_resolve_model', false)) {
+            return;
+        }
+
+        $tenantModelClass = config('tenant.model');
+
+        $this->app->bind($tenantModelClass, function ($app) use ($tenantModelClass) {
+            /** @var TenantContextContract $context */
+            $context = $app->make(TenantContextContract::class);
+            $tenant = $context->current();
+
+            if ($tenant === null) {
+                throw new RuntimeException(
+                    'Cannot auto-resolve tenant model: No tenant is set in the current context. '.
+                    'Ensure tenant middleware has run or manually set a tenant via TenantContext::setCurrent().'
+                );
+            }
+
+            return $tenant;
+        });
     }
 
     /**

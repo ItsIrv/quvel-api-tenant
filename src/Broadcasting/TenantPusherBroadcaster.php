@@ -6,7 +6,7 @@ namespace Quvel\Tenant\Broadcasting;
 
 use Illuminate\Broadcasting\Broadcasters\PusherBroadcaster;
 use Pusher\Pusher;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Pusher broadcaster that automatically prefixes channels with tenant identifiers.

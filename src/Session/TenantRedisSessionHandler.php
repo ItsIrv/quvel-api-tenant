@@ -6,7 +6,7 @@ namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\CacheBasedSessionHandler;
 use SessionHandlerInterface;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware Redis session handler that isolates sessions by tenant.

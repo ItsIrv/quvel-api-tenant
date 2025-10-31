@@ -10,10 +10,13 @@ use Quvel\Tenant\Models\Tenant;
 /**
  * @method static Tenant|null current()
  * @method static void setCurrent(?Tenant $tenant)
+ * @method static bool hasCurrent()
+ * @method static void clear()
  * @method static bool isBypassed()
  * @method static void bypass()
  * @method static void clearBypassed()
  *
+ * @see \Quvel\Tenant\Contracts\TenantContext
  * @see \Quvel\Tenant\Context\TenantContext
  */
 class TenantContext extends Facade
@@ -23,6 +26,6 @@ class TenantContext extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return \Quvel\Tenant\Context\TenantContext::class;
+        return \Quvel\Tenant\Contracts\TenantContext::class;
     }
 }

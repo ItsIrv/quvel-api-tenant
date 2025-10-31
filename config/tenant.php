@@ -24,6 +24,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto-Resolve Tenant Model
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, type-hinting the tenant model in controller/service
+    | constructors will automatically resolve to TenantContext::current().
+    |
+    | Example with auto_resolve_model = true:
+    |   public function show(Tenant $tenant) { ... }
+    |   // $tenant is automatically the current tenant from context
+    |
+    | IMPORTANT: This feature is disabled by default to avoid confusion.
+    | Enable only if you understand the implications:
+    | - The tenant model will resolve to current context, not a new instance
+    | - If no tenant is set, an exception will be thrown
+    | - Route model binding for Tenant will be affected
+    |
+    */
+    'auto_resolve_model' => env('TENANT_AUTO_RESOLVE_MODEL', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Middleware Configuration
     |--------------------------------------------------------------------------
     |

@@ -7,7 +7,7 @@ namespace Quvel\Tenant\Mail;
 use Illuminate\Mail\MailManager;
 use Illuminate\Mail\Mailer;
 use InvalidArgumentException;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Mail manager that automatically applies tenant context to mail drivers.

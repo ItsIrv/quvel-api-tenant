@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Quvel\Tenant\Config\Actions\TenantProtectedConfig;
 use Quvel\Tenant\Config\Actions\TenantPublicConfig;
 use Quvel\Tenant\Config\Actions\TenantsCache;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 use Quvel\Tenant\Http\Resources\TenantConfigResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

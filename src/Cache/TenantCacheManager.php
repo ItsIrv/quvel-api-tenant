@@ -6,7 +6,7 @@ namespace Quvel\Tenant\Cache;
 
 use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Foundation\Application;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware cache manager that automatically scopes cache operations to tenants.

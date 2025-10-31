@@ -6,7 +6,7 @@ namespace Quvel\Tenant\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

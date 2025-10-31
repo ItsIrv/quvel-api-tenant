@@ -8,7 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Session\FileSessionHandler;
 use RuntimeException;
 use SessionHandlerInterface;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware file session handler that isolates sessions by tenant.

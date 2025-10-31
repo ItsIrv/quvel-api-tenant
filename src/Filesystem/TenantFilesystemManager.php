@@ -6,7 +6,7 @@ namespace Quvel\Tenant\Filesystem;
 
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Contracts\Foundation\Application;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware filesystem manager.

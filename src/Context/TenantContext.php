@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Context;
 
+use Quvel\Tenant\Contracts\TenantContext as TenantContextContract;
 use Quvel\Tenant\Events\TenantContextSet;
 
 /**
@@ -18,7 +19,7 @@ use Quvel\Tenant\Events\TenantContextSet;
  * - Access current tenant: $context->current()
  * - Check if tenant is set: $context->hasCurrent()
  */
-class TenantContext
+class TenantContext implements TenantContextContract
 {
     protected $tenant = null;
     protected bool $bypassed = false;

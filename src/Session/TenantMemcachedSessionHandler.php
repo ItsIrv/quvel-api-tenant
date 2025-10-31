@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\CacheBasedSessionHandler;
-use Quvel\Tenant\Context\TenantContext;
+use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware Memcached session handler that isolates sessions by tenant.
