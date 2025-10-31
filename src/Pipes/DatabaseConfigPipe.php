@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Pipes;
 
 use Closure;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Handles database configuration for tenants.
@@ -33,15 +32,11 @@ class DatabaseConfigPipe extends BasePipe
             "database.connections.$connection.password",
         ]);
 
-        $tenantConnection = $this->createTenantConnection($connection);
-
-        if ($tenantConnection) {
-            DB::setDefaultConnection($tenantConnection);
-        }
+        $this->createTenantConnection($connection);
     }
 
     /**
-     * Create tenant-specific database connection.
+     * Create a tenant-specific database connection.
      */
     protected function createTenantConnection(string $baseConnection): ?string
     {
@@ -80,7 +75,7 @@ class DatabaseConfigPipe extends BasePipe
     }
 
     /**
-     * Configure default connection type.
+     * Configure a default connection type.
      */
     public static function withDefaultConnection(Closure $callback): string
     {
@@ -100,7 +95,7 @@ class DatabaseConfigPipe extends BasePipe
     }
 
     /**
-     * Get default connection using configurator or default.
+     * Get the default connection using configurator or default.
      */
     protected function getDefaultConnection(): string
     {
@@ -108,7 +103,7 @@ class DatabaseConfigPipe extends BasePipe
     }
 
     /**
-     * Get tenant connection name using configurator or default.
+     * Get the tenant connection name using configurator or default.
      */
     protected function getTenantConnectionName(string $baseConnection): string
     {

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Mail;
 
-use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\MailManager;
+use Illuminate\Mail\Mailer;
+use InvalidArgumentException;
 use Quvel\Tenant\Context\TenantContext;
 
 /**
@@ -22,35 +23,45 @@ class TenantMailManager extends MailManager
 
     /**
      * Resolve the given mailer.
+     *
+     * Overridden to create TenantMailer when tenant has mail configuration overrides.
      */
-    protected function resolve($name): Mailer
+    protected function resolve($name)
     {
-        $mailer = parent::resolve($name);
+        $config = $this->getConfig($name);
+
+        if (is_null($config)) {
+            throw new InvalidArgumentException("Mailer [{$name}] is not defined.");
+        }
+
+        if (!config('tenant.mail.auto_tenant_mail', false)) {
+            return parent::resolve($name);
+        }
 
         $tenant = $this->tenantContext->current();
 
         if (!$tenant) {
-            return $mailer;
+            return parent::resolve($name);
         }
 
-        $fromAddress = $tenant->getConfig('mail.from.address');
-        $fromName = $tenant->getConfig('mail.from.name');
+        $hasMailOverrides = $tenant->hasConfig('mail.from.address') ||
+            $tenant->hasConfig('mail.reply_to.address') ||
+            $tenant->hasConfig('mail.return_path');
 
-        if ($fromAddress) {
-            $mailer->alwaysFrom($fromAddress, $fromName);
+        if (!$hasMailOverrides) {
+            return parent::resolve($name);
         }
 
-        $replyToAddress = $tenant->getConfig('mail.reply_to.address');
-        $replyToName = $tenant->getConfig('mail.reply_to.name');
+        $mailer = new TenantMailer(
+            $name,
+            $this->app['view'],
+            $this->createSymfonyTransport($config),
+            $this->app['events'],
+            $tenant
+        );
 
-        if ($replyToAddress) {
-            $mailer->alwaysReplyTo($replyToAddress, $replyToName);
-        }
-
-        $returnPath = $tenant->getConfig('mail.return_path');
-
-        if ($returnPath) {
-            $mailer->alwaysReturnPath($returnPath);
+        if ($this->app->bound('queue')) {
+            $mailer->setQueue($this->app['queue']);
         }
 
         return $mailer;
