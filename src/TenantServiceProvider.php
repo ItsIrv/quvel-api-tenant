@@ -116,6 +116,8 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantBroadcastingManager();
 
         if ($this->app->runningInConsole()) {
+            $this->registerCommands();
+
             $this->publishes([
                 __DIR__.'/../config/tenant.php' => config_path('tenant.php'),
             ], 'tenant-config');
@@ -253,9 +255,7 @@ class TenantServiceProvider extends ServiceProvider
 
                 TenantContextFacade::setCurrent($tenant);
 
-                foreach (app(PipelineRegistryContract::class)->getPipes() as $pipe) {
-                    $pipe->handle($tenant, config());
-                }
+                app(PipelineRegistryContract::class)->applyPipes($tenant);
             }
         });
     }
@@ -531,6 +531,16 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerFacades(): void
     {
         $this->app->alias(TenantContext::class, 'tenant.context');
+    }
+
+    /**
+     * Register tenant-aware console commands.
+     */
+    protected function registerCommands(): void
+    {
+        $this->app->extend('command.tinker', function ($command, $app) {
+            return new Console\TenantTinkerCommand();
+        });
     }
 
     /**

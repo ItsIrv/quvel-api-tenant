@@ -30,4 +30,14 @@ interface PipelineRegistry
      * @return Collection<int, BasePipe>
      */
     public function getPipes(): Collection;
+
+    /**
+     * Apply all registered pipes to a tenant.
+     *
+     * Executes each pipe's handle method with the tenant and config.
+     *
+     * @param mixed $tenant The tenant model instance
+     * @return void
+     */
+    public function applyPipes($tenant): void;
 }

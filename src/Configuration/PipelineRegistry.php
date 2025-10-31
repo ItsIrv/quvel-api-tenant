@@ -70,4 +70,19 @@ class PipelineRegistry implements PipelineRegistryContract
     {
         return $this->pipes;
     }
+
+    /**
+     * Apply all registered pipes to a tenant.
+     *
+     * Executes each pipe's handle method with the tenant and config.
+     *
+     * @param mixed $tenant The tenant model instance
+     * @return void
+     */
+    public function applyPipes($tenant): void
+    {
+        foreach ($this->pipes as $pipe) {
+            $pipe->handle($tenant, config());
+        }
+    }
 }

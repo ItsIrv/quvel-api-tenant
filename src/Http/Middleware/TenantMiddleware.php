@@ -44,9 +44,7 @@ class TenantMiddleware
 
         $this->tenantContext->setCurrent($tenant);
 
-        foreach ($this->pipelineRegistry->getPipes() as $pipe) {
-            $pipe->handle($tenant, config());
-        }
+        $this->pipelineRegistry->applyPipes($tenant);
 
         TenantMiddlewareCompleted::dispatch($tenant, $request);
 

@@ -28,7 +28,7 @@ trait HasTenantCommands
         $this->getDefinition()->addOptions([
             new InputOption(
                 'tenant', 't', InputOption::VALUE_OPTIONAL,
-                'Run command for specific tenant (ID, identifier, or name)'
+                'Run command for specific tenant (ID, public_id, identifier, or name)'
             ),
             new InputOption(
                 'all-tenants', null, InputOption::VALUE_NONE,
@@ -37,6 +37,10 @@ trait HasTenantCommands
             new InputOption(
                 'apply-tenant-config', null, InputOption::VALUE_NONE,
                 'Apply tenant configuration pipes (database, mail, etc.)'
+            ),
+            new InputOption(
+                'hard', null, InputOption::VALUE_NONE,
+                'Apply tenant configuration pipes (alias for --apply-tenant-config)'
             ),
         ]);
     }
@@ -103,9 +107,7 @@ trait HasTenantCommands
             TenantContext::setCurrent($tenant);
 
             if ($this->shouldApplyTenantConfig()) {
-                foreach (app(PipelineRegistry::class)->getPipes() as $pipe) {
-                    $pipe->handle($tenant, config());
-                }
+                app(PipelineRegistry::class)->applyPipes($tenant);
 
                 if ($this->output->isVerbose()) {
                     $this->line("  → Applied tenant configuration pipes");
@@ -126,7 +128,7 @@ trait HasTenantCommands
 
     protected function shouldApplyTenantConfig(): bool
     {
-        return $this->option('apply-tenant-config') ?? false;
+        return $this->option('apply-tenant-config') || $this->option('hard');
     }
 
     protected function findTenant(string $identifier): mixed
@@ -134,6 +136,7 @@ trait HasTenantCommands
         $tenantModel = config('tenant.model');
         $tenant = $tenantModel::where('identifier', $identifier)
             ->orWhere('id', $identifier)
+            ->orWhere('public_id', $identifier)
             ->orWhere('name', $identifier)
             ->first();
 
