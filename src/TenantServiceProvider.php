@@ -64,12 +64,6 @@ class TenantServiceProvider extends ServiceProvider
             return $manager->driver($manager->getDefaultDriver());
         });
 
-        $this->app->singleton(ResolutionService::class, function ($app) {
-            return new ResolutionService(
-                $app->make(TenantResolver::class),
-                $app->make(ResolverManager::class)
-            );
-        });
         $this->app->singleton(
             ResolutionServiceContract::class,
             ResolutionService::class
@@ -79,8 +73,6 @@ class TenantServiceProvider extends ServiceProvider
             PipelineRegistryContract::class,
             PipelineRegistry::class
         );
-
-        $this->app->scoped(TenantContext::class);
 
         $this->app->scoped(
             TenantContextContract::class,
