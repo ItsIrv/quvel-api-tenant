@@ -2,6 +2,129 @@
 
 Multi-tenant support for Laravel applications with flexible tenant resolution, database isolation, and service scoping.
 
+## Installation
+
+### Step 1: Install the Package
+
+Install from Packagist:
+
+```bash
+composer require quvel/tenant
+```
+
+### Step 2: Publish Configuration
+
+Publish the configuration file to `config/tenant.php`:
+
+```bash
+php artisan vendor:publish --tag=tenant-config
+```
+
+### Step 3: Publish and Run Migrations
+
+Publish the migrations:
+
+```bash
+php artisan vendor:publish --tag=tenant-migrations
+```
+
+This publishes:
+- `2024_01_01_000000_create_tenants_table` - Main tenants table
+- `2024_01_02_000000_add_tenant_id_to_tables` - Adds tenant_id to existing tables
+
+Run the migrations:
+
+```bash
+php artisan migrate
+```
+
+### Step 4: Configure Environment Variables
+
+Add to your `.env` file:
+
+```env
+# Tenant Resolver
+TENANT_RESOLVER=Quvel\Tenant\Resolvers\DomainResolver
+TENANT_RESOLVER_ENABLE_CACHE=false
+TENANT_RESOLVER_CACHE_TTL=300
+
+# Tenant Configuration
+TENANT_AUTO_MIDDLEWARE=true
+TENANT_DEFAULT_PIPELINE=config,database,mail,filesystem
+
+# Database per Tenant (optional)
+# Set to true if each tenant has its own database
+TENANT_SEPARATE_DATABASES=false
+
+# Admin UI (optional)
+TENANT_ADMIN_ENABLED=false
+```
+
+### Step 5: Update User Model
+
+Add the tenant relationship to your `User` model:
+
+```php
+use Quvel\Tenant\Concerns\BelongsToTenant;
+
+class User extends Authenticatable
+{
+    use BelongsToTenant;
+
+    // Your existing code...
+}
+```
+
+### Step 6: Verify Installation
+
+Check that the package is discovered:
+
+```bash
+php artisan package:discover
+```
+
+You should see `quvel/tenant` in the list.
+
+Test tenant functionality:
+
+```php
+php artisan tinker
+>>> Quvel\Tenant\Models\Tenant::count()
+>>> Quvel\Tenant\Facades\TenantContext::isActive()
+```
+
+### Optional: Publish Additional Assets
+
+```bash
+# Publish admin UI routes
+php artisan vendor:publish --tag=tenant-routes
+
+# Publish language files
+php artisan vendor:publish --tag=tenant-lang
+```
+
+### Troubleshooting
+
+**Package not discovered:**
+- Clear bootstrap cache: `rm bootstrap/cache/*.php`
+- Run: `php artisan package:discover`
+
+**Migration conflicts:**
+If you get "table already exists" errors, the tables may have been created by another package (like `quvel/core`). Mark them as migrated:
+
+```php
+php artisan tinker
+DB::table('migrations')->insert([
+    ['migration' => '2024_01_01_000000_create_platform_settings_table', 'batch' => 2],
+    ['migration' => '2024_01_01_000001_create_user_devices_table', 'batch' => 2],
+]);
+```
+
+**Tenant not resolving:**
+- Check `TENANT_RESOLVER` class is correct
+- Verify middleware is enabled: `TENANT_AUTO_MIDDLEWARE=true`
+- Check domain configuration in tenants table
+
 ## Configuration
 
 ### Tenant Model

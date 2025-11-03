@@ -1,0 +1,22 @@
+name: Update Packagist
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    name: Update Packagist
+
+    steps:
+      - name: Notify Packagist
+        run: |
+          curl -XPOST -H'content-type:application/json' \
+          "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}" \
+          -d'{"repository":{"url":"https://packagist.org/packages/quvel/PACKAGE-NAME"}}'
