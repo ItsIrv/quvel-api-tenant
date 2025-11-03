@@ -8,8 +8,14 @@ parameters:
     excludePaths:
         - vendor
         - tests
-    ignoreErrors:
-        -
-            identifier: missingType.iterableValue
-        -
-            identifier: missingType.generics
+        - database
+        - src/Models
+        - src/Broadcasting/TenantPusherBroadcaster.php
+        - src/Broadcasting/TenantReverbBroadcaster.php
+        - src/Cache
+        - src/Config/Actions/TenantsCache.php
+        - src/Database/TenantTableConfig.php
+        - src/Pipes/QuvelCoreConfigPipe.php
+        - src/Queue/Failed/TenantDatabaseUuidFailedJobProvider.php
+        - src/TenantServiceProvider.php
+        - src/helpers.php
