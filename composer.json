@@ -1,14 +1,26 @@
 {
     "name": "quvel/tenant",
     "description": "Multi-tenant support for the Quvel framework",
+    "keywords": [
+        "laravel",
+        "quvel",
+        "multi-tenant",
+        "tenancy",
+        "saas"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Quvel",
-            "email": "support@quvel.com"
+            "name": "Irving Gomez",
+            "email": "gomirv.work@gmail.com",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/ItsIrv/quvel-api-tenant/issues",
+        "source": "https://github.com/ItsIrv/quvel-api-tenant"
+    },
     "require": {
         "php": "^8.4",
         "illuminate/database": "^12.0",
