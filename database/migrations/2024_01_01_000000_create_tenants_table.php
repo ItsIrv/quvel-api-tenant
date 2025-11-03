@@ -16,7 +16,7 @@ return new class extends Migration
             $table->ulid('public_id')->unique();
             $table->string('name');
             $table->string('identifier')->unique();
-            $table->foreignIdFor(config('tenant.model', Tenant::class), 'parent_id')
+            $table->foreignIdFor(tenant_class(), 'parent_id')
                 ->nullable()
                 ->constrained()
                 ->onDelete('set null');

@@ -60,8 +60,7 @@ trait HasTenantCommands
 
     protected function runForAllTenants($callback): int
     {
-        $tenantModel = config('tenant.model');
-        $tenants = $tenantModel::where('is_active', true)->get();
+        $tenants = tenant_class()::where('is_active', true)->get();
 
         if ($tenants->isEmpty()) {
             $this->error('No active tenants found.');
@@ -133,8 +132,7 @@ trait HasTenantCommands
 
     protected function findTenant(string $identifier): mixed
     {
-        $tenantModel = config('tenant.model');
-        $tenant = $tenantModel::where('identifier', $identifier)
+        $tenant = tenant_class()::where('identifier', $identifier)
             ->orWhere('id', $identifier)
             ->orWhere('public_id', $identifier)
             ->orWhere('name', $identifier)

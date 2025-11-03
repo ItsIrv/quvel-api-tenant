@@ -11,7 +11,7 @@ class TenantFactory extends Factory
 {
     public function __construct()
     {
-        $this->model = config('tenant.model');
+        $this->model = tenant_class();
 
         parent::__construct();
     }

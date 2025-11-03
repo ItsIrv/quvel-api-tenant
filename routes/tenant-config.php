@@ -24,4 +24,5 @@ Route::get('/protected', [TenantConfigController::class, 'protected'])
     ->name('tenant.config.protected');
 
 Route::get('/cache', [TenantConfigController::class, 'cache'])
+    ->middleware(config('tenant.middleware.internal_request'))
     ->name('tenant.config.cache');

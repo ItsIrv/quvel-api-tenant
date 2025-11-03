@@ -175,8 +175,8 @@ class TenantServiceProvider extends ServiceProvider
     {
         if (config('tenant.api.enabled', true)) {
             Route::prefix(config('tenant.api.prefix', 'tenant-info'))
-                ->name(config('tenant.api.name', 'tenant.'))
-                ->middleware(config('tenant.api.middleware', []))
+                ->name(config('tenant.api.name', 'tenant.config.'))
+                ->middleware(config('tenant.api.middleware', ['tenant.is-internal']))
                 ->group(__DIR__ . '/../routes/tenant-config.php');
         }
 
@@ -514,9 +514,7 @@ class TenantServiceProvider extends ServiceProvider
             return;
         }
 
-        $tenantModelClass = config('tenant.model');
-
-        $this->app->bind($tenantModelClass, function ($app) use ($tenantModelClass) {
+        $this->app->bind(tenant_class(), function ($app) {
             /** @var TenantContextContract $context */
             $context = $app->make(TenantContextContract::class);
             $tenant = $context->current();

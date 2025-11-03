@@ -30,9 +30,7 @@ trait HasTenant
      */
     public function tenant(): BelongsTo
     {
-        $tenantModel = config('tenant.model', Tenant::class);
-
-        return $this->belongsTo($tenantModel, 'tenant_id');
+        return $this->belongsTo(tenant_class(), 'tenant_id');
     }
 
 

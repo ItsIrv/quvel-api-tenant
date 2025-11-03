@@ -48,7 +48,7 @@ if (!function_exists('tenant_config')) {
 
 if (!function_exists('tenant_bypassed')) {
     /**
-     * Check if tenant resolution is bypassed.
+     * Check if the tenant resolution is bypassed.
      */
     function tenant_bypassed(): bool
     {
@@ -58,7 +58,7 @@ if (!function_exists('tenant_bypassed')) {
 
 if (!function_exists('with_tenant')) {
     /**
-     * Execute callback with specific tenant context.
+     * Execute callback with a specific tenant context.
      */
     function with_tenant(?Tenant $tenant, callable $callback): mixed
     {
@@ -212,19 +212,31 @@ if (!function_exists('tenant_reply_to')) {
     }
 }
 
+if (!function_exists('tenant_class')) {
+    /**
+     * Get the tenant model class.
+     *
+     * @return class-string<Tenant>
+     */
+    function tenant_class(): string
+    {
+        return config('tenant.model', Tenant::class);
+    }
+}
+
 if (!function_exists('tenant_model')) {
     /**
      * Get a new instance of the configured tenant model.
      */
     function tenant_model(): mixed
     {
-        return app(config('tenant.model'));
+        return app(tenant_class());
     }
 }
 
 if (!function_exists('tenant_event')) {
     /**
-     * Dispatch an event with tenant context.
+     * Dispatch an event with a tenant context.
      */
     function tenant_event(object|string $event, array $payload = [], bool $halt = false): ?array
     {
@@ -250,7 +262,7 @@ if (!function_exists('tenant_event_name')) {
 
 if (!function_exists('with_tenant_events')) {
     /**
-     * Execute callback with tenant-aware event context.
+     * Execute callback with a tenant-aware event context.
      */
     function with_tenant_events(?Tenant $tenant, callable $callback): mixed
     {
@@ -314,7 +326,7 @@ if (!function_exists('tenant_cache_tags')) {
 
 if (!function_exists('tenant_cache_remember')) {
     /**
-     * Remember a value in cache with tenant scoping.
+     * Remember a value in the cache with tenant scoping.
      */
     function tenant_cache_remember(string $key, $ttl, Closure $callback): mixed
     {
@@ -324,7 +336,7 @@ if (!function_exists('tenant_cache_remember')) {
 
 if (!function_exists('tenant_cache_get')) {
     /**
-     * Get a value from cache with tenant scoping.
+     * Get a value from the cache with tenant scoping.
      */
     function tenant_cache_get(string $key, mixed $default = null): mixed
     {
@@ -334,7 +346,7 @@ if (!function_exists('tenant_cache_get')) {
 
 if (!function_exists('tenant_cache_put')) {
     /**
-     * Put a value in cache with tenant scoping.
+     * Put a value in the cache with tenant scoping.
      */
     function tenant_cache_put(string $key, mixed $value, $ttl = null): bool
     {
@@ -344,7 +356,7 @@ if (!function_exists('tenant_cache_put')) {
 
 if (!function_exists('tenant_cache_forget')) {
     /**
-     * Remove a value from cache with tenant scoping.
+     * Remove a value from the cache with tenant scoping.
      */
     function tenant_cache_forget(string $key): bool
     {

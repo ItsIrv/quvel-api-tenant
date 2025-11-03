@@ -69,8 +69,7 @@ class TenantConfigController
         }
 
         if ($tenant->isInternal() && $request->hasHeader('X-Tenant-Override')) {
-            $tenantModel = config('tenant.model');
-            $targetTenant = $tenantModel::where('identifier', $request->header('X-Tenant-Override'))
+            $targetTenant = tenant_class()::where('identifier', $request->header('X-Tenant-Override'))
                 ->with('parent')
                 ->first();
 

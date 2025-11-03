@@ -37,9 +37,7 @@ abstract class AbstractResolver implements TenantResolver
             return null;
         }
 
-        $tenantModel = config('tenant.model');
-
-        return $tenantModel::findByIdentifier($identifier);
+        return tenant_class()::findByIdentifier($identifier);
     }
 
     /**
