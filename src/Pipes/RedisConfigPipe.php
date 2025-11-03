@@ -36,6 +36,7 @@ class RedisConfigPipe extends BasePipe
     public static function withDefaultPrefix(Closure $callback): string
     {
         static::registerConfigurator('default_prefix', $callback);
+
         return static::class;
     }
 

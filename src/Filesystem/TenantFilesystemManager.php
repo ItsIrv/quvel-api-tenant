@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Filesystem;
 
-use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Filesystem\FilesystemManager;
 use Quvel\Tenant\Contracts\TenantContext;
 
 /**

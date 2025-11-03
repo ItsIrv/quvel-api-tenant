@@ -44,6 +44,7 @@ abstract class TenantAwareCommand extends Command
     protected function runWithoutTenant(): int
     {
         $this->error('This command requires tenant context. Use --tenant or --all-tenants.');
+
         return 1;
     }
 }

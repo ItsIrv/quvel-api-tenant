@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Concerns;
 
-use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Events\TenantMismatchDetected;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
+use Quvel\Tenant\Facades\TenantContext;
 
 /**
  * Shared logic for tenant model scoping and validation.

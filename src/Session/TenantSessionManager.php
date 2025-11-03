@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\SessionManager;
-use SessionHandlerInterface;
 
 class TenantSessionManager extends SessionManager
 {

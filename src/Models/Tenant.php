@@ -31,7 +31,8 @@ use Quvel\Tenant\Enums\ConfigVisibility;
  */
 class Tenant extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     public function getTable()
     {

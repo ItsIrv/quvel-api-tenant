@@ -176,6 +176,7 @@ trait HasTenantStorage
 
         if (is_array($paths)) {
             $tenantPaths = array_map([$this, 'tenantPath'], $paths);
+
             return $disk->delete($tenantPaths);
         }
 
@@ -197,7 +198,6 @@ trait HasTenantStorage
     {
         return Storage::disk($this->tenantDisk())->move($this->tenantPath($from), $this->tenantPath($to));
     }
-
 
     /**
      * Clean up all files for the current tenant.

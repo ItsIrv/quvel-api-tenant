@@ -6,8 +6,8 @@ namespace Quvel\Tenant\Console;
 
 use Laravel\Tinker\Console\TinkerCommand;
 use Quvel\Tenant\Console\Concerns\HasTenantCommands;
-use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Contracts\PipelineRegistry;
+use Quvel\Tenant\Facades\TenantContext;
 
 /**
  * Tenant-aware Tinker command.
@@ -52,20 +52,20 @@ class TenantTinkerCommand extends TinkerCommand
 
             TenantContext::setCurrent($tenant);
 
-            $this->info("Tinker session started with tenant context:");
+            $this->info('Tinker session started with tenant context:');
             $this->line("  → Tenant: <fg=cyan>$tenant->name</>");
             $this->line("  → Identifier: <fg=cyan>$tenant->identifier</>");
             $this->line("  → ID: <fg=cyan>$tenant->public_id</>");
 
             if ($this->shouldApplyTenantConfig()) {
-                $this->line("  → <fg=yellow>Applying tenant configuration pipeline...</>");
+                $this->line('  → <fg=yellow>Applying tenant configuration pipeline...</>');
 
                 app(PipelineRegistry::class)->applyPipes($tenant);
 
-                $this->info("  → <fg=green>Configuration pipeline applied (database, mail, etc.)</>");
+                $this->info('  → <fg=green>Configuration pipeline applied (database, mail, etc.)</>');
             } else {
-                $this->line("  → <fg=yellow>Soft mode: tenant set in context only</>");
-                $this->line("  → <fg=gray>Use --hard to apply full configuration pipeline</>");
+                $this->line('  → <fg=yellow>Soft mode: tenant set in context only</>');
+                $this->line('  → <fg=gray>Use --hard to apply full configuration pipeline</>');
             }
 
             $this->newLine();

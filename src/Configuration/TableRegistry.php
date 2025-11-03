@@ -133,6 +133,7 @@ class TableRegistry implements TableRegistryContract
 
         try {
             $this->addTenantSupport($tableName, $config);
+
             return 'processed';
         } catch (Exception $e) {
             return 'error: ' . $e->getMessage();
@@ -159,6 +160,7 @@ class TableRegistry implements TableRegistryContract
 
         try {
             $this->removeTenantFromTableSchema($tableName, $config);
+
             return 'processed';
         } catch (Exception $e) {
             return 'error: ' . $e->getMessage();

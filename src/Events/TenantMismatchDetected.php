@@ -12,12 +12,14 @@ use Illuminate\Queue\SerializesModels;
  */
 class TenantMismatchDetected
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public string $modelClass,
         public ?int $modelTenantId,
         public ?int $currentTenantId,
         public string $operation
-    ) {}
+    ) {
+    }
 }

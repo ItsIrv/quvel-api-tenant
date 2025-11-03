@@ -129,6 +129,7 @@ trait TenantAware
 
         try {
             TenantContext::setCurrent($tenant);
+
             return $callback();
         } finally {
             TenantContext::setCurrent($original);
@@ -144,6 +145,7 @@ trait TenantAware
 
         try {
             TenantContext::bypass();
+
             return $callback();
         } finally {
             if (!$wasBypassed) {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\CacheBasedSessionHandler;
-use SessionHandlerInterface;
 use Quvel\Tenant\Contracts\TenantContext;
+use SessionHandlerInterface;
 
 /**
  * Tenant-aware Redis session handler that isolates sessions by tenant.
@@ -63,6 +63,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
     public function read($id): string
     {
         $key = $this->getTenantKey($id);
+
         return $this->cache->get($key, '');
     }
 
@@ -72,6 +73,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
     public function write($id, $data): bool
     {
         $key = $this->getTenantKey($id);
+
         return (bool) $this->cache->put($key, $data, $this->minutes);
     }
 
@@ -81,6 +83,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
     public function destroy($id): bool
     {
         $key = $this->getTenantKey($id);
+
         return $this->cache->forget($key);
     }
 

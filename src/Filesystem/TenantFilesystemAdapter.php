@@ -45,6 +45,7 @@ class TenantFilesystemAdapter implements Filesystem
     protected function isDiskAlreadyTenantScoped(): bool
     {
         $diskRoot = $this->filesystem->path('');
+
         return str_contains($diskRoot, "tenants/{$this->tenant->public_id}") ||
                str_contains($diskRoot, "tenants\\{$this->tenant->public_id}"); // Windows path support
     }
@@ -195,6 +196,7 @@ class TenantFilesystemAdapter implements Filesystem
             if (str_starts_with($file, $tenantPrefix)) {
                 return substr($file, $prefixLength);
             }
+
             return $file;
         }, $files);
     }
@@ -223,6 +225,7 @@ class TenantFilesystemAdapter implements Filesystem
             if (str_starts_with($dir, $tenantPrefix)) {
                 return substr($dir, $prefixLength);
             }
+
             return $dir;
         }, $directories);
     }

@@ -108,7 +108,6 @@ trait HasTenantNotifications
         ]);
     }
 
-
     /**
      * Get tenant-specific notification preferences.
      */

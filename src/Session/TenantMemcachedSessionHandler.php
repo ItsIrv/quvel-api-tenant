@@ -51,6 +51,7 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
     public function read($sessionId): string
     {
         $key = $this->getTenantKey($sessionId);
+
         return $this->cache->get($key, '');
     }
 
@@ -60,6 +61,7 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
     public function write($sessionId, $data): bool
     {
         $key = $this->getTenantKey($sessionId);
+
         return $this->cache->put($key, $data, $this->minutes);
     }
 
@@ -69,6 +71,7 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
     public function destroy($sessionId): bool
     {
         $key = $this->getTenantKey($sessionId);
+
         return $this->cache->forget($key);
     }
 

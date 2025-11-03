@@ -6,9 +6,9 @@ namespace Quvel\Tenant\Session;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Session\FileSessionHandler;
+use Quvel\Tenant\Contracts\TenantContext;
 use RuntimeException;
 use SessionHandlerInterface;
-use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Tenant-aware file session handler that isolates sessions by tenant.
@@ -74,6 +74,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
     public function open($path, $name): bool
     {
         $this->updateHandlerPath();
+
         return $this->handler->open($path, $name);
     }
 
@@ -91,6 +92,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
     public function read($id): string
     {
         $this->updateHandlerPath();
+
         return $this->handler->read($id);
     }
 
@@ -100,6 +102,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
     public function write($id, $data): bool
     {
         $this->updateHandlerPath();
+
         return $this->handler->write($id, $data);
     }
 
@@ -109,6 +112,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
     public function destroy($id): bool
     {
         $this->updateHandlerPath();
+
         return $this->handler->destroy($id);
     }
 

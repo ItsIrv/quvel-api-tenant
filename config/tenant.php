@@ -169,7 +169,7 @@ return [
         'name' => env('TENANT_ADMIN_NAME', 'tenant.admin.'),
         'middleware' => [
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            'tenant.is-internal'
+            'tenant.is-internal',
         ],
     ],
 
@@ -217,7 +217,7 @@ return [
             'after' => 'id',
             'cascade_delete' => true,
             'drop_uniques' => [['email']],
-            'tenant_unique_constraints' => [['email']]
+            'tenant_unique_constraints' => [['email']],
         ],
         // 'posts' => true, // Simple registration with defaults
         // 'orders' => \App\Tenant\Tables\OrdersTableConfig::class,

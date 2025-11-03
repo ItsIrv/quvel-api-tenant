@@ -6,10 +6,9 @@ namespace Quvel\Tenant\Console\Concerns;
 
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
-use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Contracts\PipelineRegistry;
+use Quvel\Tenant\Facades\TenantContext;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
@@ -27,19 +26,27 @@ trait HasTenantCommands
     {
         $this->getDefinition()->addOptions([
             new InputOption(
-                'tenant', 't', InputOption::VALUE_OPTIONAL,
+                'tenant',
+                't',
+                InputOption::VALUE_OPTIONAL,
                 'Run command for specific tenant (ID, public_id, identifier, or name)'
             ),
             new InputOption(
-                'all-tenants', null, InputOption::VALUE_NONE,
+                'all-tenants',
+                null,
+                InputOption::VALUE_NONE,
                 'Run command for all active tenants'
             ),
             new InputOption(
-                'apply-tenant-config', null, InputOption::VALUE_NONE,
+                'apply-tenant-config',
+                null,
+                InputOption::VALUE_NONE,
                 'Apply tenant configuration pipes (database, mail, etc.)'
             ),
             new InputOption(
-                'hard', null, InputOption::VALUE_NONE,
+                'hard',
+                null,
+                InputOption::VALUE_NONE,
                 'Apply tenant configuration pipes (alias for --apply-tenant-config)'
             ),
         ]);
@@ -64,14 +71,15 @@ trait HasTenantCommands
 
         if ($tenants->isEmpty()) {
             $this->error('No active tenants found.');
+
             return 1;
         }
 
-        $this->info("Running command for " . $tenants->count() . " tenants...");
+        $this->info('Running command for ' . $tenants->count() . ' tenants...');
 
         $failures = 0;
         foreach ($tenants as $tenant) {
-            $this->line("Running for tenant: " . $tenant->name . " (" . $tenant->identifier . ")");
+            $this->line('Running for tenant: ' . $tenant->name . ' (' . $tenant->identifier . ')');
 
             if ($this->executeWithTenant($tenant, $callback) !== 0) {
                 $failures++;
@@ -79,11 +87,13 @@ trait HasTenantCommands
         }
 
         if ($failures > 0) {
-            $this->error("Command failed for " . $failures . " tenants.");
+            $this->error('Command failed for ' . $failures . ' tenants.');
+
             return 1;
         }
 
         $this->info('Command completed successfully for all tenants.');
+
         return 0;
     }
 
@@ -94,7 +104,8 @@ trait HasTenantCommands
             return 1;
         }
 
-        $this->info("Running for tenant: " . $tenant->name . " (" . $tenant->identifier . ")");
+        $this->info('Running for tenant: ' . $tenant->name . ' (' . $tenant->identifier . ')');
+
         return $this->executeWithTenant($tenant, $callback);
     }
 
@@ -109,16 +120,17 @@ trait HasTenantCommands
                 app(PipelineRegistry::class)->applyPipes($tenant);
 
                 if ($this->output->isVerbose()) {
-                    $this->line("  → Applied tenant configuration pipes");
+                    $this->line('  → Applied tenant configuration pipes');
                 }
             }
 
             return $callback($tenant) ?? 0;
         } catch (Exception $e) {
-            $this->error("Error: " . $e->getMessage());
+            $this->error('Error: ' . $e->getMessage());
             if ($this->output->isVerbose()) {
                 $this->error($e->getTraceAsString());
             }
+
             return 1;
         } finally {
             TenantContext::setCurrent($originalTenant);
@@ -139,13 +151,13 @@ trait HasTenantCommands
             ->first();
 
         if (!$tenant) {
-            $this->error("Tenant not found: " . $identifier);
+            $this->error('Tenant not found: ' . $identifier);
+
             return null;
         }
 
         return $tenant;
     }
-
 
     protected function requiresTenant(): bool
     {

@@ -13,11 +13,13 @@ use Illuminate\Queue\SerializesModels;
  */
 class TenantNotFound
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public Request $request,
         public string $resolverClass,
         public ?string $cacheKey = null,
-    ) {}
+    ) {
+    }
 }

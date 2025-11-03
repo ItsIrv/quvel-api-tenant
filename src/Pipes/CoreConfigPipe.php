@@ -6,9 +6,9 @@ namespace Quvel\Tenant\Pipes;
 
 use Closure;
 use Exception;
+use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Routing\UrlGenerator;
 
 /**
  * Handles core application configuration for tenants.

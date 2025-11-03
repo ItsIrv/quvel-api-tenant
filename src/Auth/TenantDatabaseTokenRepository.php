@@ -21,7 +21,7 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
         $record = (array) $this->getToken($user->getEmailForPasswordReset());
 
         return $record &&
-               ! $this->tokenExpired($record['created_at']) &&
+               !$this->tokenExpired($record['created_at']) &&
                $this->hasher->check($token, $record['token']);
     }
 

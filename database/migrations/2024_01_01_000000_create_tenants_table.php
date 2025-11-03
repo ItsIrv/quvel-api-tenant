@@ -3,10 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Quvel\Tenant\Models\Tenant;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         $tableName = config('tenant.table_name', 'tenants');

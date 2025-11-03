@@ -12,11 +12,13 @@ use Illuminate\Queue\SerializesModels;
  */
 class TenantResolved
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public $tenant,
         public string $resolverClass,
         public ?string $cacheKey,
-    ) {}
+    ) {
+    }
 }

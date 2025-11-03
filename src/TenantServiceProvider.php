@@ -17,25 +17,25 @@ use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
+use Quvel\Tenant\Concerns\HandlesTenantModels;
 use Quvel\Tenant\Configuration\PipelineRegistry;
+use Quvel\Tenant\Configuration\TableRegistry;
+use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
+use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
+use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Contracts\TenantContext as TenantContextContract;
 use Quvel\Tenant\Contracts\TenantResolver;
-use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
-use Quvel\Tenant\Configuration\TableRegistry;
-use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
-use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
-use Quvel\Tenant\Resolution\ResolverManager;
-use Quvel\Tenant\Resolution\ResolutionService;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
+use Quvel\Tenant\Resolution\ResolutionService;
+use Quvel\Tenant\Resolution\ResolverManager;
 use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
-use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
-use Quvel\Tenant\Concerns\HandlesTenantModels;
 use RuntimeException;
 
 class TenantServiceProvider extends ServiceProvider
@@ -48,7 +48,7 @@ class TenantServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/tenant.php',
+            __DIR__ . '/../config/tenant.php',
             'tenant'
         );
 
@@ -61,6 +61,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->app->singleton(TenantResolver::class, function ($app) {
             /** @var ResolverManager $manager */
             $manager = $app->make(ResolverManager::class);
+
             return $manager->driver($manager->getDefaultDriver());
         });
 
@@ -112,21 +113,21 @@ class TenantServiceProvider extends ServiceProvider
             $this->registerCommands();
 
             $this->publishes([
-                __DIR__.'/../config/tenant.php' => config_path('tenant.php'),
+                __DIR__ . '/../config/tenant.php' => config_path('tenant.php'),
             ], 'tenant-config');
 
             $this->publishes([
-                __DIR__.'/../database/migrations/' => database_path('migrations'),
+                __DIR__ . '/../database/migrations/' => database_path('migrations'),
             ], 'tenant-migrations');
 
             $this->publishes([
                 __DIR__ . '/../routes/tenant-config.php' => base_path('routes/tenant-info.php'),
-                __DIR__.'/../routes/tenant-admin.php' => base_path('routes/tenant-admin.php'),
+                __DIR__ . '/../routes/tenant-admin.php' => base_path('routes/tenant-admin.php'),
             ], 'tenant-routes');
         }
 
         if (config('tenant.admin.enabled', false)) {
-            $this->loadViewsFrom(__DIR__.'/../resources/views', 'tenant');
+            $this->loadViewsFrom(__DIR__ . '/../resources/views', 'tenant');
         }
     }
 
@@ -142,7 +143,7 @@ class TenantServiceProvider extends ServiceProvider
             $router->aliasMiddleware('tenant.is-internal', Http\Middleware\RequireInternalTenant::class);
             $router->aliasMiddleware('tenant.csrf', Http\Middleware\TenantAwareCsrfToken::class);
         } catch (BindingResolutionException $e) {
-            throw new RuntimeException('Failed to alias tenant middleware', 0 , $e);
+            throw new RuntimeException('Failed to alias tenant middleware', 0, $e);
         }
     }
 
@@ -184,7 +185,7 @@ class TenantServiceProvider extends ServiceProvider
             Route::prefix(config('tenant.admin.prefix', 'tenant-admin'))
                 ->name(config('tenant.admin.name', 'tenant.admin.'))
                 ->middleware(config('tenant.admin.middleware', ['tenant.is-internal']))
-                ->group(__DIR__.'/../routes/tenant-admin.php');
+                ->group(__DIR__ . '/../routes/tenant-admin.php');
         }
     }
 
@@ -394,7 +395,10 @@ class TenantServiceProvider extends ServiceProvider
                     $lockTable = $config['lock_table'] ?? 'cache_locks';
 
                     $store = new TenantDatabaseStore(
-                        $connection, $table, $prefix, $lockTable
+                        $connection,
+                        $table,
+                        $prefix,
+                        $lockTable
                     );
 
                     return $manager->repository($store);
@@ -521,7 +525,7 @@ class TenantServiceProvider extends ServiceProvider
 
             if ($tenant === null) {
                 throw new RuntimeException(
-                    'Cannot auto-resolve tenant model: No tenant is set in the current context. '.
+                    'Cannot auto-resolve tenant model: No tenant is set in the current context. ' .
                     'Ensure tenant middleware has run or manually set a tenant via TenantContext::setCurrent().'
                 );
             }

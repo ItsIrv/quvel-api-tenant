@@ -92,7 +92,6 @@ trait HasTenantCache
         return $tenant->getConfig('cache.default_ttl', $default);
     }
 
-
     /**
      * Flush all cache for the current tenant.
      * Use with caution - this will clear ALL tenant cache.

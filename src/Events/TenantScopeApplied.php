@@ -12,11 +12,13 @@ use Illuminate\Queue\SerializesModels;
  */
 class TenantScopeApplied
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public string $modelClass,
         public $tenant,
         public string $column = 'tenant_id'
-    ) {}
+    ) {
+    }
 }

@@ -142,7 +142,11 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     public function lock($name, $seconds = 0, $owner = null)
     {
         return new TenantDatabaseLock(
-            $this->connection, $this->lockTable, $this->prefix . $name, $seconds, $owner
+            $this->connection,
+            $this->lockTable,
+            $this->prefix . $name,
+            $seconds,
+            $owner
         );
     }
 

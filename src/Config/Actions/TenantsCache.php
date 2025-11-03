@@ -32,7 +32,7 @@ class TenantsCache
         $tenants = $this->getTenants();
 
         $collection = TenantConfigResource::collection($tenants);
-        $collection->each(fn($resource) => $resource->setVisibilityLevel('protected'));
+        $collection->each(fn ($resource) => $resource->setVisibilityLevel('protected'));
 
         return $collection;
     }

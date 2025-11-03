@@ -7,11 +7,11 @@ namespace Quvel\Tenant\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Quvel\Tenant\Facades\TenantContext;
-use Quvel\Tenant\Exceptions\NoTenantException;
+use Quvel\Tenant\Concerns\HandlesTenantModels;
 use Quvel\Tenant\Events\TenantScopeApplied;
 use Quvel\Tenant\Events\TenantScopeNoTenantFound;
-use Quvel\Tenant\Concerns\HandlesTenantModels;
+use Quvel\Tenant\Exceptions\NoTenantException;
+use Quvel\Tenant\Facades\TenantContext;
 
 /**
  * Global scope that automatically filters queries by tenant_id.

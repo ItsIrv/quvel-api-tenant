@@ -50,6 +50,7 @@ class ResolutionService implements ResolutionServiceContract
 
         if ($identifier === null) {
             TenantNotFound::dispatch($request, get_class($this->resolver), null);
+
             return null;
         }
 
@@ -81,7 +82,7 @@ class ResolutionService implements ResolutionServiceContract
             return Cache::remember(
                 "tenant.$cacheKey",
                 $cacheTtl,
-                static fn() => $resolver->resolve($request)
+                static fn () => $resolver->resolve($request)
             );
         }
 

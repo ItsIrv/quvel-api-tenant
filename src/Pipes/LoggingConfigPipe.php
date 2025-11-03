@@ -71,9 +71,9 @@ class LoggingConfigPipe extends BasePipe
     {
         $this->config->set('logging.channels.tenant', [
             'driver' => $this->tenant->getConfig('log_custom_driver'),
-            'path'   => $this->tenant->getConfig('log_custom_path') ?? $this->getCustomLogPath(),
-            'level'  => $this->tenant->getConfig('log_custom_level') ?? 'info',
-            'days'   => $this->tenant->getConfig('log_custom_days') ?? 14,
+            'path' => $this->tenant->getConfig('log_custom_path') ?? $this->getCustomLogPath(),
+            'level' => $this->tenant->getConfig('log_custom_level') ?? 'info',
+            'days' => $this->tenant->getConfig('log_custom_days') ?? 14,
         ]);
     }
 

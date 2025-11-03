@@ -33,7 +33,6 @@ trait HasTenant
         return $this->belongsTo(tenant_class(), 'tenant_id');
     }
 
-
     /**
      * Check if this model belongs to the current tenant.
      */

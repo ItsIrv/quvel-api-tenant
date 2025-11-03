@@ -6,10 +6,10 @@ namespace Quvel\Tenant\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Quvel\Tenant\Contracts\TenantContext;
-use Quvel\Tenant\Events\TenantMiddlewareCompleted;
 use Quvel\Tenant\Contracts\PipelineRegistry;
 use Quvel\Tenant\Contracts\ResolutionService;
+use Quvel\Tenant\Contracts\TenantContext;
+use Quvel\Tenant\Events\TenantMiddlewareCompleted;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

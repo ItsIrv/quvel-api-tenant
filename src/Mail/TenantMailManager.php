@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Mail;
 
-use Illuminate\Mail\MailManager;
 use Illuminate\Mail\Mailer;
+use Illuminate\Mail\MailManager;
 use InvalidArgumentException;
 use Quvel\Tenant\Contracts\TenantContext;
 

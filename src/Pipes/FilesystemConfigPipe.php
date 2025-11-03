@@ -46,8 +46,8 @@ class FilesystemConfigPipe extends BasePipe
 
         if (!$this->tenant->hasConfig('disable_temp_isolation')) {
             $this->config->set('filesystems.disks.temp', [
-                'driver'     => 'local',
-                'root'       => $this->getTempRootPath(),
+                'driver' => 'local',
+                'root' => $this->getTempRootPath(),
                 'visibility' => 'private',
             ]);
         }

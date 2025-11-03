@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Http\Middleware;
 
-use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Contracts\Support\Responsable;
-use Illuminate\Cookie\CookieValuePrefix;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Quvel\Tenant\Contracts\TenantContext;
-use Symfony\Component\HttpFoundation\Cookie;
-
 use function config;
+
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Symfony\Component\HttpFoundation\Cookie;
 
 class TenantAwareCsrfToken extends VerifyCsrfToken
 {

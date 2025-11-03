@@ -66,6 +66,7 @@ if (!function_exists('with_tenant')) {
 
         try {
             TenantContext::setCurrent($tenant);
+
             return $callback();
         } finally {
             TenantContext::setCurrent($original);
@@ -83,6 +84,7 @@ if (!function_exists('without_tenant')) {
 
         try {
             TenantContext::bypass();
+
             return $callback();
         } finally {
             if (!$wasBypassed) {
@@ -136,7 +138,6 @@ if (!function_exists('tenant_broadcast')) {
     }
 }
 
-
 if (!function_exists('tenant_mail')) {
     /**
      * Get a tenant-specific mail manager instance.
@@ -144,6 +145,7 @@ if (!function_exists('tenant_mail')) {
     function tenant_mail(): Mailer
     {
         $mailerName = tenant_mailer();
+
         return app('mail.manager')->mailer($mailerName);
     }
 }
@@ -529,6 +531,7 @@ if (!function_exists('tenant_storage_delete')) {
 
         if (is_array($paths)) {
             $tenantPaths = array_map('tenant_storage_path', $paths);
+
             return $disk->delete($tenantPaths);
         }
 
@@ -555,7 +558,7 @@ if (!function_exists('tenant_storage_temporary_url')) {
         $disk = Storage::disk(tenant_storage_disk());
 
         if (!method_exists($disk, 'temporaryUrl')) {
-            throw new RuntimeException("Disk [" . tenant_storage_disk() . "] does not support temporary URLs.");
+            throw new RuntimeException('Disk [' . tenant_storage_disk() . '] does not support temporary URLs.');
         }
 
         return $disk->temporaryUrl(tenant_storage_path($path), $expiration, $options);

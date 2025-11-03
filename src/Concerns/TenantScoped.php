@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
-use Quvel\Tenant\Scopes\TenantScope;
 use Quvel\Tenant\Exceptions\TenantMismatchException;
+use Quvel\Tenant\Scopes\TenantScope;
 
 /**
  * Tenant scoping with automatic isolation detection.
@@ -133,13 +133,13 @@ trait TenantScoped
     public function fill(array $attributes): static
     {
         if ($this->exists && array_key_exists(
-                'tenant_id',
-                $attributes
-            ) && $attributes['tenant_id'] !== $this->tenant_id) {
-                throw new TenantMismatchException(
-                    'Cannot change tenant_id after model creation'
-                );
-            }
+            'tenant_id',
+            $attributes
+        ) && $attributes['tenant_id'] !== $this->tenant_id) {
+            throw new TenantMismatchException(
+                'Cannot change tenant_id after model creation'
+            );
+        }
 
         return parent::fill($attributes);
     }

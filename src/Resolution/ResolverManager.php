@@ -51,7 +51,6 @@ class ResolverManager extends Manager
         return new DomainResolver($config);
     }
 
-
     /**
      * Make a resolver instance with custom config.
      *

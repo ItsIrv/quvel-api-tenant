@@ -18,7 +18,6 @@ use Quvel\Tenant\Models\Tenant;
 
 class TenantAdminController extends Controller
 {
-
     /**
      * Get all available configuration fields.
      */
