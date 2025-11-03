@@ -1,2 +1,32 @@
+# IDE
 .idea
-vendor
+.vscode
+*.swp
+*.swo
+*~
+
+# Dependencies
+/vendor
+composer.lock
+
+# Testing
+.phpunit.cache
+.phpunit.result.cache
+coverage/
+.phpunit.coverage
+
+# Static Analysis
+.phpstan.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.backup
+.env.testing
+
+# Build artifacts
+/build
+/dist
