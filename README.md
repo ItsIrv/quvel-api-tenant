@@ -96,16 +96,46 @@ php artisan tinker
 ### Optional: Publish Additional Assets
 
 ```bash
-# Publish admin UI routes
-php artisan vendor:publish --tag=tenant-routes
-
 # Publish language files
 php artisan vendor:publish --tag=tenant-lang
 ```
 
+### Advanced: Custom Route Files
+
+By default, routes are autoloaded from the package. For advanced customization, you can publish and customize route files:
+
+```bash
+# Publish tenant config API routes (tenant-info endpoints)
+php artisan vendor:publish --tag=tenant-config-routes
+
+# Publish tenant admin routes
+php artisan vendor:publish --tag=tenant-admin-routes
+```
+
+**To use your published routes instead of the package defaults:**
+
+1. Publish the route file(s) you want to customize (commands above)
+2. Disable auto-loading in `config/tenant.php`:
+   ```php
+   // For tenant config API routes
+   'api' => [
+       'enabled' => false, // Disable autoloading
+       // ... other settings
+   ],
+
+   // For tenant admin routes
+   'admin' => [
+       'enabled' => false, // Disable autoloading
+       // ... other settings
+   ],
+   ```
+3. Customize your published route files in `routes/tenant-info.php` or `routes/tenant-admin.php`
+
+**Note:** Most users don't need to publish routes. Use config settings to customize prefixes, middleware, and route names.
+
 ### Troubleshooting
 
-**Package not discovered:**
+**Package isn't discovered:**
 - Clear bootstrap cache: `rm bootstrap/cache/*.php`
 - Run: `php artisan package:discover`
 

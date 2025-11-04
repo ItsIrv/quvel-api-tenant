@@ -21,16 +21,22 @@ class TenantConfigController
     /**
      * Get public tenant configuration.
      */
-    public function public(Request $request, TenantContext $tenantContext, TenantPublicConfig $action): TenantConfigResource
-    {
+    public function public(
+        Request $request,
+        TenantContext $tenantContext,
+        TenantPublicConfig $action
+    ): TenantConfigResource {
         return $this->overrideTenant($tenantContext, $request, $action);
     }
 
     /**
      * Get protected tenant configuration.
      */
-    public function protected(Request $request, TenantContext $tenantContext, TenantProtectedConfig $action): TenantConfigResource
-    {
+    public function protected(
+        Request $request,
+        TenantContext $tenantContext,
+        TenantProtectedConfig $action
+    ): TenantConfigResource {
         return $this->overrideTenant($tenantContext, $request, $action);
     }
 
@@ -51,12 +57,6 @@ class TenantConfigController
         return $action();
     }
 
-    /**
-     * @param TenantContext $tenantContext
-     * @param Request $request
-     * @param TenantProtectedConfig|TenantPublicConfig $action
-     * @return TenantConfigResource
-     */
     public function overrideTenant(
         TenantContext $tenantContext,
         Request $request,

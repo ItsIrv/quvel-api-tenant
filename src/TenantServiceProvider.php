@@ -122,8 +122,11 @@ class TenantServiceProvider extends ServiceProvider
 
             $this->publishes([
                 __DIR__ . '/../routes/tenant-config.php' => base_path('routes/tenant-info.php'),
+            ], 'tenant-config-routes');
+
+            $this->publishes([
                 __DIR__ . '/../routes/tenant-admin.php' => base_path('routes/tenant-admin.php'),
-            ], 'tenant-routes');
+            ], 'tenant-admin-routes');
         }
 
         if (config('tenant.admin.enabled', false)) {
