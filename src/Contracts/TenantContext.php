@@ -62,4 +62,15 @@ interface TenantContext
      * @return void
      */
     public function clearBypassed(): void;
+
+    /**
+     * Check if the current tenant needs tenant_id column scoping.
+     *
+     * Returns false for tenants using isolated databases (separate schema/server)
+     * where tenant_id columns are not needed. Returns true for shared database
+     * tenancy where tenant_id scoping is required.
+     *
+     * @return bool True if tenant_id scoping is needed, false if using an isolated database
+     */
+    public function needsTenantIdScope(): bool;
 }

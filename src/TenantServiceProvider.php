@@ -207,11 +207,9 @@ class TenantServiceProvider extends ServiceProvider
 
             $modelClass::addGlobalScope(new Scopes\TenantScope());
 
-            $modelClass::creating(static function ($model) use ($provider) {
+            $modelClass::creating(static function ($model) {
                 if (!isset($model->tenant_id) && !tenant_bypassed()) {
-                    $tenant = TenantContextFacade::current();
-
-                    if ($tenant && $provider->tenantUsesIsolatedDatabase($tenant)) {
+                    if (!TenantContextFacade::needsTenantIdScope()) {
                         return;
                     }
 

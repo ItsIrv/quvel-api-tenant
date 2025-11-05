@@ -25,7 +25,7 @@ use Quvel\Tenant\Facades\TenantContext;
  * Bypass behavior:
  * - When TenantContext::isBypassed() returns true, no filtering is applied
  * - When no tenant is set in context, no filtering is applied (allows global data)
- * - Otherwise, queries are filtered to current tenant's ID
+ * - Otherwise, queries are filtered to the current tenant's ID
  */
 class TenantScope implements Scope
 {
@@ -59,14 +59,14 @@ class TenantScope implements Scope
                 );
             }
 
-            // Return empty results by applying impossible condition
+            // Return empty results by applying an impossible condition
             $builder->whereRaw('1 = 0');
 
             return;
         }
 
-        if ($this->tenantUsesIsolatedDatabase($tenant)) {
-            TenantScopeApplied::dispatch(get_class($model), $tenant, 'database_isolation');
+        if (!TenantContext::needsTenantIdScope()) {
+            TenantScopeApplied::dispatch(get_class($model), $tenant, 'isolated');
 
             return;
         }

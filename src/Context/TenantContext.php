@@ -78,10 +78,29 @@ class TenantContext implements TenantContextContract
     }
 
     /**
-     * Restore the context to non-bypassed state.
+     * Restore the context to a non-bypassed state.
      */
     public function clearBypassed(): void
     {
         $this->bypassed = false;
+    }
+
+    /**
+     * Check if the current tenant needs tenant_id column scoping.
+     *
+     * Returns false for tenants using isolated databases (separate schema/server)
+     * where tenant_id columns are not needed. Returns true for shared database
+     * tenancy where tenant_id scoping is required.
+     *
+     * The skip_when_isolated config is dynamically set by DatabaseConfigPipe
+     * based on whether the current tenant has isolated database configuration.
+     */
+    public function needsTenantIdScope(): bool
+    {
+        if (!$this->hasCurrent()) {
+            return true;
+        }
+
+        return !config('tenant.scoping.skip_when_isolated', false);
     }
 }

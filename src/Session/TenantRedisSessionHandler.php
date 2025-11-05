@@ -28,7 +28,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
      */
     protected function getTenantKey(string $sessionId): string
     {
-        if (!config('tenant.sessions.auto_tenant_id', false)) {
+        if (!config('tenant.sessions.auto_tenant_id', false) || !$this->tenantContext->needsTenantIdScope()) {
             return $sessionId;
         }
 

@@ -27,7 +27,7 @@ class TenantDatabaseQueue extends DatabaseQueue
             'payload' => $payload,
         ];
 
-        if (config('tenant.queue.auto_tenant_id', true)) {
+        if (config('tenant.queue.auto_tenant_id', true) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
 
             if ($tenant) {

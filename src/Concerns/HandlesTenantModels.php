@@ -14,22 +14,6 @@ use Quvel\Tenant\Facades\TenantContext;
 trait HandlesTenantModels
 {
     /**
-     * Check if tenant uses isolated database and should skip tenant_id logic.
-     */
-    protected function tenantUsesIsolatedDatabase($tenant): bool
-    {
-        $baseConnection = $tenant->getConfig('database.default') ?? 'mysql';
-        $hasIsolatedDatabase = $tenant->hasConfig("database.connections.$baseConnection.host") ||
-                               $tenant->hasConfig("database.connections.$baseConnection.database");
-
-        if (!$hasIsolatedDatabase) {
-            return false;
-        }
-
-        return config('tenant.scoping.skip_tenant_id_in_isolated_databases', false);
-    }
-
-    /**
      * Validate that model belongs to current tenant context.
      *
      * @throws TenantMismatchException
@@ -40,11 +24,11 @@ trait HandlesTenantModels
             return;
         }
 
-        $tenant = TenantContext::current();
-
-        if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
+        if (!TenantContext::needsTenantIdScope()) {
             return;
         }
+
+        $tenant = TenantContext::current();
 
         $currentTenantId = tenant_id();
         $modelTenantId = $model->tenant_id;

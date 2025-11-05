@@ -201,6 +201,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Connection Pooling
+    |--------------------------------------------------------------------------
+    |
+    | Controls whether tenant database connections should be pooled by host.
+    |
+    | When false (default): Each tenant gets a unique connection named 'tenant_{id}'.
+    |                       - Safest approach with complete isolation
+    |                       - May hit database connection limits at scale (MySQL: 151, PostgreSQL: 100)
+    |
+    | When true: Tenants sharing the same host:port pool the same connection.
+    |            - Reduces total connections from O(tenants) to O(unique_hosts)
+    |            - Example: 1000 tenants on 5 hosts = 5 connections instead of 1000
+    |            - Relies on PDO switching databases per query
+    |            - Small risk of state pollution (transactions, temp tables, session vars)
+    |
+    | Note: Callback configurators via DatabaseConfigPipe::withTenantConnectionName()
+    |       take precedence over this config.
+    |
+    */
+    'database' => [
+        'pool_connections_by_host' => env('TENANT_POOL_CONNECTIONS_BY_HOST', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |
@@ -274,11 +299,38 @@ return [
         | Skip Tenant ID in Isolated Databases
         |----------------------------------------------------------------------
         |
-        | When true, skip tenant_id scoping for tenants using isolated databases.
-        | When false, always use tenant_id scoping for consistency.
+        | Controls whether tenant_id column scoping should be skipped for tenants
+        | using isolated databases. This enables hybrid multi-tenancy strategies.
+        |
+        | HOW IT WORKS:
+        |
+        | By default, all tenants share the main database defined in your .env file
+        | (DB_HOST, DB_DATABASE, etc.) and are isolated using tenant_id columns.
+        |
+        | For per-tenant database isolation, configure tenant-specific database
+        | settings in the tenant's config (database.connections.mysql.host or
+        | database.connections.mysql.database). The DatabaseConfigPipe reads these
+        | configs during tenant resolution and overrides Laravel's database config
+        | for the current request.
+        |
+        |
+        | When this setting is true and a tenant uses an isolated database:
+        | - Model scopes skip tenant_id filtering (database is already isolated)
+        | - Cache/Queue/Session drivers skip tenant_id columns
+        | - Migrations don't require tenant_id columns for isolated databases
+        |
+        | Benefits of isolated databases:
+        | - Complete data isolation at database level
+        | - Cleaner schema without tenant_id columns
+        | - Faster queries (no tenant_id index overhead)
+        | - Easier data exports/backups (no filtering needed)
+        | - Simplified data presentation (no tenant_id in dumps)
+        |
+        | When false, tenant_id scoping is always applied for consistency,
+        | even if tenants use isolated databases.
         |
         */
-        'skip_tenant_id_in_isolated_databases' => env('TENANT_SKIP_TENANT_ID_ISOLATED', false),
+        'skip_when_isolated' => env('TENANT_SKIP_WHEN_ISOLATED', false),
     ],
 
     /*
@@ -314,7 +366,7 @@ return [
     */
     'queue' => [
         // Enable tenant-aware database queue with automatic tenant_id column management
-        'auto_tenant_id' => env('TENANT_QUEUE_AUTO_TENANT_ID', false),
+        'auto_tenant_id' => env('TENANT_QUEUE_AUTO_TENANT_ID', true),
     ],
 
     /*
@@ -338,7 +390,7 @@ return [
     |
     */
     'sessions' => [
-        'auto_tenant_id' => env('TENANT_SESSIONS_AUTO_TENANT_ID', false),
+        'auto_tenant_id' => env('TENANT_SESSIONS_AUTO_TENANT_ID', true),
     ],
 
     /*
@@ -361,7 +413,7 @@ return [
     |
     */
     'cache' => [
-        'auto_tenant_id' => env('TENANT_CACHE_AUTO_TENANT_ID', false),
+        'auto_tenant_id' => env('TENANT_CACHE_AUTO_TENANT_ID', true),
     ],
 
     /*
@@ -382,7 +434,7 @@ return [
     |
     */
     'password_reset_tokens' => [
-        'auto_tenant_id' => env('TENANT_PASSWORD_RESET_AUTO_TENANT_ID', false),
+        'auto_tenant_id' => env('TENANT_PASSWORD_RESET_AUTO_TENANT_ID', true),
     ],
 
     /*
@@ -401,7 +453,7 @@ return [
     |
     */
     'broadcasting' => [
-        'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', false),
+        'auto_tenant_id' => env('TENANT_BROADCASTING_AUTO_PREFIX', true),
     ],
 
     /*
@@ -439,6 +491,6 @@ return [
     |
     */
     'filesystems' => [
-        'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', false),
+        'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', true),
     ],
 ];

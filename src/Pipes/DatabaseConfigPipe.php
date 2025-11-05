@@ -29,6 +29,7 @@ class DatabaseConfigPipe extends BasePipe
             "database.connections.$connection.database",
             "database.connections.$connection.username",
             "database.connections.$connection.password",
+            'tenant.scoping.skip_when_isolated',
         ]);
 
         $this->createTenantConnection($connection);
@@ -98,7 +99,7 @@ class DatabaseConfigPipe extends BasePipe
      */
     protected function getDefaultConnection(): string
     {
-        return $this->applyConfigurator('default_connection', 'mysql');
+        return $this->applyConfigurator('default_connection', config('database.default') ?? 'mysql');
     }
 
     /**
@@ -110,6 +111,23 @@ class DatabaseConfigPipe extends BasePipe
             return static::$configurators['tenant_connection_name']($this, $baseConnection);
         }
 
+        if (config('tenant.database.pool_connections_by_host', false)) {
+            return $this->getPooledConnectionName($baseConnection);
+        }
+
         return 'tenant_' . $this->tenant->id;
+    }
+
+    /**
+     * Generate a pooled connection name based on host:port hash.
+     */
+    protected function getPooledConnectionName(string $baseConnection): string
+    {
+        $host = $this->tenant->getConfig("database.connections.$baseConnection.host")
+            ?? config("database.connections.$baseConnection.host");
+        $port = $this->tenant->getConfig("database.connections.$baseConnection.port")
+            ?? config("database.connections.$baseConnection.port");
+
+        return 'tenant_' . md5($host . ':' . $port);
     }
 }

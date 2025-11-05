@@ -14,7 +14,7 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
     {
         $payload = $this->getDefaultPayload($data);
 
-        if (config('tenant.sessions.auto_tenant_id', false)) {
+        if (config('tenant.sessions.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
             if ($tenant) {
                 $payload['tenant_id'] = $tenant->id;
@@ -41,7 +41,7 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
     {
         $session = $this->getQuery()->where('id', $sessionId);
 
-        if (config('tenant.sessions.auto_tenant_id', false)) {
+        if (config('tenant.sessions.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
             if ($tenant) {
                 $session = $session->where('tenant_id', $tenant->id);

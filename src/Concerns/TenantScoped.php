@@ -47,9 +47,7 @@ trait TenantScoped
 
         static::creating(static function ($model) {
             if (!isset($model->tenant_id)) {
-                $tenant = $model->getCurrentTenant();
-
-                if ($tenant && $model->tenantUsesIsolatedDatabase($tenant)) {
+                if (!TenantContext::needsTenantIdScope()) {
                     return;
                 }
 
@@ -150,9 +148,7 @@ trait TenantScoped
     protected function ensureTenantIdSet(): void
     {
         if (!isset($this->tenant_id) && !tenant_bypassed()) {
-            $tenant = $this->getCurrentTenant();
-
-            if ($tenant && $this->tenantUsesIsolatedDatabase($tenant)) {
+            if (!TenantContext::needsTenantIdScope()) {
                 return;
             }
 

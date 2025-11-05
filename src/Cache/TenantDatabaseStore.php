@@ -29,7 +29,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
             'expiration' => $expiration,
         ];
 
-        if (config('tenant.cache.auto_tenant_id', false)) {
+        if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
 
             if ($tenant) {
@@ -60,7 +60,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         $cache = $this->table()->where('key', '=', $prefixed);
 
-        if (config('tenant.cache.auto_tenant_id', false)) {
+        if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
             if ($tenant) {
                 $cache = $cache->where('tenant_id', $tenant->id);
@@ -95,7 +95,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     {
         $query = $this->table()->where('key', '=', $this->prefix . $key);
 
-        if (config('tenant.cache.auto_tenant_id', false)) {
+        if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
             if ($tenant) {
                 $query = $query->where('tenant_id', $tenant->id);
@@ -117,7 +117,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     {
         $query = $this->table();
 
-        if (config('tenant.cache.auto_tenant_id', false)) {
+        if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
 
             if ($tenant) {

@@ -738,7 +738,7 @@ $allPosts = Post::all();
     // Skip tenant_id scoping for tenants using isolated databases
     // When true, skip tenant_id scoping for tenants using isolated databases.
     // When false, always use tenant_id scoping for consistency.
-    'skip_tenant_id_in_isolated_databases' => env('TENANT_SKIP_TENANT_ID_ISOLATED', false),
+    'skip_tenant_id_in_isolated_databases' => env('TENANT_SKIP_WHEN_ISOLATED', false),
 ],
 ```
 
