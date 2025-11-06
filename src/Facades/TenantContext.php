@@ -15,6 +15,7 @@ use Quvel\Tenant\Models\Tenant;
  * @method static bool isBypassed()
  * @method static void bypass()
  * @method static void clearBypassed()
+ * @method static bool needsTenantIdScope()
  *
  * @see \Quvel\Tenant\Contracts\TenantContext
  * @see \Quvel\Tenant\Context\TenantContext
