@@ -267,7 +267,7 @@ return [
         // \Illuminate\Notifications\DatabaseNotification::class,
 
         // Sanctum tokens (for API authentication per tenant)
-        // \Laravel\Sanctum\PersonalAccessToken::class,
+        \Laravel\Sanctum\PersonalAccessToken::class,
 
         // Spatie permissions (enable if roles should be tenant-scoped)
         // \Spatie\Permission\Models\Role::class,

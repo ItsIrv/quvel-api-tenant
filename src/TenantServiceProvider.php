@@ -279,8 +279,8 @@ class TenantServiceProvider extends ServiceProvider
                 if ($app['config']->get('queue.failed.database') !== null) {
                     return new TenantDatabaseUuidFailedJobProvider(
                         $app['db'],
-                        $app['config']['queue.failed.database'],
-                        $app['config']['queue.failed.table']
+                        $app['config']->get('queue.failed.database'),
+                        $app['config']->get('queue.failed.table')
                     );
                 }
 
@@ -337,16 +337,16 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.sessions.auto_tenant_id', false)) {
             $this->app->extend('session', function (SessionManager $manager, $app) {
                 $manager->extend('database', function () use ($app) {
-                    $table = $app['config']['session.table'];
-                    $lifetime = $app['config']['session.lifetime'];
-                    $connection = $app['db']->connection($app['config']['session.connection']);
+                    $table = $app['config']->get('session.table');
+                    $lifetime = $app['config']->get('session.lifetime');
+                    $connection = $app['db']->connection($app['config']->get('session.connection'));
 
                     return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
                 });
 
                 $manager->extend('file', function () use ($app) {
-                    $path = $app['config']['session.files'];
-                    $lifetime = $app['config']['session.lifetime'];
+                    $path = $app['config']->get('session.files');
+                    $lifetime = $app['config']->get('session.lifetime');
 
                     return new Session\TenantFileSessionHandler(
                         $path,
@@ -356,8 +356,8 @@ class TenantServiceProvider extends ServiceProvider
                 });
 
                 $manager->extend('redis', function () use ($app) {
-                    $cache = $app['cache']->store($app['config']['session.store']);
-                    $lifetime = $app['config']['session.lifetime'];
+                    $cache = $app['cache']->store($app['config']->get('session.store'));
+                    $lifetime = $app['config']->get('session.lifetime');
 
                     return new Session\TenantRedisSessionHandler(
                         $cache,
@@ -367,8 +367,8 @@ class TenantServiceProvider extends ServiceProvider
                 });
 
                 $manager->extend('memcached', function () use ($app) {
-                    $cache = $app['cache']->store($app['config']['session.store']);
-                    $lifetime = $app['config']['session.lifetime'];
+                    $cache = $app['cache']->store($app['config']->get('session.store'));
+                    $lifetime = $app['config']->get('session.lifetime');
 
                     return new Session\TenantMemcachedSessionHandler(
                         $cache,
