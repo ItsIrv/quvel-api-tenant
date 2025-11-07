@@ -226,33 +226,141 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Table Configuration Defaults
+    |--------------------------------------------------------------------------
+    |
+    | Default behavior for tenant table configurations. These settings apply
+    | when using auto-detection or simple 'true' configurations.
+    |
+    */
+    'table_defaults' => [
+        // Whether to cascade delete when tenant is deleted
+        'cascade_delete' => true,
+
+        // Automatically add tenant_id to all detected indexes
+        'add_tenant_to_all_indexes' => true,
+
+        // Automatically add tenant_id to all detected unique constraints
+        'add_tenant_to_all_uniques' => true,
+
+        // Custom constraint name generator (class name or null for default)
+        // Must implement: public function unique(string $table, array $columns): string
+        //                 public function index(string $table, array $columns): string
+        'constraint_name_generator' => null,
+
+        // Column after which tenant_id should be added (used when auto-detecting)
+        'default_after_column' => 'id',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant Tables Configuration
     |--------------------------------------------------------------------------
     |
     | Define which tables should have a tenant_id column added.
-    | You can use:
-    | - true: Use default settings
-    | - array: Custom configuration
-    | - string: Class that implements table configuration
+    |
+    | Supported formats:
+    | - true: Use default settings with auto-detection
+    | - array: Manual configuration (see examples below)
+    | - class-string: Reference to a class extending BaseTenantTable
+    |
+    | Auto-detection example:
+    |   'posts' => true  // Automatically detects indexes, uniques, FKs
+    |
+    | Manual configuration example:
+    |   'users' => [
+    |       'after' => 'id',
+    |       'cascade_delete' => true,
+    |       'drop_uniques' => [['email']],
+    |       'tenant_unique_constraints' => [['email']],
+    |   ]
+    |
+    | Class-based configuration example:
+    |   'orders' => \App\Database\Tables\OrdersTable::class
+    |
+    | Auto-detection with overrides:
+    |   'posts' => [
+    |       'auto_detect_schema' => true,
+    |       'after' => 'custom_id',  // Override detected value
+    |   ]
     |
     */
     'tables' => [
-        // Users table with proper tenant isolation
-        'users' => [
-            'after' => 'id',
-            'cascade_delete' => true,
-            'drop_uniques' => [['email']],
-            'tenant_unique_constraints' => [['email']],
-        ],
+        /*
+        |----------------------------------------------------------------------
+        | Core Tables (Required)
+        |----------------------------------------------------------------------
+        */
 
-        // Laravel Telescope tables (only when TENANT_TELESCOPE_SCOPED=true)
-        // Uncomment these if you enable tenant-scoped Telescope:
-        // 'telescope_entries' => true,
-        // 'telescope_entries_tags' => true,
-        // 'telescope_monitoring' => true,
+        // Users table - Use table class for manual control
+        'users' => \Quvel\Tenant\Database\Tables\UsersTable::class,
 
-        // 'posts' => true, // Simple registration with defaults
-        // 'orders' => \App\Tenant\Tables\OrdersTableConfig::class,
+        // Sanctum personal access tokens - Use table class for manual control
+        'personal_access_tokens' => \Quvel\Tenant\Database\Tables\PersonalAccessTokensTable::class,
+
+        /*
+        |----------------------------------------------------------------------
+        | Optional Application Tables
+        |----------------------------------------------------------------------
+        |
+        | Uncomment and enable if these tables exist in your application.
+        | You can use auto-detection (true) or reference the table class.
+        |
+        */
+
+        // User devices (if exists in your app)
+        // Auto-detect approach (clean):
+        // 'user_devices' => true,
+        // Or use table class for manual control:
+        // 'user_devices' => \Quvel\Tenant\Database\Tables\UserDevicesTable::class,
+
+        // Platform settings (if exists in your app)
+        // 'platform_settings' => true,
+        // Or: \Quvel\Tenant\Database\Tables\PlatformSettingsTable::class,
+
+        // Failed jobs uuid handling (usually auto-configured via queue.auto_tenant_id)
+        // 'failed_jobs' => \Quvel\Tenant\Database\Tables\FailedJobsTable::class,
+
+        /*
+        |----------------------------------------------------------------------
+        | Laravel Telescope Tables
+        |----------------------------------------------------------------------
+        |
+        | Only enable when TENANT_TELESCOPE_SCOPED=true.
+        | For global admin debugging, keep these disabled (default).
+        |
+        */
+
+        // Telescope entries (when tenant-scoping Telescope)
+        // 'telescope_entries' => \Quvel\Tenant\Database\Tables\TelescopeEntriesTable::class,
+        // 'telescope_entries_tags' => \Quvel\Tenant\Database\Tables\TelescopeEntriesTagsTable::class,
+        // 'telescope_monitoring' => \Quvel\Tenant\Database\Tables\TelescopeMonitoringTable::class,
+
+        /*
+        |----------------------------------------------------------------------
+        | Your Custom Tables
+        |----------------------------------------------------------------------
+        |
+        | Add your application-specific tables here.
+        |
+        | Examples:
+        |
+        | Simple auto-detection:
+        |   'posts' => true,
+        |   'comments' => true,
+        |
+        | Class-based configuration:
+        |   'orders' => \App\Database\Tables\OrdersTable::class,
+        |
+        | Manual array configuration:
+        |   'products' => [
+        |       'after' => 'id',
+        |       'cascade_delete' => true,
+        |       'drop_uniques' => [['sku']],
+        |       'tenant_unique_constraints' => [['sku']],
+        |   ],
+        |
+        */
     ],
 
     /*

@@ -117,7 +117,10 @@ class TenantServiceProvider extends ServiceProvider
             ], 'tenant-config');
 
             $this->publishes([
-                __DIR__ . '/../database/migrations/' => database_path('migrations'),
+                __DIR__ . '/../database/migrations/2024_01_01_000000_create_tenants_table.php' =>
+                    database_path('migrations/' . date('Y_m_d_His') . '_create_tenants_table.php'),
+                __DIR__ . '/../database/migrations/2024_01_02_000000_add_tenant_id_to_tables.php' =>
+                    database_path('migrations/' . date('Y_m_d_His', time() + 1) . '_add_tenant_id_to_tables.php'),
             ], 'tenant-migrations');
 
             $this->publishes([

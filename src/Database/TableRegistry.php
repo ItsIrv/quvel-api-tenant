@@ -187,6 +187,14 @@ class TableRegistry implements TableRegistryContract
 
             $table->index('tenant_id');
 
+            foreach ($config->dropForeignKeys as $fkName) {
+                try {
+                    $table->dropForeign($fkName);
+                } catch (Exception) {
+                    // Constraint might not exist, continue processing
+                }
+            }
+
             foreach ($config->dropUniques as $columns) {
                 try {
                     $table->dropUnique($columns);
@@ -195,11 +203,46 @@ class TableRegistry implements TableRegistryContract
                 }
             }
 
+            foreach ($config->dropIndexes as $columns) {
+                try {
+                    $table->dropIndex($columns);
+                } catch (Exception) {
+                    // Index might not exist, continue processing
+                }
+            }
+
             foreach ($config->tenantUniqueConstraints as $columns) {
                 $uniqueColumns = array_merge(['tenant_id'], $columns);
-                $constraintName = $this->generateConstraintName($tableName, $columns);
+                $constraintName = $this->generateConstraintName($tableName, $columns, 'unique');
 
                 $table->unique($uniqueColumns, $constraintName);
+            }
+
+            foreach ($config->tenantIndexes as $columns) {
+                $indexColumns = array_merge(['tenant_id'], $columns);
+                $indexName = $this->generateConstraintName($tableName, $columns, 'index');
+
+                $table->index($indexColumns, $indexName);
+            }
+
+            foreach ($config->recreateForeignKeys as $fk) {
+                $foreign = $table->foreign($fk['column'], $fk['name'] ?? null);
+
+                if (isset($fk['references'])) {
+                    $foreign->references($fk['references']);
+                }
+
+                if (isset($fk['on'])) {
+                    $foreign->on($fk['on']);
+                }
+
+                if (isset($fk['onDelete'])) {
+                    $foreign->onDelete($fk['onDelete']);
+                }
+
+                if (isset($fk['onUpdate'])) {
+                    $foreign->onUpdate($fk['onUpdate']);
+                }
             }
         });
     }
@@ -216,12 +259,22 @@ class TableRegistry implements TableRegistryContract
     {
         Schema::table($tableName, function (Blueprint $table) use ($config, $tableName) {
             foreach ($config->tenantUniqueConstraints as $columns) {
-                $constraintName = $this->generateConstraintName($tableName, $columns);
+                $constraintName = $this->generateConstraintName($tableName, $columns, 'unique');
 
                 try {
                     $table->dropUnique($constraintName);
                 } catch (Exception) {
                     // Constraint might not exist, continue processing
+                }
+            }
+
+            foreach ($config->tenantIndexes as $columns) {
+                $indexName = $this->generateConstraintName($tableName, $columns, 'index');
+
+                try {
+                    $table->dropIndex($indexName);
+                } catch (Exception) {
+                    // Index might not exist, continue processing
                 }
             }
 
@@ -233,23 +286,32 @@ class TableRegistry implements TableRegistryContract
                 }
             }
 
+            foreach ($config->dropIndexes as $columns) {
+                try {
+                    $table->index($columns);
+                } catch (Exception) {
+                    // Index might already exist, continue processing
+                }
+            }
+
             $table->dropConstrainedForeignId('tenant_id');
         });
     }
 
     /**
-     * Generate a consistent constraint name for tenant-scoped unique indexes.
+     * Generate a consistent constraint name for tenant-scoped constraints and indexes.
      *
      * @param string $tableName The table name
      * @param array $columns The columns involved in the constraint
+     * @param string $type The type of constraint ('unique' or 'index')
      *
      * @return string The generated constraint name
      */
-    private function generateConstraintName(string $tableName, array $columns): string
+    private function generateConstraintName(string $tableName, array $columns, string $type = 'unique'): string
     {
         $columnString = implode('_', $columns);
 
-        return "{$tableName}_{$columnString}_tenant_unique";
+        return "{$tableName}_{$columnString}_tenant_{$type}";
     }
 
     /**
