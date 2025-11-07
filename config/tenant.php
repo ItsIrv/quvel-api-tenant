@@ -244,6 +244,13 @@ return [
             'drop_uniques' => [['email']],
             'tenant_unique_constraints' => [['email']],
         ],
+
+        // Laravel Telescope tables (only when TENANT_TELESCOPE_SCOPED=true)
+        // Uncomment these if you enable tenant-scoped Telescope:
+        // 'telescope_entries' => true,
+        // 'telescope_entries_tags' => true,
+        // 'telescope_monitoring' => true,
+
         // 'posts' => true, // Simple registration with defaults
         // 'orders' => \App\Tenant\Tables\OrdersTableConfig::class,
     ],
@@ -267,7 +274,7 @@ return [
         // \Illuminate\Notifications\DatabaseNotification::class,
 
         // Sanctum tokens (for API authentication per tenant)
-        \Laravel\Sanctum\PersonalAccessToken::class,
+        // \Laravel\Sanctum\PersonalAccessToken::class,
 
         // Spatie permissions (enable if roles should be tenant-scoped)
         // \Spatie\Permission\Models\Role::class,
@@ -492,5 +499,35 @@ return [
     */
     'filesystems' => [
         'auto_tenant_scoping' => env('TENANT_FILESYSTEM_AUTO_SCOPING', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Laravel Telescope Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant isolation for Laravel Telescope debugging data.
+    |
+    | When false (default): Telescope data is GLOBAL across all tenants.
+    |                       - All tenant activity visible in single Telescope dashboard
+    |                       - Useful for platform-wide admin debugging
+    |                       - No tenant_id scoping applied to EntryModel
+    |                       - Recommended for most applications
+    |
+    | When true: Telescope data is TENANT-SCOPED.
+    |            - Each tenant only sees their own Telescope entries
+    |            - EntryModel automatically added to scoped_models
+    |            - Requires tenant_id columns on telescope tables:
+    |              * telescope_entries
+    |              * telescope_entries_tags
+    |              * telescope_monitoring
+    |            - Must publish and modify telescope migrations to add tenant_id
+    |
+    | Note: This only affects the EntryModel scoping. Telescope must be installed
+    |       separately via: composer require laravel/telescope
+    |
+    */
+    'telescope' => [
+        'tenant_scoped' => env('TENANT_TELESCOPE_SCOPED', false),
     ],
 ];

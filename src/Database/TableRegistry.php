@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Configuration;
+namespace Quvel\Tenant\Database;
 
 use Exception;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
-use Quvel\Tenant\Database\TenantTableConfig;
 
 /**
  * Registry for managing tenant-aware database tables.

@@ -20,16 +20,16 @@ use Illuminate\Support\ServiceProvider;
 use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Concerns\HandlesTenantModels;
-use Quvel\Tenant\Configuration\PipelineRegistry;
-use Quvel\Tenant\Configuration\TableRegistry;
 use Quvel\Tenant\Context\TenantContext;
 use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
 use Quvel\Tenant\Contracts\ResolutionService as ResolutionServiceContract;
 use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
 use Quvel\Tenant\Contracts\TenantContext as TenantContextContract;
 use Quvel\Tenant\Contracts\TenantResolver;
+use Quvel\Tenant\Database\TableRegistry;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
+use Quvel\Tenant\Pipes\PipelineRegistry;
 use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
@@ -198,6 +198,14 @@ class TenantServiceProvider extends ServiceProvider
     protected function bootExternalModelScoping(): void
     {
         $models = config('tenant.scoped_models', []);
+
+        if (class_exists(\Laravel\Telescope\Storage\EntryModel::class) && config(
+                'tenant.telescope.tenant_scoped',
+                false
+            )) {
+            $models[] = \Laravel\Telescope\Storage\EntryModel::class;
+        }
+
         $provider = $this; // Capture instance for use in closures
 
         foreach ($models as $modelClass) {

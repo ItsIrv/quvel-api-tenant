@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Quvel\Tenant\Configuration;
+namespace Quvel\Tenant\Pipes;
 
 use Illuminate\Support\Collection;
 use Quvel\Tenant\Contracts\PipelineRegistry as PipelineRegistryContract;
-use Quvel\Tenant\Pipes\BasePipe;
 
 /**
  * Registry for configuration pipes that apply tenant config to Laravel.

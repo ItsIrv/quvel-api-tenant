@@ -73,7 +73,7 @@ readonly class TenantTableConfig
     }
 
     /**
-     * Create with default configuration.
+     * Create with the default configuration.
      *
      * @return static
      */
