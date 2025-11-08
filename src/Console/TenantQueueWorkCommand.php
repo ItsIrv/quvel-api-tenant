@@ -9,6 +9,8 @@ use Quvel\Tenant\Console\Concerns\HasTenantCommands;
 use Quvel\Tenant\Contracts\PipelineRegistry;
 use Quvel\Tenant\Facades\TenantContext;
 use Quvel\Tenant\Queue\TenantDatabaseQueue;
+use Quvel\Tenant\Queue\TenantHorizonRedisQueue;
+use Quvel\Tenant\Queue\TenantRedisQueue;
 
 /**
  * Tenant-aware queue work command.
@@ -81,7 +83,7 @@ class TenantQueueWorkCommand extends WorkCommand
     }
 
     /**
-     * Set the tenant filter on all database queue connections.
+     * Set the tenant filter on all queue connections.
      *
      * @param int $tenantId
      * @return void
@@ -91,10 +93,12 @@ class TenantQueueWorkCommand extends WorkCommand
         $queueManager = app('queue');
 
         foreach (config('queue.connections', []) as $name => $config) {
-            if (($config['driver'] ?? null) === 'database') {
+            $driver = $config['driver'] ?? null;
+
+            if ($driver === 'database' || $driver === 'redis') {
                 $connection = $queueManager->connection($name);
 
-                if ($connection instanceof TenantDatabaseQueue) {
+                if ($connection instanceof TenantDatabaseQueue || $connection instanceof TenantRedisQueue || $connection instanceof TenantHorizonRedisQueue) {
                     $connection->setFilterTenantId($tenantId);
                 }
             }
@@ -102,7 +106,7 @@ class TenantQueueWorkCommand extends WorkCommand
 
         $defaultConnection = $queueManager->connection();
 
-        if ($defaultConnection instanceof TenantDatabaseQueue) {
+        if ($defaultConnection instanceof TenantDatabaseQueue || $defaultConnection instanceof TenantRedisQueue || $defaultConnection instanceof TenantHorizonRedisQueue) {
             $defaultConnection->setFilterTenantId($tenantId);
         }
     }

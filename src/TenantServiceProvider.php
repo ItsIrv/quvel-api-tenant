@@ -15,10 +15,10 @@ use Illuminate\Queue\Console\WorkCommand;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
 use Illuminate\Session\SessionManager;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Horizon\Horizon;
 use Quvel\Tenant\Auth\TenantPasswordBrokerManager;
 use Quvel\Tenant\Cache\TenantDatabaseStore;
 use Quvel\Tenant\Concerns\HandlesTenantModels;
@@ -32,9 +32,9 @@ use Quvel\Tenant\Database\TableRegistry;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Pipes\PipelineRegistry;
-use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
+use Quvel\Tenant\Redis\TenantAwareRedisManager;
 use Quvel\Tenant\Resolution\ResolutionService;
 use Quvel\Tenant\Resolution\ResolverManager;
 use Quvel\Tenant\Session\TenantDatabaseSessionHandler;
@@ -273,15 +273,25 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware queue connector if enabled.
+     * Register tenant-aware queue connectors if enabled.
      */
     protected function registerTenantQueueConnector(): void
     {
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $this->app->resolving('queue', function (QueueManager $manager) {
+            $this->app->afterResolving('queue', function (QueueManager $manager) {
                 $manager->addConnector('database', function () {
-                    return new TenantDatabaseConnector($this->app['db']);
+                    return new Queue\Connectors\TenantDatabaseConnector($this->app['db']);
                 });
+
+                if (class_exists(Horizon::class)) {
+                    $manager->addConnector('redis', function () {
+                        return new Queue\Connectors\TenantHorizonConnector($this->app['redis']);
+                    });
+                } else {
+                    $manager->addConnector('redis', function () {
+                        return new Queue\Connectors\TenantRedisConnector($this->app['redis']);
+                    });
+                }
             });
         }
     }
@@ -532,7 +542,7 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantRedisManager(): void
     {
-        if (!class_exists(\Laravel\Horizon\Horizon::class)) {
+        if (!class_exists(Horizon::class)) {
             return;
         }
 
@@ -541,7 +551,7 @@ class TenantServiceProvider extends ServiceProvider
         }
 
         $this->app->extend('redis', function ($redis, $app) {
-            return new \Quvel\Tenant\Redis\TenantAwareRedisManager(
+            return new TenantAwareRedisManager(
                 $app,
                 config('database.redis.client', 'phpredis'),
                 config('database.redis')
