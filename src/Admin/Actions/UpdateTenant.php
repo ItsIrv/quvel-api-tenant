@@ -10,6 +10,7 @@ use Quvel\Tenant\Models\Tenant;
 class UpdateTenant
 {
     use NormalizesVisibility;
+
     /**
      * Update an existing tenant.
      */

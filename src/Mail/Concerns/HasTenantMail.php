@@ -42,6 +42,7 @@ use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
 trait HasTenantMail
 {
     use BaseTenantAware;
+
     /**
      * Get tenant-specific from address and name.
      *
@@ -121,5 +122,4 @@ trait HasTenantMail
 
         return $tenant->getConfig('mail.return_path');
     }
-
 }

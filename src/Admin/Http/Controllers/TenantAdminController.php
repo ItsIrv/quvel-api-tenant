@@ -82,7 +82,6 @@ class TenantAdminController extends Controller
                     'identifier' => $tenant->identifier,
                 ],
             ], 201);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -136,7 +135,6 @@ class TenantAdminController extends Controller
                     'identifier' => $updatedTenant->identifier,
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

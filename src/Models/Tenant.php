@@ -83,8 +83,10 @@ class Tenant extends Model
 
     /**
      * Get a config value by key with parent inheritance.
+     *
+     * @param array|null|true $default
      */
-    public function getConfig(string $key, mixed $default = null): mixed
+    public function getConfig(string $key, array|bool|null $default = null): mixed
     {
         $value = data_get($this->config, $key);
 

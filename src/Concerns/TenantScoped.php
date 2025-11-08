@@ -130,10 +130,12 @@ trait TenantScoped
      */
     public function fill(array $attributes): static
     {
-        if ($this->exists && array_key_exists(
-            'tenant_id',
-            $attributes
-        ) && $attributes['tenant_id'] !== $this->tenant_id) {
+        if (
+            $this->exists && array_key_exists(
+                'tenant_id',
+                $attributes
+            ) && $attributes['tenant_id'] !== $this->tenant_id
+        ) {
             throw new TenantMismatchException(
                 'Cannot change tenant_id after model creation'
             );
@@ -169,5 +171,4 @@ trait TenantScoped
             $this->tenant_id = $this->getCurrentTenantId();
         }
     }
-
 }

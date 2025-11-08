@@ -37,6 +37,7 @@ use Quvel\Tenant\Concerns\TenantAware as BaseTenantAware;
 trait HasTenantBroadcasting
 {
     use BaseTenantAware;
+
     /**
      * Get tenant-prefixed versions of the given channels.
      *
@@ -87,5 +88,4 @@ trait HasTenantBroadcasting
     {
         return tenant_channel('private-' . $channel);
     }
-
 }

@@ -14,19 +14,16 @@ class TenantTableConfig
          * Column after which the tenant_id should be added.
          */
         public string $after = 'id',
-
         /**
          * Whether tenant deletion should cascade to this table.
          */
         public bool $cascadeDelete = true,
-
         /**
          * Whether the tenant_id column should be nullable.
          * Set to true for tables that may have records without tenant context
          * (e.g., Telescope entries from tinker, global logs, etc.).
          */
         public bool $nullable = false,
-
         /**
          * List of unique constraints to drop before adding tenant-specific ones.
          * Each entry is an array of columns that form a unique constraint.
@@ -34,7 +31,6 @@ class TenantTableConfig
          * @var array<int, array<int, string>>
          */
         public array $dropUniques = [],
-
         /**
          * Unique constraints that should include tenant_id.
          * Each entry is an array of columns that should be unique together within a tenant.
@@ -42,7 +38,6 @@ class TenantTableConfig
          * @var array<int, array<int, string>>
          */
         public array $tenantUniqueConstraints = [],
-
         /**
          * List of regular indexes to drop before adding tenant-specific ones.
          * Each entry is an array of columns that form an index.
@@ -50,7 +45,6 @@ class TenantTableConfig
          * @var array<int, array<int, string>>
          */
         public array $dropIndexes = [],
-
         /**
          * Regular indexes that should include tenant_id.
          * Each entry is an array of columns that should be indexed together within a tenant.
@@ -58,14 +52,12 @@ class TenantTableConfig
          * @var array<int, array<int, string>>
          */
         public array $tenantIndexes = [],
-
         /**
          * List of foreign key constraint names to drop before adding tenant_id.
          *
          * @var array<int, string>
          */
         public array $dropForeignKeys = [],
-
         /**
          * Foreign keys to recreate (optionally with tenant_id considerations).
          * Each entry contains a foreign key configuration.
@@ -73,25 +65,21 @@ class TenantTableConfig
          * @var array<int, array<string, mixed>>
          */
         public array $recreateForeignKeys = [],
-
         /**
          * Whether to automatically detect and configure schema elements.
          * When true, indexes, uniques, and foreign keys are auto-detected from the table.
          */
         public bool $autoDetectSchema = false,
-
         /**
          * Whether tenant_id should be automatically added to all detected indexes.
          * Only applies when autoDetectSchema is true.
          */
         public bool $addTenantToAllIndexes = true,
-
         /**
          * Whether tenant_id should be automatically added to all detected unique constraints.
          * Only applies when autoDetectSchema is true.
          */
         public bool $addTenantToAllUniques = true,
-
         /**
          * Custom constraint name generator class or null for default naming.
          */

@@ -22,6 +22,7 @@ use Symfony\Component\Console\Input\InputOption;
 trait HasTenantCommands
 {
     use BaseTenantAware;
+
     protected function addTenantOptions(): void
     {
         $this->getDefinition()->addOptions([

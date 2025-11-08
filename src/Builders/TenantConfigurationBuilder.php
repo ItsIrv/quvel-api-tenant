@@ -21,8 +21,12 @@ class TenantConfigurationBuilder
 
     /**
      * Set a config value using dot notation.
+     *
+     * @param string $key
+     * @param bool|int|string $value
+     * @return TenantConfigurationBuilder
      */
-    public function setConfig(string $key, mixed $value): self
+    public function setConfig(string $key, string|bool|int $value): self
     {
         data_set($this->config, $key, $value);
 
