@@ -108,8 +108,10 @@ if (!function_exists('tenant_channel')) {
 
         $prefix = "tenant.$tenant->public_id.";
 
-        if (str_starts_with($channel, 'tenant.') ||
-            str_contains($channel, "tenant.$tenant->public_id.")) {
+        if (
+            str_starts_with($channel, 'tenant.') ||
+            str_contains($channel, "tenant.$tenant->public_id.")
+        ) {
             return $channel;
         }
 

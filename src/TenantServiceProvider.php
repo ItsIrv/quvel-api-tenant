@@ -208,10 +208,12 @@ class TenantServiceProvider extends ServiceProvider
     {
         $models = config('tenant.scoped_models', []);
 
-        if (class_exists(\Laravel\Telescope\Storage\EntryModel::class) && config(
-            'tenant.telescope.tenant_scoped',
-            false
-        )) {
+        if (
+            class_exists(\Laravel\Telescope\Storage\EntryModel::class) && config(
+                'tenant.telescope.tenant_scoped',
+                false
+            )
+        ) {
             $models[] = \Laravel\Telescope\Storage\EntryModel::class;
         }
 

@@ -94,5 +94,4 @@ class TenantScope implements Scope
             return $builder->withoutGlobalScope($this);
         });
     }
-
 }
