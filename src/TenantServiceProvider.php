@@ -108,6 +108,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerContextPreservation();
         $this->registerTenantFailedJobProvider();
         $this->registerTenantBroadcastingManager();
+        $this->registerTenantTelescopeRepository();
 
         if ($this->app->runningInConsole()) {
             $this->registerCommands();
@@ -516,6 +517,31 @@ class TenantServiceProvider extends ServiceProvider
                 );
             });
         }
+    }
+
+    /**
+     * Register a tenant-aware Telescope repository if Telescope is installed.
+     */
+    protected function registerTenantTelescopeRepository(): void
+    {
+        // Only register if Telescope is installed and tenant scoping is enabled
+        if (! interface_exists(\Laravel\Telescope\Contracts\EntriesRepository::class)) {
+            return;
+        }
+
+        if (! config('tenant.telescope.tenant_scoped', false)) {
+            return;
+        }
+
+        $this->app->singleton(
+            \Laravel\Telescope\Contracts\EntriesRepository::class,
+            function () {
+                return new \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository(
+                    config('telescope.storage.database.connection'),
+                    config('telescope.storage.database.chunk', 1000)
+                );
+            }
+        );
     }
 
     /**

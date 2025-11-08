@@ -21,6 +21,13 @@ class TenantTableConfig
         public bool $cascadeDelete = true,
 
         /**
+         * Whether the tenant_id column should be nullable.
+         * Set to true for tables that may have records without tenant context
+         * (e.g., Telescope entries from tinker, global logs, etc.).
+         */
+        public bool $nullable = false,
+
+        /**
          * List of unique constraints to drop before adding tenant-specific ones.
          * Each entry is an array of columns that form a unique constraint.
          *
@@ -102,6 +109,7 @@ class TenantTableConfig
         return [
             'after' => $this->after,
             'cascade_delete' => $this->cascadeDelete,
+            'nullable' => $this->nullable,
             'drop_uniques' => $this->dropUniques,
             'tenant_unique_constraints' => $this->tenantUniqueConstraints,
             'drop_indexes' => $this->dropIndexes,
@@ -126,6 +134,7 @@ class TenantTableConfig
         return new static(
             after: $config['after'] ?? 'id',
             cascadeDelete: $config['cascade_delete'] ?? true,
+            nullable: $config['nullable'] ?? false,
             dropUniques: $config['drop_uniques'] ?? [],
             tenantUniqueConstraints: $config['tenant_unique_constraints'] ?? [],
             dropIndexes: $config['drop_indexes'] ?? [],
@@ -211,6 +220,15 @@ class TenantTableConfig
     public function cascadeDelete(bool $enabled = true): static
     {
         $this->cascadeDelete = $enabled;
+        return $this;
+    }
+
+    /**
+     * Make tenant_id column nullable or not.
+     */
+    public function nullable(bool $enabled = true): static
+    {
+        $this->nullable = $enabled;
         return $this;
     }
 

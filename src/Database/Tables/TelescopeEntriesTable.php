@@ -19,6 +19,6 @@ class TelescopeEntriesTable extends BaseTenantTable
 
     public function getConfig(): TenantTableConfig
     {
-        return $this->autoDetect(['after' => 'sequence']);
+        return $this->autoDetect(['after' => 'sequence'])->nullable();
     }
 }

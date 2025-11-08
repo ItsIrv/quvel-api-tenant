@@ -19,7 +19,6 @@ class TelescopeMonitoringTable extends BaseTenantTable
 
     public function getConfig(): TenantTableConfig
     {
-        // Use auto-detection since Telescope's schema might vary
-        return $this->autoDetect(['after' => 'tag']);
+        return $this->autoDetect(['after' => 'tag'])->nullable();
     }
 }

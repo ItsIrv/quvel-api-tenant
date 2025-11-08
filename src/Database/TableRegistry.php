@@ -178,8 +178,13 @@ class TableRegistry implements TableRegistryContract
     {
         Schema::table($tableName, function (Blueprint $table) use ($config, $tableName) {
             $tenantIdColumn = $table->foreignId('tenant_id')
-                ->after($config->after)
-                ->constrained('tenants');
+                ->after($config->after);
+
+            if ($config->nullable) {
+                $tenantIdColumn->nullable();
+            }
+
+            $tenantIdColumn->constrained('tenants');
 
             if ($config->cascadeDelete) {
                 $tenantIdColumn->cascadeOnDelete();
