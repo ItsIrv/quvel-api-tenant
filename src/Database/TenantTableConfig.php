@@ -211,6 +211,7 @@ class TenantTableConfig
     public function after(string $column): static
     {
         $this->after = $column;
+
         return $this;
     }
 
@@ -220,6 +221,7 @@ class TenantTableConfig
     public function cascadeDelete(bool $enabled = true): static
     {
         $this->cascadeDelete = $enabled;
+
         return $this;
     }
 
@@ -229,6 +231,7 @@ class TenantTableConfig
     public function nullable(bool $enabled = true): static
     {
         $this->nullable = $enabled;
+
         return $this;
     }
 
@@ -238,6 +241,7 @@ class TenantTableConfig
     public function dropUnique(array $columns): static
     {
         $this->dropUniques[] = $columns;
+
         return $this;
     }
 
@@ -247,6 +251,7 @@ class TenantTableConfig
     public function tenantUnique(array $columns): static
     {
         $this->tenantUniqueConstraints[] = $columns;
+
         return $this;
     }
 
@@ -256,6 +261,7 @@ class TenantTableConfig
     public function dropIndex(array $columns): static
     {
         $this->dropIndexes[] = $columns;
+
         return $this;
     }
 
@@ -265,6 +271,7 @@ class TenantTableConfig
     public function tenantIndex(array $columns): static
     {
         $this->tenantIndexes[] = $columns;
+
         return $this;
     }
 
@@ -274,6 +281,7 @@ class TenantTableConfig
     public function dropForeignKey(string $name): static
     {
         $this->dropForeignKeys[] = $name;
+
         return $this;
     }
 
@@ -290,6 +298,7 @@ class TenantTableConfig
             'onDelete' => $onDelete,
             'onUpdate' => $onUpdate,
         ];
+
         return $this;
     }
 
@@ -299,6 +308,7 @@ class TenantTableConfig
     public function autoDetect(bool $enabled = true): static
     {
         $this->autoDetectSchema = $enabled;
+
         return $this;
     }
 }

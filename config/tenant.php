@@ -638,4 +638,32 @@ return [
     'telescope' => [
         'tenant_scoped' => env('TENANT_TELESCOPE_SCOPED', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Horizon Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-scoped Laravel Horizon queues.
+    |
+    | When false (default): Horizon data is GLOBAL (shared across all tenants).
+    |                       - All tenant queue jobs visible in single Horizon dashboard
+    |                       - Useful for platform-wide queue monitoring
+    |                       - No Redis key prefixing applied
+    |                       - Recommended for simpler setups
+    |
+    | When true: Horizon data is TENANT-SCOPED.
+    |            - Each tenant has isolated queue jobs, metrics, and supervisors
+    |            - Redis keys automatically prefixed with "tenant_{id}:"
+    |            - Separate Horizon dashboard per tenant
+    |            - Jobs queued within tenant context are isolated
+    |            - Requires no database migrations (pure Redis implementation)
+    |
+    | Note: This only affects Redis key prefixing. Horizon must be installed
+    |       separately via: composer require laravel/horizon
+    |
+    */
+    'horizon' => [
+        'tenant_scoped' => env('TENANT_HORIZON_SCOPED', false),
+    ],
 ];

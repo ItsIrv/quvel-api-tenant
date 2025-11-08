@@ -3,18 +3,65 @@
 namespace Quvel\Tenant\Queue;
 
 use Illuminate\Queue\DatabaseQueue;
+use Illuminate\Queue\Jobs\DatabaseJobRecord;
 use Quvel\Tenant\Facades\TenantContext;
 
 class TenantDatabaseQueue extends DatabaseQueue
 {
     /**
-     * Create an array to insert for the given job.
+     * The tenant ID to filter jobs by (set by queue:work --tenant command).
      *
-     * @param  string|null  $queue
-     * @param  string  $payload
-     * @param  int  $availableAt
-     * @param  int  $attempts
-     * @return array
+     * @var int|null
+     */
+    protected $filterByTenantId = null;
+
+    /**
+     * Set the tenant ID to filter jobs by.
+     */
+    public function setFilterTenantId(?int $tenantId): void
+    {
+        $this->filterByTenantId = $tenantId;
+    }
+
+    /**
+     * Pop the next job off of the queue.
+     */
+    public function pop($queue = null)
+    {
+        $queue = $this->getQueue($queue);
+
+        return $this->database->transaction(function () use ($queue) {
+            if ($job = $this->getNextAvailableJob($queue)) {
+                return $this->marshalJob($queue, $job);
+            }
+
+            return null;
+        });
+    }
+
+    /**
+     * Get the next available job for the queue.
+     */
+    protected function getNextAvailableJob($queue)
+    {
+        $job = $this->database->table($this->table)
+            ->lock($this->getLockForPopping())
+            ->where('queue', $this->getQueue($queue))
+            ->where(function ($query) {
+                $this->isAvailable($query);
+                $this->isReservedButExpired($query);
+            })
+            ->when($this->filterByTenantId !== null, function ($query) {
+                return $query->where('tenant_id', $this->filterByTenantId);
+            })
+            ->orderBy('id')
+            ->first();
+
+        return $job ? new DatabaseJobRecord($job) : null;
+    }
+
+    /**
+     * Create an array to insert for the given job.
      */
     protected function buildDatabaseRecord($queue, $payload, $availableAt, $attempts = 0): array
     {

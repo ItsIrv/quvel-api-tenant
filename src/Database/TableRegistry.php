@@ -184,10 +184,10 @@ class TableRegistry implements TableRegistryContract
                 $tenantIdColumn->nullable();
             }
 
-            $tenantIdColumn->constrained('tenants');
-
             if ($config->cascadeDelete) {
-                $tenantIdColumn->cascadeOnDelete();
+                $tenantIdColumn->constrained('tenants')->cascadeOnDelete();
+            } else {
+                $tenantIdColumn->constrained('tenants');
             }
 
             $table->index('tenant_id');

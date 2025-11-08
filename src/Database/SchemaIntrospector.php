@@ -74,7 +74,7 @@ class SchemaIntrospector
                 [$tableName]
             );
 
-            $columns = array_map(fn($row) => $row->COLUMN_NAME, $result);
+            $columns = array_map(fn ($row) => $row->COLUMN_NAME, $result);
 
             return match (count($columns)) {
                 0 => null,
@@ -85,17 +85,17 @@ class SchemaIntrospector
 
         if ($driver === 'pgsql') {
             $result = DB::connection($connection)->select(
-                "
+                '
                 SELECT a.attname
                 FROM pg_index i
                 JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
                 WHERE i.indrelid = ?::regclass AND i.indisprimary
                 ORDER BY a.attnum
-            ",
+            ',
                 [$tableName]
             );
 
-            $columns = array_map(fn($row) => $row->attname, $result);
+            $columns = array_map(fn ($row) => $row->attname, $result);
 
             return match (count($columns)) {
                 0 => null,
@@ -123,14 +123,14 @@ class SchemaIntrospector
 
         if ($driver === 'sqlsrv') {
             $result = DB::connection($connection)->select(
-                "
+                '
                 SELECT c.name
                 FROM sys.indexes i
                 JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
                 JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
                 WHERE i.object_id = OBJECT_ID(?) AND i.is_primary_key = 1
                 ORDER BY ic.key_ordinal
-            ",
+            ',
                 [$tableName]
             );
 
@@ -189,7 +189,7 @@ class SchemaIntrospector
 
         if ($driver === 'pgsql') {
             $results = DB::connection($connection)->select(
-                "
+                '
                 SELECT
                     i.relname as name,
                     a.attname as column_name,
@@ -202,7 +202,7 @@ class SchemaIntrospector
                 WHERE t.relname = ?
                     AND NOT ix.indisprimary
                 ORDER BY i.relname, a.attnum
-            ",
+            ',
                 [$tableName]
             );
 
@@ -239,7 +239,7 @@ class SchemaIntrospector
 
         if ($driver === 'sqlsrv') {
             $results = DB::connection($connection)->select(
-                "
+                '
                 SELECT
                     i.name,
                     c.name as column_name,
@@ -250,7 +250,7 @@ class SchemaIntrospector
                 JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
                 WHERE i.object_id = OBJECT_ID(?) AND i.is_primary_key = 0
                 ORDER BY i.name, ic.key_ordinal
-            ",
+            ',
                 [$tableName]
             );
 
@@ -301,7 +301,7 @@ class SchemaIntrospector
 
         if ($driver === 'mysql') {
             $results = DB::connection($connection)->select(
-                "
+                '
                 SELECT
                     kcu.CONSTRAINT_NAME as name,
                     kcu.COLUMN_NAME as `column`,
@@ -316,11 +316,11 @@ class SchemaIntrospector
                 WHERE kcu.TABLE_SCHEMA = DATABASE()
                     AND kcu.TABLE_NAME = ?
                     AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-            ",
+            ',
                 [$tableName]
             );
 
-            return array_map(static fn($row) => [
+            return array_map(static fn ($row) => [
                 'name' => $row->name,
                 'column' => $row->column,
                 'references' => $row->references,
@@ -363,7 +363,7 @@ class SchemaIntrospector
                 [$tableName]
             );
 
-            return array_map(fn($row) => [
+            return array_map(fn ($row) => [
                 'name' => $row->name,
                 'column' => $row->column,
                 'references' => $row->references,
@@ -388,7 +388,7 @@ class SchemaIntrospector
 
         if ($driver === 'sqlsrv') {
             $results = DB::connection($connection)->select(
-                "
+                '
                 SELECT
                     fk.name,
                     COL_NAME(fkc.parent_object_id, fkc.parent_column_id) as column_name,
@@ -399,7 +399,7 @@ class SchemaIntrospector
                 FROM sys.foreign_keys fk
                 JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
                 WHERE fk.parent_object_id = OBJECT_ID(?)
-            ",
+            ',
                 [$tableName]
             );
 

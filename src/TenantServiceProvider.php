@@ -11,9 +11,11 @@ use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Queue\Console\WorkCommand;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
 use Illuminate\Session\SessionManager;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -92,7 +94,12 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantPasswordResetTokenRepository();
         $this->registerTenantFilesystemManager();
         $this->registerTenantMailManager();
+        $this->registerTenantRedisManager();
         $this->registerFacades();
+
+        if ($this->app->runningInConsole()) {
+            $this->registerTenantCommands();
+        }
     }
 
     /**
@@ -111,8 +118,6 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantTelescopeRepository();
 
         if ($this->app->runningInConsole()) {
-            $this->registerCommands();
-
             $this->publishes([
                 __DIR__ . '/../config/tenant.php' => config_path('tenant.php'),
             ], 'tenant-config');
@@ -204,9 +209,9 @@ class TenantServiceProvider extends ServiceProvider
         $models = config('tenant.scoped_models', []);
 
         if (class_exists(\Laravel\Telescope\Storage\EntryModel::class) && config(
-                'tenant.telescope.tenant_scoped',
-                false
-            )) {
+            'tenant.telescope.tenant_scoped',
+            false
+        )) {
             $models[] = \Laravel\Telescope\Storage\EntryModel::class;
         }
 
@@ -520,16 +525,40 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register tenant-aware Redis manager for Horizon.
+     *
+     * Wraps Laravel's Redis manager to automatically prefix all Redis keys
+     * with the current tenant ID, enabling tenant isolation for Horizon.
+     */
+    protected function registerTenantRedisManager(): void
+    {
+        if (!class_exists(\Laravel\Horizon\Horizon::class)) {
+            return;
+        }
+
+        if (!config('tenant.horizon.tenant_scoped', false)) {
+            return;
+        }
+
+        $this->app->extend('redis', function ($redis, $app) {
+            return new \Quvel\Tenant\Redis\TenantAwareRedisManager(
+                $app,
+                config('database.redis.client', 'phpredis'),
+                config('database.redis')
+            );
+        });
+    }
+
+    /**
      * Register a tenant-aware Telescope repository if Telescope is installed.
      */
     protected function registerTenantTelescopeRepository(): void
     {
-        // Only register if Telescope is installed and tenant scoping is enabled
-        if (! interface_exists(\Laravel\Telescope\Contracts\EntriesRepository::class)) {
+        if (!interface_exists(\Laravel\Telescope\Contracts\EntriesRepository::class)) {
             return;
         }
 
-        if (! config('tenant.telescope.tenant_scoped', false)) {
+        if (!config('tenant.telescope.tenant_scoped', false)) {
             return;
         }
 
@@ -581,12 +610,28 @@ class TenantServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register tenant-aware console commands.
+     * Replaces Laravel's built-in commands with tenant-aware versions.
      */
-    protected function registerCommands(): void
+    protected function registerTenantCommands(): void
     {
-        $this->app->extend('command.tinker', function ($command, $app) {
+        $this->app->afterResolving('command.tinker', function ($command, $app) {
+            $app->forgetInstance('command.tinker');
+            $app->singleton('command.tinker', function ($app) {
+                return new Console\TenantTinkerCommand();
+            });
+        });
+
+        $this->app->singleton('command.tinker', function ($app) {
             return new Console\TenantTinkerCommand();
+        });
+
+        $this->commands(['command.tinker']);
+
+        $this->app->extend(WorkCommand::class, function ($command, $app) {
+            return new Console\TenantQueueWorkCommand(
+                $app['queue.worker'],
+                $app['cache.store']
+            );
         });
     }
 
