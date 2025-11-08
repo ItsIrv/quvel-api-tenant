@@ -276,8 +276,14 @@ class TenantTableConfig
     /**
      * Add a foreign key to recreate.
      */
-    public function recreateForeignKey(string $column, string $references, string $on, string $onDelete = 'restrict', string $onUpdate = 'restrict', ?string $name = null): static
-    {
+    public function recreateForeignKey(
+        string $column,
+        string $references,
+        string $on,
+        string $onDelete = 'restrict',
+        string $onUpdate = 'restrict',
+        ?string $name = null
+    ): static {
         $this->recreateForeignKeys[] = [
             'name' => $name,
             'column' => $column,

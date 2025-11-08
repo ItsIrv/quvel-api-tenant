@@ -98,7 +98,11 @@ class TenantQueueWorkCommand extends WorkCommand
             if ($driver === 'database' || $driver === 'redis') {
                 $connection = $queueManager->connection($name);
 
-                if ($connection instanceof TenantDatabaseQueue || $connection instanceof TenantRedisQueue || $connection instanceof TenantHorizonRedisQueue) {
+                if (
+                    $connection instanceof TenantDatabaseQueue
+                    || $connection instanceof TenantRedisQueue
+                    || $connection instanceof TenantHorizonRedisQueue
+                ) {
                     $connection->setFilterTenantId($tenantId);
                 }
             }
@@ -106,7 +110,11 @@ class TenantQueueWorkCommand extends WorkCommand
 
         $defaultConnection = $queueManager->connection();
 
-        if ($defaultConnection instanceof TenantDatabaseQueue || $defaultConnection instanceof TenantRedisQueue || $defaultConnection instanceof TenantHorizonRedisQueue) {
+        if (
+            $defaultConnection instanceof TenantDatabaseQueue
+            || $defaultConnection instanceof TenantRedisQueue
+            || $defaultConnection instanceof TenantHorizonRedisQueue
+        ) {
             $defaultConnection->setFilterTenantId($tenantId);
         }
     }

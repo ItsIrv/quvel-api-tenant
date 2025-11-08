@@ -18,4 +18,6 @@ parameters:
         - src/Pipes/QuvelCoreConfigPipe.php
         - src/Queue/Failed/TenantDatabaseUuidFailedJobProvider.php
         - src/TenantServiceProvider.php
+        - src/Telescope
+        - src/Redis
         - src/helpers.php

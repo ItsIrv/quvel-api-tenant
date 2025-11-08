@@ -88,7 +88,10 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
         // For now, we'll just return 0 and log a warning
 
         if (config('app.debug')) {
-            logger()->warning('TenantMemcachedSessionHandler::clearTenantSessions() is not fully supported. Consider using Redis for better tenant session management.');
+            logger()->warning(
+                'TenantMemcachedSessionHandler::clearTenantSessions() is not fully supported. '
+                . 'Consider using Redis for better tenant session management.'
+            );
         }
 
         return 0;

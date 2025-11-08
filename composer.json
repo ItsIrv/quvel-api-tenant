@@ -30,8 +30,13 @@
         "orchestra/testbench": "^10.6",
         "phpunit/phpunit": "^12.4",
         "laravel/pint": "^1.25",
-        "larastan/larastan": "^3.7",
-        "rector/rector": "^2.0"
+        "larastan/larastan": "^3.8",
+        "laravel/horizon": "^5.31",
+        "rector/rector": "^2.2",
+        "vimeo/psalm": "^6.13",
+        "psalm/plugin-laravel": "^3.0",
+        "phpmd/phpmd": "^2.15",
+        "squizlabs/php_codesniffer": "^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -49,11 +54,34 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage",
-        "format": "vendor/bin/pint",
-        "format-check": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint --test",
+        "format-fix": "vendor/bin/pint",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
-        "refactor": "vendor/bin/rector process",
-        "refactor-dry": "vendor/bin/rector process --dry-run"
+        "psalm": "vendor/bin/psalm --no-cache",
+        "psalm-fix": "vendor/bin/psalm --alter --issues=MissingParamType",
+        "phpmd": "vendor/bin/phpmd src text phpmd.xml 2>&1 | grep -v '^PHP Deprecated:' | grep -v '^Deprecated:' || true",
+        "phpcs": "vendor/bin/phpcs",
+        "phpcs-fix": "vendor/bin/phpcbf",
+        "refactor": "vendor/bin/rector process --dry-run",
+        "refactor-fix": "vendor/bin/rector process",
+        "ci": [
+            "@format",
+            "@analyse",
+            "@psalm",
+            "@phpmd",
+            "@phpcs",
+            "@refactor",
+            "@test"
+        ],
+        "ci-fix": [
+            "@format-fix",
+            "@analyse",
+            "@psalm-fix",
+            "@phpmd",
+            "@phpcs-fix",
+            "@refactor-fix",
+            "@test"
+        ]
     },
     "extra": {
         "laravel": {

@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -13,6 +13,7 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__ . '/vendor',
+        AddOverrideAttributeToOverriddenMethodsRector::class,
     ])
     ->withPhpSets(php84: true)
     ->withSets([
@@ -21,13 +22,10 @@ return RectorConfig::configure()
         SetList::DEAD_CODE,
         SetList::TYPE_DECLARATION,
     ])
-    ->withRules([
-        AddVoidReturnTypeWhereNoReturnRector::class,
-    ])
     ->withPreparedSets(
         deadCode: true,
         codeQuality: true,
         typeDeclarations: true,
         earlyReturn: true,
-        strictBooleans: true
+        codingStyle: true
     );

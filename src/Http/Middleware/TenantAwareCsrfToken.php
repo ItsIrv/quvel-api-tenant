@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Http\Middleware;
 
-use function config;
-
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Symfony\Component\HttpFoundation\Cookie;
 

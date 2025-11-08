@@ -197,6 +197,7 @@ class TableRegistry implements TableRegistryContract
                     $table->dropForeign($fkName);
                 } catch (Exception) {
                     // Constraint might not exist, continue processing
+                    continue;
                 }
             }
 
@@ -205,6 +206,7 @@ class TableRegistry implements TableRegistryContract
                     $table->dropUnique($columns);
                 } catch (Exception) {
                     // Constraint might not exist, continue processing
+                    continue;
                 }
             }
 
@@ -213,6 +215,7 @@ class TableRegistry implements TableRegistryContract
                     $table->dropIndex($columns);
                 } catch (Exception) {
                     // Index might not exist, continue processing
+                    continue;
                 }
             }
 
@@ -269,7 +272,7 @@ class TableRegistry implements TableRegistryContract
                 try {
                     $table->dropUnique($constraintName);
                 } catch (Exception) {
-                    // Constraint might not exist, continue processing
+                    continue;
                 }
             }
 
@@ -279,7 +282,7 @@ class TableRegistry implements TableRegistryContract
                 try {
                     $table->dropIndex($indexName);
                 } catch (Exception) {
-                    // Index might not exist, continue processing
+                    continue;
                 }
             }
 
@@ -287,7 +290,7 @@ class TableRegistry implements TableRegistryContract
                 try {
                     $table->unique($columns);
                 } catch (Exception) {
-                    // Constraint might already exist, continue processing
+                    continue;
                 }
             }
 
@@ -295,7 +298,7 @@ class TableRegistry implements TableRegistryContract
                 try {
                     $table->index($columns);
                 } catch (Exception) {
-                    // Index might already exist, continue processing
+                    continue;
                 }
             }
 
@@ -529,6 +532,7 @@ class TableRegistry implements TableRegistryContract
                 $table->dropUnique($columns);
             } catch (Exception) {
                 // Constraint might not exist in this context
+                continue;
             }
         }
 
