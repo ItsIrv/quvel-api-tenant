@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Admin\Http\Controllers;
 
 use Exception;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -82,10 +83,10 @@ class TenantAdminController extends Controller
                     'identifier' => $tenant->identifier,
                 ],
             ], 201);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ], 422);
         }
     }
@@ -93,7 +94,7 @@ class TenantAdminController extends Controller
     /**
      * Show the tenant management UI.
      */
-    public function ui()
+    public function showUI(): View
     {
         return view('tenant::admin.ui');
     }
@@ -135,10 +136,10 @@ class TenantAdminController extends Controller
                     'identifier' => $updatedTenant->identifier,
                 ],
             ]);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ], 422);
         }
     }

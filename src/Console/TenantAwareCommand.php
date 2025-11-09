@@ -19,7 +19,7 @@ abstract class TenantAwareCommand extends Command
 
     public function handle(): int
     {
-        return $this->withTenant(function ($tenant) {
+        return $this->withTenant(function ($tenant): int {
             if ($tenant) {
                 return $this->handleForTenant($tenant);
             }

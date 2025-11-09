@@ -18,7 +18,11 @@ class QueueConfigPipe extends BasePipe
             'queue.failed.table',
         ]);
 
-        if ($this->tenant->hasConfig('queue.connections.database.table') || $this->tenant->hasConfig('queue.connections.redis.queue') || $this->tenant->hasConfig('queue.connections.sqs.queue')) {
+        if (
+            $this->tenant->hasConfig('queue.connections.database.table')
+            || $this->tenant->hasConfig('queue.connections.redis.queue')
+            || $this->tenant->hasConfig('queue.connections.sqs.queue')
+        ) {
             $this->configureQueueConnection();
         }
     }
@@ -134,7 +138,7 @@ class QueueConfigPipe extends BasePipe
     {
         $result = $this->applyConfigurator('default_retry_after', '90');
 
-        return is_numeric($result) ? (int) $result : 90;
+        return is_numeric($result) ? (int)$result : 90;
     }
 
     /**

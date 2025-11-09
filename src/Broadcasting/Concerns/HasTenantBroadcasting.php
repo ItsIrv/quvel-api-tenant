@@ -40,9 +40,6 @@ trait HasTenantBroadcasting
 
     /**
      * Get tenant-prefixed versions of the given channels.
-     *
-     * @param array $channels
-     * @return array
      */
     protected function tenantChannels(array $channels): array
     {
@@ -51,9 +48,6 @@ trait HasTenantBroadcasting
 
     /**
      * Get a tenant-prefixed version of a single channel.
-     *
-     * @param object|string $channel
-     * @return string|object
      */
     protected function tenantChannel(object|string $channel): object|string
     {
@@ -69,9 +63,6 @@ trait HasTenantBroadcasting
 
     /**
      * Get a tenant-specific presence channel.
-     *
-     * @param string $channel
-     * @return string
      */
     protected function tenantPresenceChannel(string $channel): string
     {
@@ -80,9 +71,6 @@ trait HasTenantBroadcasting
 
     /**
      * Get a tenant-specific private channel.
-     *
-     * @param string $channel
-     * @return string
      */
     protected function tenantPrivateChannel(string $channel): string
     {

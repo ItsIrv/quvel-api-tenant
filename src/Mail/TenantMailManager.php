@@ -31,7 +31,7 @@ class TenantMailManager extends MailManager
         $config = $this->getConfig($name);
 
         if (is_null($config)) {
-            throw new InvalidArgumentException("Mailer [{$name}] is not defined.");
+            throw new InvalidArgumentException(sprintf('Mailer [%s] is not defined.', $name));
         }
 
         if (!config('tenant.mail.auto_tenant_mail', false)) {

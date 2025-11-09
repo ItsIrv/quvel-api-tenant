@@ -12,9 +12,7 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
     /**
      * Determine if a token record exists and is valid.
      *
-     * @param CanResetPasswordContract $user
      * @param  string  $token
-     * @return bool
      */
     public function exists(CanResetPasswordContract $user, $token): bool
     {
@@ -27,9 +25,6 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
 
     /**
      * Delete all existing reset tokens from the database.
-     *
-     * @param CanResetPasswordContract $user
-     * @return int
      */
     protected function deleteExisting(CanResetPasswordContract $user): int
     {
@@ -51,7 +46,6 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
      *
      * @param  string  $email
      * @param  string  $token
-     * @return array
      */
     protected function getPayload($email, #[SensitiveParameter] $token): array
     {
@@ -70,10 +64,9 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
     /**
      * Find a token record by email address.
      *
-     * @param string $email
-     * @return object
+     *
      */
-    protected function getToken(string $email): object
+    protected function getToken(string $email): object|null
     {
         $query = $this->getTable()->where('email', $email);
 

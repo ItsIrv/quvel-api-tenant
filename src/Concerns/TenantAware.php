@@ -103,7 +103,7 @@ trait TenantAware
             return '';
         }
 
-        return "tenant.{$tenant->public_id}.";
+        return sprintf('tenant.%s.', $tenant->public_id);
     }
 
     /**

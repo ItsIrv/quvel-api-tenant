@@ -48,6 +48,6 @@ class CacheConfigPipe extends BasePipe
      */
     protected function getDefaultPrefix(): string
     {
-        return $this->applyConfigurator('default_prefix', "tenant_{$this->tenant->public_id}");
+        return $this->applyConfigurator('default_prefix', 'tenant_' . $this->tenant->public_id);
     }
 }

@@ -15,11 +15,6 @@ use Illuminate\Redis\Connections\Connection;
 class TenantAwareRedisConnection
 {
     /**
-     * The underlying Redis connection.
-     */
-    protected Connection $connection;
-
-    /**
      * Redis commands that have keys as their first argument.
      */
     protected array $keyCommands = [
@@ -126,9 +121,12 @@ class TenantAwareRedisConnection
     /**
      * Create a new tenant-aware Redis connection.
      */
-    public function __construct(Connection $connection)
-    {
-        $this->connection = $connection;
+    public function __construct(
+        /**
+         * The underlying Redis connection.
+         */
+        protected Connection $connection
+    ) {
     }
 
     /**
@@ -150,7 +148,7 @@ class TenantAwareRedisConnection
      */
     protected function prefixKeys(array $parameters, int $tenantId): array
     {
-        if (empty($parameters)) {
+        if ($parameters === []) {
             return $parameters;
         }
 
@@ -158,7 +156,7 @@ class TenantAwareRedisConnection
             $parameters[0] = $this->addTenantPrefix($parameters[0], $tenantId);
         } elseif (is_array($parameters[0])) {
             $parameters[0] = array_map(
-                fn ($key) => is_string($key) ? $this->addTenantPrefix($key, $tenantId) : $key,
+                fn($key): mixed => is_string($key) ? $this->addTenantPrefix($key, $tenantId) : $key,
                 $parameters[0]
             );
         }
@@ -171,11 +169,11 @@ class TenantAwareRedisConnection
      */
     protected function addTenantPrefix(string $key, int $tenantId): string
     {
-        if (str_starts_with($key, "tenant_$tenantId:")) {
+        if (str_starts_with($key, sprintf('tenant_%d:', $tenantId))) {
             return $key;
         }
 
-        return "tenant_$tenantId:$key";
+        return sprintf('tenant_%d:%s', $tenantId, $key);
     }
 
     /**
@@ -189,7 +187,7 @@ class TenantAwareRedisConnection
     /**
      * Pass property access to the underlying connection.
      */
-    public function __get(string $property)
+    public function __get(string $property): mixed
     {
         return $this->connection->{$property};
     }
@@ -197,7 +195,7 @@ class TenantAwareRedisConnection
     /**
      * Set properties on the underlying connection.
      */
-    public function __set(string $property, $value)
+    public function __set(string $property, mixed $value)
     {
         $this->connection->{$property} = $value;
     }

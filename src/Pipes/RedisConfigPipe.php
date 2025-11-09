@@ -45,6 +45,6 @@ class RedisConfigPipe extends BasePipe
      */
     protected function getDefaultPrefix(): string
     {
-        return $this->applyConfigurator('default_prefix', "tenant_{$this->tenant->public_id}:");
+        return $this->applyConfigurator('default_prefix', sprintf('tenant_%s:', $this->tenant->public_id));
     }
 }

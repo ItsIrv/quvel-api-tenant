@@ -244,7 +244,7 @@ class Tenant extends Model
                 if (is_array($childConfig)) {
                     $filteredChild = $this->filterByVisibilityKeys($visValue, $childConfig, $minVisibility);
 
-                    if (!empty($filteredChild)) {
+                    if ($filteredChild !== []) {
                         $filtered[$key] = $filteredChild;
                     }
                 }
@@ -269,7 +269,7 @@ class Tenant extends Model
             return true;
         }
 
-        if (empty($value)) {
+        if ($value === []) {
             return true;
         }
 

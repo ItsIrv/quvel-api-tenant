@@ -31,18 +31,13 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
-
-            if ($tenant) {
-                $record['tenant_id'] = $tenant->id;
-            } else {
-                $record['tenant_id'] = null;
-            }
+            $record['tenant_id'] = $tenant ? $tenant->id : null;
         }
 
         try {
             return (bool)$this->table()->upsert($record, ['key'], ['value', 'expiration']);
-        } catch (Exception $e) {
-            $this->handleWriteException($e);
+        } catch (Exception $exception) {
+            $this->handleWriteException($exception);
 
             return false;
         }
@@ -89,9 +84,8 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
      * Remove an item from the cache.
      *
      * @param string $key
-     * @return bool
      */
-    public function forget($key)
+    public function forget($key): int
     {
         $query = $this->table()->where('key', '=', $this->prefix . $key);
 
@@ -110,10 +104,8 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
     /**
      * Remove all items from the cache.
-     *
-     * @return bool
      */
-    public function flush()
+    public function flush(): int
     {
         $query = $this->table();
 

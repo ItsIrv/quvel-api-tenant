@@ -52,9 +52,9 @@ trait HasTenantStorage
             return $path;
         }
 
-        $tenantFolder = "tenant-$tenant->public_id";
+        $tenantFolder = 'tenant-' . $tenant->public_id;
 
-        return $path ? "$tenantFolder/$path" : $tenantFolder;
+        return $path !== '' && $path !== '0' ? sprintf('%s/%s', $tenantFolder, $path) : $tenantFolder;
     }
 
     /**
@@ -91,10 +91,10 @@ trait HasTenantStorage
         }
 
         $diskName = $this->tenantDisk();
-        $defaultConfig = config("filesystems.disks.$diskName", []);
+        $defaultConfig = config('filesystems.disks.' . $diskName, []);
 
         // Get tenant-specific overrides
-        $tenantConfig = $tenant->getConfig("filesystems.disks.$diskName", []);
+        $tenantConfig = $tenant->getConfig('filesystems.disks.' . $diskName, []);
 
         return array_merge($defaultConfig, $tenantConfig);
     }
@@ -115,7 +115,7 @@ trait HasTenantStorage
         $disk = Storage::disk($this->tenantDisk());
 
         if (!method_exists($disk, 'temporaryUrl')) {
-            throw new RuntimeException("Disk [{$this->tenantDisk()}] does not support temporary URLs.");
+            throw new RuntimeException(sprintf('Disk [%s] does not support temporary URLs.', $this->tenantDisk()));
         }
 
         return $disk->temporaryUrl($this->tenantPath($path), $expiration, $options);
@@ -212,7 +212,7 @@ trait HasTenantStorage
         }
 
         $disk = Storage::disk($this->tenantDisk());
-        $tenantFolder = "tenant-$tenant->public_id";
+        $tenantFolder = 'tenant-' . $tenant->public_id;
 
         if (!$disk->exists($tenantFolder)) {
             return true; // Nothing to clean up

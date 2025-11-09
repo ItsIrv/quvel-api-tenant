@@ -39,7 +39,7 @@ class TenantConfigResource extends JsonResource
             'id' => $this->resource->public_id,
             'name' => $this->resource->name,
             'identifier' => $this->resource->identifier,
-            'parent' => $this->when((bool) $this->resource->parent, function () {
+            'parent' => $this->when((bool) $this->resource->parent, function (): array {
                 $parentConfig = $this->getParentFilteredConfig();
                 $parentConfig['__visibility'] = data_get($this->resource->parent->config, '__visibility', []);
 

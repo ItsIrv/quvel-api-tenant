@@ -16,14 +16,12 @@ class GetPresets
     {
         $presets = PresetDefinitions::all();
 
-        return array_map(function ($preset) {
-            return [
-                'name' => $preset['name'],
-                'description' => $preset['description'],
-                'features' => $preset['features'],
-                'fields' => $this->getFieldsWithDefinitions($preset['fields']),
-            ];
-        }, $presets);
+        return array_map(fn(array $preset): array => [
+            'name' => $preset['name'],
+            'description' => $preset['description'],
+            'features' => $preset['features'],
+            'fields' => $this->getFieldsWithDefinitions($preset['fields']),
+        ], $presets);
     }
 
     /**

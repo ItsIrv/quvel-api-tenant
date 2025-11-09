@@ -18,7 +18,7 @@ class TenantAwareRedisManager extends RedisManager
     /**
      * Get a Redis connection instance.
      */
-    public function connection($name = null)
+    public function connection($name = null): Connection|TenantAwareRedisConnection
     {
         $connection = parent::connection($name);
 

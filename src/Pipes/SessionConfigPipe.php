@@ -75,7 +75,7 @@ class SessionConfigPipe extends BasePipe
 
         $tenantForCookie = $this->tenant->parent ?? $this->tenant;
 
-        return "tenant_{$tenantForCookie->public_id}_xsrf";
+        return sprintf('tenant_%s_xsrf', $tenantForCookie->public_id);
     }
 
     /**
@@ -94,20 +94,18 @@ class SessionConfigPipe extends BasePipe
             $domain = $this->tenant->identifier;
         }
 
-        if ($domain === null || $domain === false || $domain === '') {
+        if (in_array($domain, [null, false, ''], true)) {
             return null;
         }
 
-        $parts = explode('.', $domain);
+        $parts = explode('.', (string)$domain);
 
         if (count($parts) > 2) {
             array_shift($parts);
-            $rootDomain = '.' . implode('.', $parts);
-        } else {
-            $rootDomain = '.' . $domain;
+            return '.' . implode('.', $parts);
         }
 
-        return $rootDomain;
+        return '.' . $domain;
     }
 
     /**
@@ -129,6 +127,6 @@ class SessionConfigPipe extends BasePipe
             return static::$configurators['default_cookie_name']($this, $tenantForCookie);
         }
 
-        return "tenant_{$tenantForCookie->public_id}_session";
+        return sprintf('tenant_%s_session', $tenantForCookie->public_id);
     }
 }

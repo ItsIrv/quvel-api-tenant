@@ -11,13 +11,15 @@ class TenantQueueServiceProvider extends QueueServiceProvider
     /**
      * Register the database queue connector.
      *
-     * @param  QueueManager  $manager
-     * @return void
+     * @param QueueManager $manager
      */
     protected function registerDatabaseConnector($manager): void
     {
-        $manager->addConnector('database', function () {
-            return new TenantDatabaseConnector($this->app['db']);
-        });
+        $manager->addConnector(
+            'database',
+            fn(): TenantDatabaseConnector => new TenantDatabaseConnector(
+                $this->app['db']
+            )
+        );
     }
 }

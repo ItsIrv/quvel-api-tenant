@@ -10,9 +10,6 @@ class TenantRedisConnector extends RedisConnector
 {
     /**
      * Establish a queue connection.
-     *
-     * @param array $config
-     * @return TenantRedisQueue|Queue
      */
     public function connect(array $config): TenantRedisQueue|Queue
     {

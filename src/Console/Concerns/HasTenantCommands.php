@@ -126,10 +126,10 @@ trait HasTenantCommands
             }
 
             return $callback($tenant) ?? 0;
-        } catch (Exception $e) {
-            $this->error('Error: ' . $e->getMessage());
+        } catch (Exception $exception) {
+            $this->error('Error: ' . $exception->getMessage());
             if ($this->output->isVerbose()) {
-                $this->error($e->getTraceAsString());
+                $this->error($exception->getTraceAsString());
             }
 
             return 1;
@@ -140,7 +140,10 @@ trait HasTenantCommands
 
     protected function shouldApplyTenantConfig(): bool
     {
-        return $this->option('apply-tenant-config') || $this->option('hard');
+        if ($this->option('apply-tenant-config')) {
+            return true;
+        }
+        return (bool) $this->option('hard');
     }
 
     protected function findTenant(string $identifier): mixed
@@ -162,6 +165,9 @@ trait HasTenantCommands
 
     protected function requiresTenant(): bool
     {
-        return $this->option('tenant') || $this->option('all-tenants');
+        if ($this->option('tenant')) {
+            return true;
+        }
+        return (bool) $this->option('all-tenants');
     }
 }

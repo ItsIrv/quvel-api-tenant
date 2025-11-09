@@ -19,6 +19,7 @@ abstract class BasePipe implements ConfigurationPipe
     protected static array $configurators = [];
 
     protected $tenant;
+
     protected ConfigRepository $config;
 
     /**

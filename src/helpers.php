@@ -102,15 +102,15 @@ if (!function_exists('tenant_channel')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $channel;
         }
 
-        $prefix = "tenant.$tenant->public_id.";
+        $prefix = sprintf('tenant.%s.', $tenant->public_id);
 
         if (
             str_starts_with($channel, 'tenant.') ||
-            str_contains($channel, "tenant.$tenant->public_id.")
+            str_contains($channel, sprintf('tenant.%s.', $tenant->public_id))
         ) {
             return $channel;
         }
@@ -134,7 +134,7 @@ if (!function_exists('tenant_broadcast')) {
     function tenant_broadcast($channels, string $event, array $data = []): void
     {
         $channels = is_array($channels) ? $channels : [$channels];
-        $tenantChannels = array_map('tenant_channel', $channels);
+        $tenantChannels = array_map(tenant_channel(...), $channels);
 
         broadcast($event)->to($tenantChannels)->with($data);
     }
@@ -160,7 +160,7 @@ if (!function_exists('tenant_mailer')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return config('mail.default');
         }
 
@@ -176,7 +176,7 @@ if (!function_exists('tenant_from')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return [
                 'address' => config('mail.from.address'),
                 'name' => config('mail.from.name'),
@@ -198,7 +198,7 @@ if (!function_exists('tenant_reply_to')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return null;
         }
 
@@ -241,8 +241,10 @@ if (!function_exists('tenant_model')) {
 if (!function_exists('tenant_event')) {
     /**
      * Dispatch an event with a tenant context.
+     *
+     * @return array|null|object|scalar
      */
-    function tenant_event(object|string $event, array $payload = [], bool $halt = false): ?array
+    function tenant_event(object|string $event, array $payload = [], bool $halt = false)
     {
         return event($event, $payload, $halt);
     }
@@ -256,11 +258,11 @@ if (!function_exists('tenant_event_name')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $eventName;
         }
 
-        return "tenant.$tenant->public_id.$eventName";
+        return sprintf('tenant.%s.%s', $tenant->public_id, $eventName);
     }
 }
 
@@ -282,7 +284,7 @@ if (!function_exists('tenant_event_data')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return [];
         }
 
@@ -302,11 +304,11 @@ if (!function_exists('tenant_cache_key')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $key;
         }
 
-        return "tenant.$tenant->public_id.$key";
+        return sprintf('tenant.%s.%s', $tenant->public_id, $key);
     }
 }
 
@@ -318,11 +320,11 @@ if (!function_exists('tenant_cache_tags')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $tags;
         }
 
-        $tenantTag = "tenant.$tenant->public_id";
+        $tenantTag = 'tenant.' . $tenant->public_id;
 
         return array_merge([$tenantTag], $tags);
     }
@@ -377,7 +379,7 @@ if (!function_exists('tenant_cache_flush')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return false;
         }
 
@@ -389,7 +391,7 @@ if (!function_exists('tenant_cache_flush')) {
             return false;
         }
 
-        return Cache::tags(["tenant.$tenant->public_id"])->flush();
+        return Cache::tags(['tenant.' . $tenant->public_id])->flush();
     }
 }
 
@@ -401,7 +403,7 @@ if (!function_exists('tenant_notification_channels')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $defaultChannels;
         }
 
@@ -421,11 +423,11 @@ if (!function_exists('tenant_notification_enabled')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return true; // Default to enabled if no tenant context
         }
 
-        return $tenant->getConfig("notifications.types.$type.enabled", true);
+        return $tenant->getConfig(sprintf('notifications.types.%s.enabled', $type), true);
     }
 }
 
@@ -437,11 +439,11 @@ if (!function_exists('tenant_notification_preferences')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return [];
         }
 
-        return $tenant->getConfig("notifications.preferences.$type", []);
+        return $tenant->getConfig('notifications.preferences.' . $type, []);
     }
 }
 
@@ -467,13 +469,13 @@ if (!function_exists('tenant_storage_path')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return $path;
         }
 
-        $tenantFolder = "tenant-$tenant->public_id";
+        $tenantFolder = 'tenant-' . $tenant->public_id;
 
-        return $path ? "$tenantFolder/$path" : $tenantFolder;
+        return $path !== '' && $path !== '0' ? sprintf('%s/%s', $tenantFolder, $path) : $tenantFolder;
     }
 }
 
@@ -485,7 +487,7 @@ if (!function_exists('tenant_storage_disk')) {
     {
         $tenant = tenant();
 
-        if (!$tenant) {
+        if (!$tenant || !is_a($tenant, tenant_class(), true)) {
             return config('filesystems.default');
         }
 
@@ -507,7 +509,7 @@ if (!function_exists('tenant_storage_get')) {
     /**
      * Get the contents of a file from tenant-scoped storage.
      */
-    function tenant_storage_get(string $path): string
+    function tenant_storage_get(string $path): string|null
     {
         return Storage::disk(tenant_storage_disk())->get(tenant_storage_path($path));
     }
@@ -532,7 +534,7 @@ if (!function_exists('tenant_storage_delete')) {
         $disk = Storage::disk(tenant_storage_disk());
 
         if (is_array($paths)) {
-            $tenantPaths = array_map('tenant_storage_path', $paths);
+            $tenantPaths = array_map(tenant_storage_path(...), $paths);
 
             return $disk->delete($tenantPaths);
         }

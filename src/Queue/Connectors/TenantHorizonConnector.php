@@ -15,9 +15,6 @@ class TenantHorizonConnector extends HorizonRedisConnector
 {
     /**
      * Establish a queue connection.
-     *
-     * @param array $config
-     * @return TenantHorizonRedisQueue|Queue
      */
     public function connect(array $config): TenantHorizonRedisQueue|Queue
     {

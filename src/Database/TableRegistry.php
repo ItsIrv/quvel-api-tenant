@@ -134,8 +134,8 @@ class TableRegistry implements TableRegistryContract
             $this->addTenantSupport($tableName, $config);
 
             return 'processed';
-        } catch (Exception $e) {
-            return 'error: ' . $e->getMessage();
+        } catch (Exception $exception) {
+            return 'error: ' . $exception->getMessage();
         }
     }
 
@@ -161,8 +161,8 @@ class TableRegistry implements TableRegistryContract
             $this->removeTenantFromTableSchema($tableName, $config);
 
             return 'processed';
-        } catch (Exception $e) {
-            return 'error: ' . $e->getMessage();
+        } catch (Exception $exception) {
+            return 'error: ' . $exception->getMessage();
         }
     }
 
@@ -176,7 +176,7 @@ class TableRegistry implements TableRegistryContract
      */
     private function addTenantSupport(string $tableName, TenantTableConfig $config): void
     {
-        Schema::table($tableName, function (Blueprint $table) use ($config, $tableName) {
+        Schema::table($tableName, function (Blueprint $table) use ($config, $tableName): void {
             $tenantIdColumn = $table->foreignId('tenant_id')
                 ->after($config->after);
 
@@ -195,27 +195,27 @@ class TableRegistry implements TableRegistryContract
             foreach ($config->dropForeignKeys as $fkName) {
                 try {
                     $table->dropForeign($fkName);
-                } catch (Exception) {
+                } catch (Exception $e) {
                     // Constraint might not exist, continue processing
-                    continue;
+                    unset($e);
                 }
             }
 
             foreach ($config->dropUniques as $columns) {
                 try {
                     $table->dropUnique($columns);
-                } catch (Exception) {
+                } catch (Exception $e) {
                     // Constraint might not exist, continue processing
-                    continue;
+                    unset($e);
                 }
             }
 
             foreach ($config->dropIndexes as $columns) {
                 try {
                     $table->dropIndex($columns);
-                } catch (Exception) {
+                } catch (Exception $e) {
                     // Index might not exist, continue processing
-                    continue;
+                    unset($e);
                 }
             }
 
@@ -265,14 +265,15 @@ class TableRegistry implements TableRegistryContract
      */
     private function removeTenantFromTableSchema(string $tableName, TenantTableConfig $config): void
     {
-        Schema::table($tableName, function (Blueprint $table) use ($config, $tableName) {
+        Schema::table($tableName, function (Blueprint $table) use ($config, $tableName): void {
             foreach ($config->tenantUniqueConstraints as $columns) {
                 $constraintName = $this->generateConstraintName($tableName, $columns, 'unique');
 
                 try {
                     $table->dropUnique($constraintName);
-                } catch (Exception) {
-                    continue;
+                } catch (Exception $e) {
+                    // Constraint might not exist, continue processing
+                    unset($e);
                 }
             }
 
@@ -281,24 +282,27 @@ class TableRegistry implements TableRegistryContract
 
                 try {
                     $table->dropIndex($indexName);
-                } catch (Exception) {
-                    continue;
+                } catch (Exception $e) {
+                    // Index might not exist, continue processing
+                    unset($e);
                 }
             }
 
             foreach ($config->dropUniques as $columns) {
                 try {
                     $table->unique($columns);
-                } catch (Exception) {
-                    continue;
+                } catch (Exception $e) {
+                    // Constraint might already exist, continue processing
+                    unset($e);
                 }
             }
 
             foreach ($config->dropIndexes as $columns) {
                 try {
                     $table->index($columns);
-                } catch (Exception) {
-                    continue;
+                } catch (Exception $e) {
+                    // Index might already exist, continue processing
+                    unset($e);
                 }
             }
 
@@ -319,7 +323,7 @@ class TableRegistry implements TableRegistryContract
     {
         $columnString = implode('_', $columns);
 
-        return "{$tableName}_{$columnString}_tenant_{$type}";
+        return sprintf('%s_%s_tenant_%s', $tableName, $columnString, $type);
     }
 
     /**
@@ -358,12 +362,12 @@ class TableRegistry implements TableRegistryContract
             }
 
             throw new InvalidArgumentException(
-                "Class $config must have a getConfig() method that returns TenantTableConfig"
+                sprintf('Class %s must have a getConfig() method that returns TenantTableConfig', $config)
             );
         }
 
         throw new InvalidArgumentException(
-            "Invalid configuration type for table $tableName"
+            'Invalid configuration type for table ' . $tableName
         );
     }
 
@@ -530,9 +534,9 @@ class TableRegistry implements TableRegistryContract
         foreach ($dropUniques as $columns) {
             try {
                 $table->dropUnique($columns);
-            } catch (Exception) {
+            } catch (Exception $e) {
                 // Constraint might not exist in this context
-                continue;
+                unset($e);
             }
         }
 

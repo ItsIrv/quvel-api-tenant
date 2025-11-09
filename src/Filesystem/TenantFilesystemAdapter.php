@@ -16,13 +16,8 @@ use Quvel\Tenant\Models\Tenant;
  */
 class TenantFilesystemAdapter implements Filesystem
 {
-    protected Filesystem $filesystem;
-    protected Tenant $tenant;
-
-    public function __construct(Filesystem $filesystem, Tenant $tenant)
+    public function __construct(protected Filesystem $filesystem, protected Tenant $tenant)
     {
-        $this->filesystem = $filesystem;
-        $this->tenant = $tenant;
     }
 
     /**
@@ -34,9 +29,9 @@ class TenantFilesystemAdapter implements Filesystem
             return $path;
         }
 
-        $tenantFolder = "tenant-{$this->tenant->public_id}";
+        $tenantFolder = 'tenant-' . $this->tenant->public_id;
 
-        return $path ? "$tenantFolder/$path" : $tenantFolder;
+        return $path !== '' && $path !== '0' ? sprintf('%s/%s', $tenantFolder, $path) : $tenantFolder;
     }
 
     /**
@@ -46,8 +41,8 @@ class TenantFilesystemAdapter implements Filesystem
     {
         $diskRoot = $this->filesystem->path('');
 
-        return str_contains($diskRoot, "tenants/{$this->tenant->public_id}") ||
-               str_contains($diskRoot, "tenants\\{$this->tenant->public_id}"); // Windows path support
+        return str_contains($diskRoot, 'tenants/' . $this->tenant->public_id) ||
+               str_contains($diskRoot, 'tenants\\' . $this->tenant->public_id); // Windows path support
     }
 
     /**
@@ -189,10 +184,10 @@ class TenantFilesystemAdapter implements Filesystem
 
         $files = $this->filesystem->files($tenantPath, $recursive);
 
-        $tenantPrefix = "tenant-{$this->tenant->public_id}/";
+        $tenantPrefix = sprintf('tenant-%s/', $this->tenant->public_id);
         $prefixLength = strlen($tenantPrefix);
 
-        return array_map(static function ($file) use ($tenantPrefix, $prefixLength) {
+        return array_map(static function (string $file) use ($tenantPrefix, $prefixLength): string {
             if (str_starts_with($file, $tenantPrefix)) {
                 return substr($file, $prefixLength);
             }
@@ -218,10 +213,10 @@ class TenantFilesystemAdapter implements Filesystem
 
         $directories = $this->filesystem->directories($tenantPath, $recursive);
 
-        $tenantPrefix = "tenant-{$this->tenant->public_id}/";
+        $tenantPrefix = sprintf('tenant-%s/', $this->tenant->public_id);
         $prefixLength = strlen($tenantPrefix);
 
-        return array_map(static function ($dir) use ($tenantPrefix, $prefixLength) {
+        return array_map(static function (string $dir) use ($tenantPrefix, $prefixLength): string {
             if (str_starts_with($dir, $tenantPrefix)) {
                 return substr($dir, $prefixLength);
             }
@@ -281,7 +276,7 @@ class TenantFilesystemAdapter implements Filesystem
     /**
      * Pass through any other method calls to the underlying filesystem.
      */
-    public function __call($method, $parameters)
+    public function __call(string $method, array $parameters)
     {
         return $this->filesystem->{$method}(...$parameters);
     }

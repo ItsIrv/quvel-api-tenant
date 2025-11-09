@@ -34,7 +34,7 @@ class TenantReverbBroadcaster extends ReverseProxyBroadcaster
      */
     protected function formatChannels(array $channels): array
     {
-        return array_map(static function ($channel) {
+        return array_map(static function ($channel): object|string {
             $channelName = is_object($channel) ? $channel->name : $channel;
             $prefixedName = tenant_channel($channelName);
 

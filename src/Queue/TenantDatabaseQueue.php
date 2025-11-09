@@ -13,7 +13,7 @@ class TenantDatabaseQueue extends DatabaseQueue
      *
      * @var int|null
      */
-    protected $filterByTenantId = null;
+    protected $filterByTenantId;
 
     /**
      * Set the tenant ID to filter jobs by.
@@ -47,13 +47,11 @@ class TenantDatabaseQueue extends DatabaseQueue
         $job = $this->database->table($this->table)
             ->lock($this->getLockForPopping())
             ->where('queue', $this->getQueue($queue))
-            ->where(function ($query) {
+            ->where(function ($query): void {
                 $this->isAvailable($query);
                 $this->isReservedButExpired($query);
             })
-            ->when($this->filterByTenantId !== null, function ($query) {
-                return $query->where('tenant_id', $this->filterByTenantId);
-            })
+            ->when($this->filterByTenantId !== null, fn($query) => $query->where('tenant_id', $this->filterByTenantId))
             ->orderBy('id')
             ->first();
 

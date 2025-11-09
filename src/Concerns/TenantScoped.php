@@ -45,7 +45,7 @@ trait TenantScoped
     {
         static::addGlobalScope(new TenantScope());
 
-        static::creating(static function ($model) {
+        static::creating(static function ($model): void {
             if (!isset($model->tenant_id)) {
                 if (!TenantContext::needsTenantIdScope()) {
                     return;
@@ -55,16 +55,16 @@ trait TenantScoped
             }
         });
 
-        static::updating(static function ($model) {
+        static::updating(static function ($model): void {
             $model->guardAgainstTenantMismatch();
         });
 
-        static::deleting(static function ($model) {
+        static::deleting(static function ($model): void {
             $model->guardAgainstTenantMismatch();
         });
 
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive(static::class), true)) {
-            static::restoring(static function ($model) {
+        if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive(static::class), true)) {
+            static::restoring(static function ($model): void {
                 $model->guardAgainstTenantMismatch();
             });
         }

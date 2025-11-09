@@ -21,7 +21,8 @@ use Quvel\Tenant\Events\TenantContextSet;
  */
 class TenantContext implements TenantContextContract
 {
-    protected $tenant = null;
+    protected $tenant;
+
     protected bool $bypassed = false;
 
     /**

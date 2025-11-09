@@ -93,7 +93,7 @@ trait HasTenantNotifications
      */
     protected function getTenantBroadcastChannels(array $channels): array
     {
-        return array_map('tenant_channel', $channels);
+        return array_map(tenant_channel(...), $channels);
     }
 
     /**
@@ -119,7 +119,7 @@ trait HasTenantNotifications
             return [];
         }
 
-        return $tenant->getConfig("notifications.preferences.{$type}", []);
+        return $tenant->getConfig('notifications.preferences.' . $type, []);
     }
 
     /**
@@ -133,6 +133,6 @@ trait HasTenantNotifications
             return true; // Default to enabled if no tenant context
         }
 
-        return $tenant->getConfig("notifications.types.{$type}.enabled", true);
+        return $tenant->getConfig(sprintf('notifications.types.%s.enabled', $type), true);
     }
 }

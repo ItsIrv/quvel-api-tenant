@@ -24,11 +24,11 @@ class DatabaseConfigPipe extends BasePipe
         $connection = $this->tenant->getConfig('database.default') ?? $this->getDefaultConnection();
 
         $this->setMany([
-            "database.connections.$connection.host",
-            "database.connections.$connection.port",
-            "database.connections.$connection.database",
-            "database.connections.$connection.username",
-            "database.connections.$connection.password",
+            sprintf('database.connections.%s.host', $connection),
+            sprintf('database.connections.%s.port', $connection),
+            sprintf('database.connections.%s.database', $connection),
+            sprintf('database.connections.%s.username', $connection),
+            sprintf('database.connections.%s.password', $connection),
             'tenant.scoping.skip_when_isolated',
         ]);
 
@@ -42,34 +42,40 @@ class DatabaseConfigPipe extends BasePipe
     {
         $tenantConnectionName = $this->getTenantConnectionName($baseConnection);
 
-        if (config("database.connections.$tenantConnectionName")) {
+        if (config('database.connections.' . $tenantConnectionName)) {
             return $tenantConnectionName;
         }
 
-        $baseConfig = config("database.connections.$baseConnection", []);
+        $baseConfig = config('database.connections.' . $baseConnection, []);
         $tenantConfig = $baseConfig;
 
-        if ($this->tenant->hasConfig("database.connections.$baseConnection.host")) {
-            $tenantConfig['host'] = $this->tenant->getConfig("database.connections.$baseConnection.host");
+        if ($this->tenant->hasConfig(sprintf('database.connections.%s.host', $baseConnection))) {
+            $tenantConfig['host'] = $this->tenant->getConfig(sprintf('database.connections.%s.host', $baseConnection));
         }
 
-        if ($this->tenant->hasConfig("database.connections.$baseConnection.port")) {
-            $tenantConfig['port'] = $this->tenant->getConfig("database.connections.$baseConnection.port");
+        if ($this->tenant->hasConfig(sprintf('database.connections.%s.port', $baseConnection))) {
+            $tenantConfig['port'] = $this->tenant->getConfig(sprintf('database.connections.%s.port', $baseConnection));
         }
 
-        if ($this->tenant->hasConfig("database.connections.$baseConnection.database")) {
-            $tenantConfig['database'] = $this->tenant->getConfig("database.connections.$baseConnection.database");
+        if ($this->tenant->hasConfig(sprintf('database.connections.%s.database', $baseConnection))) {
+            $tenantConfig['database'] = $this->tenant->getConfig(
+                sprintf('database.connections.%s.database', $baseConnection)
+            );
         }
 
-        if ($this->tenant->hasConfig("database.connections.$baseConnection.username")) {
-            $tenantConfig['username'] = $this->tenant->getConfig("database.connections.$baseConnection.username");
+        if ($this->tenant->hasConfig(sprintf('database.connections.%s.username', $baseConnection))) {
+            $tenantConfig['username'] = $this->tenant->getConfig(
+                sprintf('database.connections.%s.username', $baseConnection)
+            );
         }
 
-        if ($this->tenant->hasConfig("database.connections.$baseConnection.password")) {
-            $tenantConfig['password'] = $this->tenant->getConfig("database.connections.$baseConnection.password");
+        if ($this->tenant->hasConfig(sprintf('database.connections.%s.password', $baseConnection))) {
+            $tenantConfig['password'] = $this->tenant->getConfig(
+                sprintf('database.connections.%s.password', $baseConnection)
+            );
         }
 
-        config(["database.connections.$tenantConnectionName" => $tenantConfig]);
+        config(['database.connections.' . $tenantConnectionName => $tenantConfig]);
 
         return $tenantConnectionName;
     }
@@ -123,10 +129,10 @@ class DatabaseConfigPipe extends BasePipe
      */
     protected function getPooledConnectionName(string $baseConnection): string
     {
-        $host = $this->tenant->getConfig("database.connections.$baseConnection.host")
-            ?? config("database.connections.$baseConnection.host");
-        $port = $this->tenant->getConfig("database.connections.$baseConnection.port")
-            ?? config("database.connections.$baseConnection.port");
+        $host = $this->tenant->getConfig(sprintf('database.connections.%s.host', $baseConnection))
+            ?? config(sprintf('database.connections.%s.host', $baseConnection));
+        $port = $this->tenant->getConfig(sprintf('database.connections.%s.port', $baseConnection))
+            ?? config(sprintf('database.connections.%s.port', $baseConnection));
 
         return 'tenant_' . md5($host . ':' . $port);
     }

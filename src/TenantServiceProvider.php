@@ -11,6 +11,7 @@ use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Application;
 use Illuminate\Queue\Console\WorkCommand;
 use Illuminate\Queue\QueueManager;
 use Illuminate\Routing\Router;
@@ -154,8 +155,8 @@ class TenantServiceProvider extends ServiceProvider
             $router->aliasMiddleware('tenant', TenantMiddleware::class);
             $router->aliasMiddleware('tenant.is-internal', Http\Middleware\RequireInternalTenant::class);
             $router->aliasMiddleware('tenant.csrf', Http\Middleware\TenantAwareCsrfToken::class);
-        } catch (BindingResolutionException $e) {
-            throw new RuntimeException('Failed to alias tenant middleware', 0, $e);
+        } catch (BindingResolutionException $bindingResolutionException) {
+            throw new RuntimeException('Failed to alias tenant middleware', 0, $bindingResolutionException);
         }
     }
 
@@ -176,8 +177,8 @@ class TenantServiceProvider extends ServiceProvider
             /** @var Kernel $kernel */
             $kernel = $this->app->make(Kernel::class);
             $kernel->prependMiddleware(TenantMiddleware::class);
-        } catch (BindingResolutionException $e) {
-            throw new RuntimeException('Failed to register tenant middleware', 0, $e);
+        } catch (BindingResolutionException $bindingResolutionException) {
+            throw new RuntimeException('Failed to register tenant middleware', 0, $bindingResolutionException);
         }
     }
 
@@ -226,7 +227,7 @@ class TenantServiceProvider extends ServiceProvider
 
             $modelClass::addGlobalScope(new Scopes\TenantScope());
 
-            $modelClass::creating(static function ($model) {
+            $modelClass::creating(static function ($model): void {
                 if (!isset($model->tenant_id) && !tenant_bypassed()) {
                     if (!TenantContextFacade::needsTenantIdScope()) {
                         return;
@@ -236,11 +237,11 @@ class TenantServiceProvider extends ServiceProvider
                 }
             });
 
-            $modelClass::updating(static function ($model) use ($provider) {
+            $modelClass::updating(static function ($model) use ($provider): void {
                 $provider->validateTenantMatch($model);
             });
 
-            $modelClass::deleting(static function ($model) use ($provider) {
+            $modelClass::deleting(static function ($model) use ($provider): void {
                 $provider->validateTenantMatch($model);
             });
         }
@@ -280,19 +281,31 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantQueueConnector(): void
     {
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $this->app->afterResolving('queue', function (QueueManager $manager) {
-                $manager->addConnector('database', function () {
-                    return new Queue\Connectors\TenantDatabaseConnector($this->app['db']);
-                });
+            $this->app->afterResolving('queue', function (QueueManager $manager): void {
+                $manager->addConnector(
+                    'database',
+                    fn(
+                    ): \Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector => new Queue\Connectors\TenantDatabaseConnector(
+                        $this->app['db']
+                    )
+                );
 
                 if (class_exists(Horizon::class)) {
-                    $manager->addConnector('redis', function () {
-                        return new Queue\Connectors\TenantHorizonConnector($this->app['redis']);
-                    });
+                    $manager->addConnector(
+                        'redis',
+                        fn(
+                        ): \Quvel\Tenant\Queue\Connectors\TenantHorizonConnector => new Queue\Connectors\TenantHorizonConnector(
+                            $this->app['redis']
+                        )
+                    );
                 } else {
-                    $manager->addConnector('redis', function () {
-                        return new Queue\Connectors\TenantRedisConnector($this->app['redis']);
-                    });
+                    $manager->addConnector(
+                        'redis',
+                        fn(
+                        ): \Quvel\Tenant\Queue\Connectors\TenantRedisConnector => new Queue\Connectors\TenantRedisConnector(
+                            $this->app['redis']
+                        )
+                    );
                 }
             });
         }
@@ -304,7 +317,7 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantFailedJobProvider(): void
     {
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $this->app->extend('queue.failer', function ($provider, $app) {
+            $this->app->extend('queue.failer', function ($provider, array $app) {
                 if ($app['config']->get('queue.failed.database') !== null) {
                     return new TenantDatabaseUuidFailedJobProvider(
                         $app['db'],
@@ -324,13 +337,17 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantBatchRepository(): void
     {
         if (config('tenant.queue.auto_tenant_id', true)) {
-            $this->app->extend(DatabaseBatchRepository::class, function ($repository, $app) {
-                return new TenantDatabaseBatchRepository(
+            $this->app->extend(
+                DatabaseBatchRepository::class,
+                fn(
+                    $repository,
+                    $app
+                ): \Quvel\Tenant\Queue\TenantDatabaseBatchRepository => new TenantDatabaseBatchRepository(
                     $app->make(BatchFactory::class),
                     $app->make('db')->connection($app->config->get('queue.batching.database')),
                     $app->config->get('queue.batching.table', 'job_batches')
-                );
-            });
+                )
+            );
         }
     }
 
@@ -339,13 +356,14 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantDatabaseManager(): void
     {
-        $this->app->extend('db', function ($manager, $app) {
-            return new Database\TenantDatabaseManager(
+        $this->app->extend(
+            'db',
+            fn($manager, $app): \Quvel\Tenant\Database\TenantDatabaseManager => new Database\TenantDatabaseManager(
                 $app,
                 $app['db.factory'],
                 $app->make(TenantContext::class)
-            );
-        });
+            )
+        );
     }
 
     /**
@@ -353,9 +371,10 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantSessionManager(): void
     {
-        $this->app->extend('session', function ($manager, $app) {
-            return new Session\TenantSessionManager($app);
-        });
+        $this->app->extend(
+            'session',
+            fn($manager, $app): \Quvel\Tenant\Session\TenantSessionManager => new Session\TenantSessionManager($app)
+        );
     }
 
     /**
@@ -364,16 +383,19 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantSessionHandler(): void
     {
         if (config('tenant.sessions.auto_tenant_id', false)) {
-            $this->app->extend('session', function (SessionManager $manager, $app) {
-                $manager->extend('database', function () use ($app) {
-                    $table = $app['config']->get('session.table');
-                    $lifetime = $app['config']->get('session.lifetime');
-                    $connection = $app['db']->connection($app['config']->get('session.connection'));
+            $this->app->extend('session', function (SessionManager $manager, $app): \Illuminate\Session\SessionManager {
+                $manager->extend(
+                    'database',
+                    function () use ($app): \Quvel\Tenant\Session\TenantDatabaseSessionHandler {
+                        $table = $app['config']->get('session.table');
+                        $lifetime = $app['config']->get('session.lifetime');
+                        $connection = $app['db']->connection($app['config']->get('session.connection'));
 
-                    return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
-                });
+                        return new TenantDatabaseSessionHandler($connection, $table, $lifetime, $app);
+                    }
+                );
 
-                $manager->extend('file', function () use ($app) {
+                $manager->extend('file', function () use ($app): \Quvel\Tenant\Session\TenantFileSessionHandler {
                     $path = $app['config']->get('session.files');
                     $lifetime = $app['config']->get('session.lifetime');
 
@@ -384,7 +406,7 @@ class TenantServiceProvider extends ServiceProvider
                     );
                 });
 
-                $manager->extend('redis', function () use ($app) {
+                $manager->extend('redis', function () use ($app): \Quvel\Tenant\Session\TenantRedisSessionHandler {
                     $cache = $app['cache']->store($app['config']->get('session.store'));
                     $lifetime = $app['config']->get('session.lifetime');
 
@@ -395,16 +417,19 @@ class TenantServiceProvider extends ServiceProvider
                     );
                 });
 
-                $manager->extend('memcached', function () use ($app) {
-                    $cache = $app['cache']->store($app['config']->get('session.store'));
-                    $lifetime = $app['config']->get('session.lifetime');
+                $manager->extend(
+                    'memcached',
+                    function () use ($app): \Quvel\Tenant\Session\TenantMemcachedSessionHandler {
+                        $cache = $app['cache']->store($app['config']->get('session.store'));
+                        $lifetime = $app['config']->get('session.lifetime');
 
-                    return new Session\TenantMemcachedSessionHandler(
-                        $cache,
-                        $lifetime,
-                        $app->make(TenantContext::class)
-                    );
-                });
+                        return new Session\TenantMemcachedSessionHandler(
+                            $cache,
+                            $lifetime,
+                            $app->make(TenantContext::class)
+                        );
+                    }
+                );
 
                 return $manager;
             });
@@ -417,8 +442,8 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantCacheStore(): void
     {
         if (config('tenant.cache.auto_tenant_id', false)) {
-            $this->app->extend('cache', function (CacheManager $manager) {
-                $manager->extend('database', function ($app, $config) use ($manager) {
+            $this->app->extend('cache', function (CacheManager $manager): \Illuminate\Cache\CacheManager {
+                $manager->extend('database', function (Application $app, array $config) use ($manager) {
                     $connection = $app['db']->connection($config['connection'] ?? null);
                     $table = $config['table'];
                     $prefix = $config['prefix'] ?? '';
@@ -445,12 +470,13 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantCacheManager(): void
     {
         if (config('tenant.cache.auto_tenant_scoping', false)) {
-            $this->app->extend('cache', function ($manager, $app) {
-                return new Cache\TenantCacheManager(
+            $this->app->extend(
+                'cache',
+                fn($manager, $app): \Quvel\Tenant\Cache\TenantCacheManager => new Cache\TenantCacheManager(
                     $app,
                     $app->make(TenantContext::class)
-                );
-            });
+                )
+            );
         }
     }
 
@@ -460,9 +486,12 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantPasswordResetTokenRepository(): void
     {
         if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
-            $this->app->extend('auth.password', function ($manager, $app) {
-                return new TenantPasswordBrokerManager($app);
-            });
+            $this->app->extend(
+                'auth.password',
+                fn($manager, $app): \Quvel\Tenant\Auth\TenantPasswordBrokerManager => new TenantPasswordBrokerManager(
+                    $app
+                )
+            );
         }
     }
 
@@ -474,16 +503,21 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.broadcasting.auto_tenant_id', true)) {
             $manager = $this->app->make(BroadcastManager::class);
 
-            $manager->extend('log', function ($app) {
-                return new Broadcasting\TenantLogBroadcaster(
+            $manager->extend(
+                'log',
+                fn($app): \Quvel\Tenant\Broadcasting\TenantLogBroadcaster => new Broadcasting\TenantLogBroadcaster(
                     $app->make('log'),
                     $app->make(TenantContext::class)
-                );
-            });
+                )
+            );
 
             if (class_exists(\Pusher\Pusher::class)) {
-                $manager->extend('pusher', function ($app, $config) {
-                    return new Broadcasting\TenantPusherBroadcaster(
+                $manager->extend(
+                    'pusher',
+                    fn(
+                        $app,
+                        $config
+                    ): \Quvel\Tenant\Broadcasting\TenantPusherBroadcaster => new Broadcasting\TenantPusherBroadcaster(
                         new \Pusher\Pusher(
                             $config['key'],
                             $config['secret'],
@@ -491,17 +525,21 @@ class TenantServiceProvider extends ServiceProvider
                             $config['options'] ?? []
                         ),
                         $app->make(TenantContext::class)
-                    );
-                });
+                    )
+                );
             }
 
             if (class_exists(\Illuminate\Broadcasting\Broadcasters\ReverseProxyBroadcaster::class)) {
-                $manager->extend('reverb', function ($app, $config) {
-                    return new Broadcasting\TenantReverbBroadcaster(
+                $manager->extend(
+                    'reverb',
+                    fn(
+                        $app,
+                        $config
+                    ): \Quvel\Tenant\Broadcasting\TenantReverbBroadcaster => new Broadcasting\TenantReverbBroadcaster(
                         $config['options'] ?? [],
                         $app->make(TenantContext::class)
-                    );
-                });
+                    )
+                );
             }
         }
     }
@@ -512,12 +550,16 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantFilesystemManager(): void
     {
         if (config('tenant.filesystems.auto_tenant_scoping', false)) {
-            $this->app->extend('filesystem', function ($manager, $app) {
-                return new Filesystem\TenantFilesystemManager(
+            $this->app->extend(
+                'filesystem',
+                fn(
+                    $manager,
+                    $app
+                ): \Quvel\Tenant\Filesystem\TenantFilesystemManager => new Filesystem\TenantFilesystemManager(
                     $app,
                     $app->make(TenantContext::class)
-                );
-            });
+                )
+            );
         }
     }
 
@@ -527,12 +569,13 @@ class TenantServiceProvider extends ServiceProvider
     protected function registerTenantMailManager(): void
     {
         if (config('tenant.mail.auto_tenant_mail', false)) {
-            $this->app->extend('mail.manager', function ($manager, $app) {
-                return new Mail\TenantMailManager(
+            $this->app->extend(
+                'mail.manager',
+                fn($manager, $app): \Quvel\Tenant\Mail\TenantMailManager => new Mail\TenantMailManager(
                     $app,
                     $app->make(TenantContext::class)
-                );
-            });
+                )
+            );
         }
     }
 
@@ -552,13 +595,14 @@ class TenantServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->extend('redis', function ($redis, $app) {
-            return new TenantAwareRedisManager(
+        $this->app->extend(
+            'redis',
+            fn($redis, $app): \Quvel\Tenant\Redis\TenantAwareRedisManager => new TenantAwareRedisManager(
                 $app,
                 config('database.redis.client', 'phpredis'),
                 config('database.redis')
-            );
-        });
+            )
+        );
     }
 
     /**
@@ -576,12 +620,11 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->app->singleton(
             \Laravel\Telescope\Contracts\EntriesRepository::class,
-            function () {
-                return new \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository(
-                    config('telescope.storage.database.connection'),
-                    config('telescope.storage.database.chunk', 1000)
-                );
-            }
+            fn(
+            ): \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository => new \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository(
+                config('telescope.storage.database.connection'),
+                config('telescope.storage.database.chunk', 1000)
+            )
         );
     }
 
@@ -626,25 +669,28 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantCommands(): void
     {
-        $this->app->afterResolving('command.tinker', function ($command, $app) {
+        $this->app->afterResolving('command.tinker', function ($command, $app): void {
             $app->forgetInstance('command.tinker');
-            $app->singleton('command.tinker', function ($app) {
-                return new Console\TenantTinkerCommand();
-            });
+            $app->singleton(
+                'command.tinker',
+                fn($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand()
+            );
         });
 
-        $this->app->singleton('command.tinker', function ($app) {
-            return new Console\TenantTinkerCommand();
-        });
+        $this->app->singleton(
+            'command.tinker',
+            fn($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand()
+        );
 
         $this->commands(['command.tinker']);
 
-        $this->app->extend(WorkCommand::class, function ($command, $app) {
-            return new Console\TenantQueueWorkCommand(
+        $this->app->extend(
+            WorkCommand::class,
+            fn($command, $app): \Quvel\Tenant\Console\TenantQueueWorkCommand => new Console\TenantQueueWorkCommand(
                 $app['queue.worker'],
                 $app['cache.store']
-            );
-        });
+            )
+        );
     }
 
     /**
@@ -684,7 +730,7 @@ class TenantServiceProvider extends ServiceProvider
             bool $cascadeDelete = true,
             array $dropUniques = [],
             array $tenantUniqueConstraints = []
-        ) {
+        ): void {
             /** @var Blueprint $this */
             TableRegistry::addTenantColumn(
                 $this,

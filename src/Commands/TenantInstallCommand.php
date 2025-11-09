@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class TenantInstallCommand extends Command
 {
     protected $signature = 'tenant:install';
+
     protected $description = 'Install the Tenant package';
 
     public function handle(): int

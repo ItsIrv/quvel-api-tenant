@@ -53,9 +53,9 @@ class TenantTinkerCommand extends TinkerCommand
             TenantContext::setCurrent($tenant);
 
             $this->info('Tinker session started with tenant context:');
-            $this->line("  → Tenant: <fg=cyan>$tenant->name</>");
-            $this->line("  → Identifier: <fg=cyan>$tenant->identifier</>");
-            $this->line("  → ID: <fg=cyan>$tenant->public_id</>");
+            $this->line(sprintf('  → Tenant: <fg=cyan>%s</>', $tenant->name));
+            $this->line(sprintf('  → Identifier: <fg=cyan>%s</>', $tenant->identifier));
+            $this->line(sprintf('  → ID: <fg=cyan>%s</>', $tenant->public_id));
 
             if ($this->shouldApplyTenantConfig()) {
                 $this->line('  → <fg=yellow>Applying tenant configuration pipeline...</>');

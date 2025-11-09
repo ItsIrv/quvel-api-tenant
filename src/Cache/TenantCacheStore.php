@@ -16,13 +16,8 @@ use Quvel\Tenant\Models\Tenant;
  */
 class TenantCacheStore implements Store
 {
-    protected Store $store;
-    protected Tenant $tenant;
-
-    public function __construct(Store $store, Tenant $tenant)
+    public function __construct(protected Store $store, protected Tenant $tenant)
     {
-        $this->store = $store;
-        $this->tenant = $tenant;
     }
 
     /**
@@ -30,7 +25,7 @@ class TenantCacheStore implements Store
      */
     protected function getTenantKey(string $key): string
     {
-        return "tenant.{$this->tenant->public_id}.$key";
+        return sprintf('tenant.%s.%s', $this->tenant->public_id, $key);
     }
 
     /**
@@ -142,7 +137,7 @@ class TenantCacheStore implements Store
     /**
      * Pass through any other method calls to the underlying store.
      */
-    public function __call($method, $parameters)
+    public function __call(string $method, array $parameters)
     {
         return $this->store->{$method}(...$parameters);
     }

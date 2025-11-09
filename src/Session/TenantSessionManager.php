@@ -10,27 +10,21 @@ class TenantSessionManager extends SessionManager
 {
     /**
      * Build the session instance.
-     *
-     * @param  \SessionHandlerInterface  $handler
-     * @return \Quvel\Tenant\Session\TenantStore
      */
-    protected function buildSession($handler)
+    protected function buildSession($handler): TenantEncryptedStore|TenantStore
     {
         return $this->config->get('session.encrypt')
-                ? $this->buildEncryptedSession($handler)
-                : new TenantStore(
-                    $this->config->get('session.cookie'),
-                    $handler,
-                    $id = null,
-                    $this->config->get('session.serialization', 'php')
-                );
+            ? $this->buildEncryptedSession($handler)
+            : new TenantStore(
+                $this->config->get('session.cookie'),
+                $handler,
+                $id = null,
+                $this->config->get('session.serialization', 'php')
+            );
     }
 
     /**
      * Build the encrypted session instance.
-     *
-     * @param  \SessionHandlerInterface  $handler
-     * @return \Quvel\Tenant\Session\TenantEncryptedStore
      */
     protected function buildEncryptedSession($handler)
     {

@@ -15,7 +15,6 @@ class TenantPusherBroadcaster extends PusherBroadcaster
 {
     public function __construct(
         protected $pusher,
-        protected TenantContext $tenantContext
     ) {
         parent::__construct($pusher);
     }
@@ -35,7 +34,7 @@ class TenantPusherBroadcaster extends PusherBroadcaster
      */
     protected function formatChannels(array $channels): array
     {
-        return array_map(static function ($channel) {
+        return array_map(static function ($channel): object|string {
             $channelName = is_object($channel) ? $channel->name : $channel;
             $prefixedName = tenant_channel($channelName);
 

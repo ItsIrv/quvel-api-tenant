@@ -16,7 +16,7 @@ use Quvel\Tenant\Events\TenantResolved;
  */
 class ResolutionService implements ResolutionServiceContract
 {
-    protected $bypassCallback = null;
+    protected $bypassCallback;
 
     public function __construct(
         protected TenantResolver $resolver,
@@ -49,7 +49,7 @@ class ResolutionService implements ResolutionServiceContract
         }
 
         if ($identifier === null) {
-            TenantNotFound::dispatch($request, get_class($this->resolver), null);
+            TenantNotFound::dispatch($request, $this->resolver::class, null);
 
             return null;
         }
@@ -63,9 +63,9 @@ class ResolutionService implements ResolutionServiceContract
         }
 
         if ($tenant) {
-            TenantResolved::dispatch($tenant, get_class($resolverUsed), $cacheKey);
+            TenantResolved::dispatch($tenant, $resolverUsed::class, $cacheKey);
         } else {
-            TenantNotFound::dispatch($request, get_class($resolverUsed), $cacheKey);
+            TenantNotFound::dispatch($request, $resolverUsed::class, $cacheKey);
         }
 
         return $tenant;
@@ -80,9 +80,9 @@ class ResolutionService implements ResolutionServiceContract
 
         if ($cacheTtl > 0) {
             return Cache::remember(
-                "tenant.$cacheKey",
+                'tenant.' . $cacheKey,
                 $cacheTtl,
-                static fn () => $resolver->resolve($request)
+                static fn(): mixed => $resolver->resolve($request)
             );
         }
 

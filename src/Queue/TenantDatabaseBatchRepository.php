@@ -12,11 +12,8 @@ class TenantDatabaseBatchRepository extends DatabaseBatchRepository
 {
     /**
      * Store a new pending batch.
-     *
-     * @param PendingBatch $batch
-     * @return Batch
      */
-    public function store(PendingBatch $batch): Batch
+    public function store(PendingBatch $batch): Batch|null
     {
         $id = (string) Str::orderedUuid();
 

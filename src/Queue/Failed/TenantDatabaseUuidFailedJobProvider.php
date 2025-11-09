@@ -16,7 +16,6 @@ class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
      * @param  string  $queue
      * @param  string  $payload
      * @param  Throwable  $exception
-     * @return int
      */
     public function log($connection, $queue, $payload, $exception): int
     {

@@ -48,13 +48,13 @@ class TenantScope implements Scope
         $tenant = TenantContext::current();
 
         if (!$tenant) {
-            TenantScopeNoTenantFound::dispatch(get_class($model));
+            TenantScopeNoTenantFound::dispatch($model::class);
 
             if (config('tenant.scoping.throw_no_tenant_exception', true)) {
                 throw new NoTenantException(
                     sprintf(
                         'No tenant context found for model %s. Ensure tenant middleware is active or use without_tenant() for admin operations.',
-                        get_class($model)
+                        $model::class
                     )
                 );
             }
@@ -66,12 +66,12 @@ class TenantScope implements Scope
         }
 
         if (!TenantContext::needsTenantIdScope()) {
-            TenantScopeApplied::dispatch(get_class($model), $tenant, 'isolated');
+            TenantScopeApplied::dispatch($model::class, $tenant, 'isolated');
 
             return;
         }
 
-        TenantScopeApplied::dispatch(get_class($model), $tenant, $this->column);
+        TenantScopeApplied::dispatch($model::class, $tenant, $this->column);
 
         $builder->where($this->column, $tenant->id);
     }
@@ -81,17 +81,11 @@ class TenantScope implements Scope
      */
     public function extend(Builder $builder): void
     {
-        $builder->macro('withoutTenantScope', function (Builder $builder) {
-            return $builder->withoutGlobalScope($this);
-        });
+        $builder->macro('withoutTenantScope', fn(Builder $builder) => $builder->withoutGlobalScope($this));
 
-        $builder->macro('forTenant', function (Builder $builder, $tenantId) {
-            return $builder->withoutGlobalScope($this)
-                ->where($this->column, $tenantId);
-        });
+        $builder->macro('forTenant', fn(Builder $builder, $tenantId) => $builder->withoutGlobalScope($this)
+            ->where($this->column, $tenantId));
 
-        $builder->macro('forAllTenants', function (Builder $builder) {
-            return $builder->withoutGlobalScope($this);
-        });
+        $builder->macro('forAllTenants', fn(Builder $builder) => $builder->withoutGlobalScope($this));
     }
 }

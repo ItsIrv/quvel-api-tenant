@@ -23,12 +23,9 @@ use Quvel\Tenant\Contracts\TenantContext;
  */
 class TenantFilesystemManager extends FilesystemManager
 {
-    protected TenantContext $tenantContext;
-
-    public function __construct(Application $app, TenantContext $tenantContext)
+    public function __construct(Application $app, protected TenantContext $tenantContext)
     {
         parent::__construct($app);
-        $this->tenantContext = $tenantContext;
     }
 
     /**
@@ -80,7 +77,7 @@ class TenantFilesystemManager extends FilesystemManager
         }
 
         // Apply tenant-specific disk configuration overrides
-        $tenantConfig = $tenant->getConfig("filesystems.disks.$name", []);
+        $tenantConfig = $tenant->getConfig('filesystems.disks.' . $name, []);
 
         return array_merge($config, $tenantConfig);
     }

@@ -16,16 +16,10 @@ class TenantHorizonRedisQueue extends HorizonRedisQueue
      *
      * @var int|null
      */
-    protected $filterByTenantId = null;
+    protected $filterByTenantId;
 
     /**
      * Create a new TenantHorizonRedisQueue instance.
-     *
-     * @param RedisManager $redis
-     * @param string $default
-     * @param string $connection
-     * @param int $retryAfter
-     * @param int|null $blockFor
      */
     public function __construct(
         RedisManager $redis,
@@ -39,9 +33,6 @@ class TenantHorizonRedisQueue extends HorizonRedisQueue
 
     /**
      * Set the tenant ID to filter jobs by.
-     *
-     * @param int|null $tenantId
-     * @return void
      */
     public function setFilterTenantId(?int $tenantId): void
     {
@@ -77,13 +68,9 @@ class TenantHorizonRedisQueue extends HorizonRedisQueue
 
     /**
      * Get the tenant-specific queue name.
-     *
-     * @param string $queue
-     * @param int $tenantId
-     * @return string
      */
     protected function getTenantQueueName(string $queue, int $tenantId): string
     {
-        return "tenant_{$tenantId}_$queue";
+        return sprintf('tenant_%d_%s', $tenantId, $queue);
     }
 }

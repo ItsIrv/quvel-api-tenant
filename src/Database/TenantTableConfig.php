@@ -115,7 +115,6 @@ class TenantTableConfig
      * Create from array configuration.
      *
      * @param array<string, mixed> $config
-     * @return static
      */
     public static function fromArray(array $config): static
     {
@@ -138,8 +137,6 @@ class TenantTableConfig
 
     /**
      * Create with the default configuration.
-     *
-     * @return static
      */
     public static function default(): static
     {
@@ -152,7 +149,6 @@ class TenantTableConfig
      * @param string $tableName The table to introspect
      * @param array<string, mixed> $overrides Manual overrides for auto-detected values
      * @param string|null $connection Database connection name
-     * @return static
      */
     public static function fromTable(string $tableName, array $overrides = [], ?string $connection = null): static
     {

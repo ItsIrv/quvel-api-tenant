@@ -12,16 +12,13 @@ class TenantPasswordBrokerManager extends PasswordBrokerManager
 {
     /**
      * Create a token repository instance based on the given configuration.
-     *
-     * @param array $config
-     * @return TenantDatabaseTokenRepository|CacheTokenRepository|TokenRepositoryInterface
      */
     protected function createTokenRepository(array $config): TenantDatabaseTokenRepository|CacheTokenRepository|TokenRepositoryInterface
     {
         $key = $this->app['config']['app.key'];
 
-        if (str_starts_with($key, 'base64:')) {
-            $key = base64_decode(substr($key, 7));
+        if (str_starts_with((string) $key, 'base64:')) {
+            $key = base64_decode(substr((string) $key, 7));
         }
 
         if (isset($config['driver']) && $config['driver'] === 'cache') {

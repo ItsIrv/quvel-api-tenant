@@ -88,8 +88,10 @@ class TenantFileSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @return false|string
      */
-    public function read($id): string
+    public function read($id): string|false
     {
         $this->updateHandlerPath();
 
@@ -133,7 +135,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
 
             if ($files->isDirectory($this->basePath)) {
                 foreach ($files->directories($this->basePath) as $tenantDir) {
-                    if (str_starts_with(basename($tenantDir), 'tenant_')) {
+                    if (str_starts_with(basename((string)$tenantDir), 'tenant_')) {
                         $tenantHandler = new FileSessionHandler(
                             $files,
                             $tenantDir,

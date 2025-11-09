@@ -13,7 +13,7 @@ use Quvel\Tenant\Admin\Http\Controllers\TenantAdminController;
 |
 */
 
-Route::get('/', [TenantAdminController::class, 'ui'])->name('ui');
+Route::get('/', [TenantAdminController::class, 'showUI'])->name('ui');
 Route::get('config-fields', [TenantAdminController::class, 'configFields'])->name('config-fields');
 Route::get('presets', [TenantAdminController::class, 'presets'])->name('presets');
 Route::get('presets/{preset}/fields', [TenantAdminController::class, 'presetFields'])->name('presets.fields');

@@ -15,8 +15,6 @@ class SchemaIntrospector
     /**
      * Introspect a table and return its schema elements.
      *
-     * @param string $tableName
-     * @param string|null $connection
      * @return array{
      *     columns: array<string>,
      *     primary_key: string|array<string>|null,
@@ -27,7 +25,7 @@ class SchemaIntrospector
      */
     public function introspect(string $tableName, ?string $connection = null): array
     {
-        $connection = $connection ?? config('database.default');
+        $connection ??= config('database.default');
 
         return [
             'columns' => $this->getColumns($tableName, $connection),
@@ -41,8 +39,6 @@ class SchemaIntrospector
     /**
      * Get all column names from a table.
      *
-     * @param string $tableName
-     * @param string $connection
      * @return array<string>
      */
     protected function getColumns(string $tableName, string $connection): array
@@ -53,8 +49,6 @@ class SchemaIntrospector
     /**
      * Detect the primary key column(s).
      *
-     * @param string $tableName
-     * @param string $connection
      * @return string|array<string>|null
      */
     protected function getPrimaryKey(string $tableName, string $connection): string|array|null
@@ -105,7 +99,7 @@ class SchemaIntrospector
         }
 
         if ($driver === 'sqlite') {
-            $result = DB::connection($connection)->select("PRAGMA table_info({$tableName})");
+            $result = DB::connection($connection)->select(sprintf('PRAGMA table_info(%s)', $tableName));
 
             $columns = [];
             foreach ($result as $row) {
@@ -152,8 +146,6 @@ class SchemaIntrospector
     /**
      * Get all indexes (including unique).
      *
-     * @param string $tableName
-     * @param string $connection
      * @return array<int, array{name: string, columns: array<string>, unique: bool}>
      */
     protected function getIndexes(string $tableName, string $connection): array
@@ -217,16 +209,16 @@ class SchemaIntrospector
         }
 
         if ($driver === 'sqlite') {
-            $indexList = DB::connection($connection)->select("PRAGMA index_list({$tableName})");
+            $indexList = DB::connection($connection)->select(sprintf('PRAGMA index_list(%s)', $tableName));
 
             $indexes = [];
             foreach ($indexList as $idx) {
                 // Skip auto-created indexes for primary keys
-                if (str_starts_with($idx->name, 'sqlite_autoindex_')) {
+                if (str_starts_with((string) $idx->name, 'sqlite_autoindex_')) {
                     continue;
                 }
 
-                $indexInfo = DB::connection($connection)->select("PRAGMA index_info({$idx->name})");
+                $indexInfo = DB::connection($connection)->select(sprintf('PRAGMA index_info(%s)', $idx->name));
                 $indexes[$idx->name] = [
                     'name' => $idx->name,
                     'columns' => array_map(fn ($col) => $col->name, $indexInfo),
@@ -270,8 +262,6 @@ class SchemaIntrospector
     /**
      * Get unique constraints (excluding primary key).
      *
-     * @param string $tableName
-     * @param string $connection
      * @return array<int, array<string>>
      */
     protected function getUniqueConstraints(string $tableName, string $connection): array
@@ -291,8 +281,6 @@ class SchemaIntrospector
     /**
      * Get foreign key constraints.
      *
-     * @param string $tableName
-     * @param string $connection
      * @return array<int, array{name: string, column: string, references: string, on: string, onUpdate: string, onDelete: string}>
      */
     protected function getForeignKeys(string $tableName, string $connection): array
@@ -320,7 +308,7 @@ class SchemaIntrospector
                 [$tableName]
             );
 
-            return array_map(static fn ($row) => [
+            return array_map(static fn ($row): array => [
                 'name' => $row->name,
                 'column' => $row->column,
                 'references' => $row->references,
@@ -363,7 +351,7 @@ class SchemaIntrospector
                 [$tableName]
             );
 
-            return array_map(fn ($row) => [
+            return array_map(fn ($row): array => [
                 'name' => $row->name,
                 'column' => $row->column,
                 'references' => $row->references,
@@ -374,15 +362,15 @@ class SchemaIntrospector
         }
 
         if ($driver === 'sqlite') {
-            $results = DB::connection($connection)->select("PRAGMA foreign_key_list({$tableName})");
+            $results = DB::connection($connection)->select(sprintf('PRAGMA foreign_key_list(%s)', $tableName));
 
-            return array_map(fn ($row) => [
-                'name' => "fk_{$tableName}_{$row->from}_{$row->id}",
+            return array_map(fn ($row): array => [
+                'name' => sprintf('fk_%s_%s_%s', $tableName, $row->from, $row->id),
                 'column' => $row->from,
                 'references' => $row->to,
                 'on' => $row->table,
-                'onUpdate' => strtolower($row->on_update),
-                'onDelete' => strtolower($row->on_delete),
+                'onUpdate' => strtolower((string) $row->on_update),
+                'onDelete' => strtolower((string) $row->on_delete),
             ], $results);
         }
 
@@ -403,7 +391,7 @@ class SchemaIntrospector
                 [$tableName]
             );
 
-            return array_map(fn ($row) => [
+            return array_map(fn ($row): array => [
                 'name' => $row->name,
                 'column' => $row->column_name,
                 'references' => $row->references,
@@ -418,10 +406,6 @@ class SchemaIntrospector
 
     /**
      * Suggest the column after which tenant_id should be added.
-     *
-     * @param string $tableName
-     * @param string $connection
-     * @return string
      */
     public function suggestAfterColumn(string $tableName, string $connection): string
     {
@@ -431,7 +415,7 @@ class SchemaIntrospector
             return $primaryKey;
         }
 
-        if (is_array($primaryKey) && count($primaryKey) > 0) {
+        if (is_array($primaryKey) && $primaryKey !== []) {
             return $primaryKey[0];
         }
 

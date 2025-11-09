@@ -17,7 +17,6 @@ interface TenantContext
      * Set the current tenant for this request.
      *
      * @param mixed $tenant The tenant model instance
-     * @return void
      */
     public function setCurrent($tenant): void;
 
@@ -37,15 +36,11 @@ interface TenantContext
 
     /**
      * Clear the current tenant.
-     *
-     * @return void
      */
     public function clear(): void;
 
     /**
      * Mark the context as bypassed (no tenant required).
-     *
-     * @return void
      */
     public function bypass(): void;
 
@@ -58,8 +53,6 @@ interface TenantContext
 
     /**
      * Restore the context to non-bypassed state.
-     *
-     * @return void
      */
     public function clearBypassed(): void;
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Pipes;
 
 use Closure;
-use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Context;
@@ -60,7 +60,7 @@ class CoreConfigPipe extends BasePipe
             $allowedOrigins[] = $this->tenant->getConfig('frontend.url');
         }
 
-        if (!empty($allowedOrigins)) {
+        if ($allowedOrigins !== []) {
             $allowedOrigins = $this->getCustomCorsOrigins($allowedOrigins);
             $this->config->set('cors.allowed_origins', $allowedOrigins);
         }
@@ -71,16 +71,12 @@ class CoreConfigPipe extends BasePipe
      */
     protected function refreshUrlGenerator(): void
     {
-        try {
-            /** @var UrlGenerator $urlGenerator */
-            $urlGenerator = app(UrlGenerator::class);
-            $appUrl = $this->config->get('app.url');
+        /** @var UrlGenerator $urlGenerator */
+        $urlGenerator = app(UrlGenerator::class);
+        $appUrl = $this->config->get('app.url');
 
-            if ($appUrl !== null) {
-                $urlGenerator->useOrigin($appUrl);
-            }
-        } catch (Exception) {
-            // Log error if needed
+        if ($appUrl !== null) {
+            $urlGenerator->useOrigin($appUrl);
         }
     }
 
@@ -89,14 +85,10 @@ class CoreConfigPipe extends BasePipe
      */
     protected function refreshLocale(): void
     {
-        try {
-            $locale = $this->config->get('app.locale');
+        $locale = $this->config->get('app.locale');
 
-            if ($locale) {
-                App::setLocale($locale);
-            }
-        } catch (Exception) {
-            // Log error if needed
+        if ($locale) {
+            App::setLocale($locale);
         }
     }
 
@@ -105,23 +97,19 @@ class CoreConfigPipe extends BasePipe
      */
     protected function handleForwardedPrefix(): void
     {
-        try {
-            if (!app()->bound('request')) {
-                return;
-            }
+        if (!app()->bound('request')) {
+            return;
+        }
 
-            $request = app('request');
-            $prefix = $request->header('X-Forwarded-Prefix');
+        $request = app(Request::class);
+        $prefix = $request->header('X-Forwarded-Prefix');
 
-            if ($prefix !== null && $request->isFromTrustedProxy()) {
-                /** @var UrlGenerator $urlGenerator */
-                $urlGenerator = app(UrlGenerator::class);
-                $urlGenerator->useOrigin(
-                    $request->getSchemeAndHttpHost() . $prefix
-                );
-            }
-        } catch (Exception) {
-            // Log error if needed
+        if ($prefix !== null && $request->isFromTrustedProxy()) {
+            /** @var UrlGenerator $urlGenerator */
+            $urlGenerator = app(UrlGenerator::class);
+            $urlGenerator->useOrigin(
+                $request->getSchemeAndHttpHost() . $prefix
+            );
         }
     }
 

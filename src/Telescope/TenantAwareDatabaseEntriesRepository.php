@@ -19,7 +19,7 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
     /**
      * Store the given array of entries.
      */
-    public function store(Collection $entries)
+    public function store(Collection $entries): void
     {
         if ($entries->isEmpty()) {
             return;
@@ -33,7 +33,7 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
 
         $tenantId = tenant_id();
 
-        $entries->chunk($this->chunkSize)->each(function ($chunked) use ($table, $tenantId) {
+        $entries->chunk($this->chunkSize)->each(function ($chunked) use ($table, $tenantId): void {
             $table->insert(
                 $chunked->map(function ($entry) use ($tenantId) {
                     $entry->content = json_encode($entry->content, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
@@ -59,7 +59,7 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
     {
         $tenantId = tenant_id();
 
-        $exceptions->chunk($this->chunkSize)->each(function ($chunked) use ($tenantId) {
+        $exceptions->chunk($this->chunkSize)->each(function ($chunked) use ($tenantId): void {
             $table = $this->table('telescope_entries');
 
             [$stored, $new] = $this->getExistingExceptionsFingerprints($chunked);
@@ -88,12 +88,10 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
                 })->toArray()
             );
 
-            $stored->each(function ($exception) use ($table, $tenantId) {
+            $stored->each(function ($exception) use ($table, $tenantId): void {
                 $table
                     ->where('family_hash', $exception->familyHash)
-                    ->when($tenantId !== null, function ($query) use ($tenantId) {
-                        return $query->where('tenant_id', $tenantId);
-                    })
+                    ->when($tenantId !== null, fn($query) => $query->where('tenant_id', $tenantId))
                     ->update([
                         'content->occurrences' => $table->raw('JSON_EXTRACT(`content`, "$.occurrences") + 1'),
                         'should_display_on_index' => true,
@@ -109,13 +107,13 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
     {
         $tenantId = tenant_id();
 
-        $results->chunk($this->chunkSize)->each(function ($chunked) use ($tenantId) {
+        $results->chunk($this->chunkSize)->each(function ($chunked) use ($tenantId): void {
             $table = $this->table('telescope_entries_tags');
 
             try {
                 $table->insert(
-                    $chunked->flatMap(function ($tags, $uuid) use ($tenantId) {
-                        return collect($tags)->map(function ($tag) use ($uuid, $tenantId) {
+                    $chunked->flatMap(
+                        fn($tags, $uuid) => collect($tags)->map(function ($tag) use ($uuid, $tenantId): array {
                             $data = [
                                 'entry_uuid' => $uuid,
                                 'tag' => $tag,
@@ -126,11 +124,12 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
                             }
 
                             return $data;
-                        });
-                    })->toArray()
+                        })
+                    )->toArray()
                 );
-            } catch (Throwable) {
-                // Ignore unique constraint violations
+            } catch (Throwable $throwable) {
+                // Ignore unique constraint violations - silently fail
+                unset($throwable);
             }
         });
     }

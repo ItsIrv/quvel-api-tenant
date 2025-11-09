@@ -32,7 +32,7 @@ class ResolverManager extends Manager
 
         $firstResolver = $resolvers[0];
 
-        if (!is_array($firstResolver) || empty($firstResolver)) {
+        if (!is_array($firstResolver) || $firstResolver === []) {
             throw new InvalidArgumentException(
                 'Invalid resolver configuration. Expected format: [["domain" => []]]'
             );
@@ -46,7 +46,7 @@ class ResolverManager extends Manager
      */
     public function createDomainDriver(?array $config = null): TenantResolver
     {
-        $config = $config ?? $this->config->get('tenant.resolver.config', []);
+        $config ??= $this->config->get('tenant.resolver.config', []);
 
         return new DomainResolver($config);
     }
@@ -56,7 +56,6 @@ class ResolverManager extends Manager
      *
      * @param string $driver The resolver driver name
      * @param array $config Custom configuration for this resolver
-     * @return TenantResolver
      * @throws InvalidArgumentException
      */
     public function makeResolver(string $driver, array $config = []): TenantResolver
@@ -67,19 +66,19 @@ class ResolverManager extends Manager
             return $this->$method($config);
         }
 
-        $resolverClass = $this->config->get("tenant.resolver.drivers.$driver");
+        $resolverClass = $this->config->get('tenant.resolver.drivers.' . $driver);
 
         if ($resolverClass && class_exists($resolverClass)) {
             if (!is_subclass_of($resolverClass, TenantResolver::class)) {
                 throw new InvalidArgumentException(
-                    "Resolver class $resolverClass must implement TenantResolver interface"
+                    sprintf('Resolver class %s must implement TenantResolver interface', $resolverClass)
                 );
             }
 
             return new $resolverClass($config);
         }
 
-        throw new InvalidArgumentException("Driver [$driver] not supported.");
+        throw new InvalidArgumentException(sprintf('Driver [%s] not supported.', $driver));
     }
 
     /**
@@ -97,20 +96,20 @@ class ResolverManager extends Manager
             return $this->$method();
         }
 
-        $resolverClass = $this->config->get("tenant.resolver.drivers.$driver");
+        $resolverClass = $this->config->get('tenant.resolver.drivers.' . $driver);
 
         if ($resolverClass && class_exists($resolverClass)) {
             $config = $this->config->get('tenant.resolver.config', []);
 
             if (!is_subclass_of($resolverClass, TenantResolver::class)) {
                 throw new InvalidArgumentException(
-                    "Resolver class $resolverClass must implement TenantResolver interface"
+                    sprintf('Resolver class %s must implement TenantResolver interface', $resolverClass)
                 );
             }
 
             return new $resolverClass($config);
         }
 
-        throw new InvalidArgumentException("Driver [$driver] not supported.");
+        throw new InvalidArgumentException(sprintf('Driver [%s] not supported.', $driver));
     }
 }

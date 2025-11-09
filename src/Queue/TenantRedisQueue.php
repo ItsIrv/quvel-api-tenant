@@ -12,13 +12,10 @@ class TenantRedisQueue extends RedisQueue
      *
      * @var int|null
      */
-    protected $filterByTenantId = null;
+    protected $filterByTenantId;
 
     /**
      * Set the tenant ID to filter jobs by.
-     *
-     * @param int|null $tenantId
-     * @return void
      */
     public function setFilterTenantId(?int $tenantId): void
     {
@@ -54,13 +51,9 @@ class TenantRedisQueue extends RedisQueue
 
     /**
      * Get the tenant-specific queue name.
-     *
-     * @param string $queue
-     * @param int $tenantId
-     * @return string
      */
     protected function getTenantQueueName(string $queue, int $tenantId): string
     {
-        return "tenant_{$tenantId}_$queue";
+        return sprintf('tenant_%d_%s', $tenantId, $queue);
     }
 }

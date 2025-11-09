@@ -28,14 +28,12 @@ trait HandlesTenantModels
             return;
         }
 
-        $tenant = TenantContext::current();
-
         $currentTenantId = tenant_id();
         $modelTenantId = $model->tenant_id;
 
         if ($modelTenantId !== null && $modelTenantId !== $currentTenantId) {
             TenantMismatchDetected::dispatch(
-                get_class($model),
+                $model::class,
                 $modelTenantId,
                 $currentTenantId,
                 $operation
@@ -44,7 +42,7 @@ trait HandlesTenantModels
             throw new TenantMismatchException(
                 sprintf(
                     'Cross-tenant operation blocked: %s (tenant_id: %s) cannot be modified from tenant %s context',
-                    get_class($model),
+                    $model::class,
                     $modelTenantId,
                     $currentTenantId
                 )

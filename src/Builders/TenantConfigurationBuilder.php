@@ -21,10 +21,6 @@ class TenantConfigurationBuilder
 
     /**
      * Set a config value using dot notation.
-     *
-     * @param string $key
-     * @param bool|int|string $value
-     * @return TenantConfigurationBuilder
      */
     public function setConfig(string $key, string|bool|int $value): self
     {
@@ -127,7 +123,7 @@ class TenantConfigurationBuilder
      */
     public function withDedicatedDatabase(string $database, string $connection = 'mysql'): self
     {
-        return $this->setConfig("database.connections.$connection.database", $database);
+        return $this->setConfig(sprintf('database.connections.%s.database', $connection), $database);
     }
 
     /**
@@ -142,13 +138,13 @@ class TenantConfigurationBuilder
         string $connection = 'mysql',
         ?int $port = null
     ): self {
-        $this->setConfig("database.connections.$connection.host", $host)
-            ->setConfig("database.connections.$connection.database", $database)
-            ->setConfig("database.connections.$connection.username", $username)
-            ->setConfig("database.connections.$connection.password", $password);
+        $this->setConfig(sprintf('database.connections.%s.host', $connection), $host)
+            ->setConfig(sprintf('database.connections.%s.database', $connection), $database)
+            ->setConfig(sprintf('database.connections.%s.username', $connection), $username)
+            ->setConfig(sprintf('database.connections.%s.password', $connection), $password);
 
         if ($port) {
-            $this->setConfig("database.connections.$connection.port", $port);
+            $this->setConfig(sprintf('database.connections.%s.port', $connection), $port);
         }
 
         return $this;

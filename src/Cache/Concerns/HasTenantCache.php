@@ -65,7 +65,7 @@ trait HasTenantCache
             return $tags;
         }
 
-        $tenantTag = "tenant.$tenant->public_id";
+        $tenantTag = 'tenant.' . $tenant->public_id;
 
         return array_merge([$tenantTag], $tags);
     }
@@ -106,7 +106,7 @@ trait HasTenantCache
 
         // If using tags, flush by tenant tag
         if (config('cache.default') === 'redis' || config('cache.default') === 'memcached') {
-            return Cache::tags(["tenant.$tenant->public_id"])->flush();
+            return Cache::tags(['tenant.' . $tenant->public_id])->flush();
         }
 
         // For other drivers, we can't easily flush just tenant keys

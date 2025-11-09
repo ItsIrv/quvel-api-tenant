@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Console;
 
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Queue\Console\WorkCommand;
+use Illuminate\Queue\Worker;
 use Quvel\Tenant\Console\Concerns\HasTenantCommands;
 use Quvel\Tenant\Contracts\PipelineRegistry;
 use Quvel\Tenant\Facades\TenantContext;
@@ -34,7 +36,7 @@ class TenantQueueWorkCommand extends WorkCommand
      */
     protected $description = 'Start processing jobs on the queue as a daemon (with tenant support)';
 
-    public function __construct($worker, $cache)
+    public function __construct(Worker $worker, Repository $cache)
     {
         parent::__construct($worker, $cache);
 
@@ -43,10 +45,8 @@ class TenantQueueWorkCommand extends WorkCommand
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
-    public function handle()
+    public function handle(): int|null
     {
         if ($tenantIdentifier = $this->option('tenant')) {
             $tenant = $this->findTenant($tenantIdentifier);
@@ -58,9 +58,9 @@ class TenantQueueWorkCommand extends WorkCommand
             TenantContext::setCurrent($tenant);
 
             $this->info('Queue worker started with tenant context:');
-            $this->line("  → Tenant: <fg=cyan>$tenant->name</>");
-            $this->line("  → Identifier: <fg=cyan>$tenant->identifier</>");
-            $this->line("  → ID: <fg=cyan>$tenant->public_id</>");
+            $this->line(sprintf('  → Tenant: <fg=cyan>%s</>', $tenant->name));
+            $this->line(sprintf('  → Identifier: <fg=cyan>%s</>', $tenant->identifier));
+            $this->line(sprintf('  → ID: <fg=cyan>%s</>', $tenant->public_id));
             $this->line('  → <fg=yellow>Only jobs for this tenant will be processed</>');
 
             if ($this->shouldApplyTenantConfig()) {
@@ -84,9 +84,6 @@ class TenantQueueWorkCommand extends WorkCommand
 
     /**
      * Set the tenant filter on all queue connections.
-     *
-     * @param int $tenantId
-     * @return void
      */
     protected function setQueueTenantFilter(int $tenantId): void
     {

@@ -38,7 +38,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
             return $sessionId;
         }
 
-        return "tenant_$tenant->id:session:$sessionId";
+        return sprintf('tenant_%s:session:%s', $tenant->id, $sessionId);
     }
 
     /**
@@ -74,7 +74,7 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
     {
         $key = $this->getTenantKey($id);
 
-        return (bool) $this->cache->put($key, $data, $this->minutes);
+        return (bool)$this->cache->put($key, $data, $this->minutes);
     }
 
     /**
@@ -102,13 +102,13 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
      */
     public function getTenantSessionKeys(?int $tenantId = null): array
     {
-        $tenantId = $tenantId ?? $this->tenantContext->current()?->id;
+        $tenantId ??= $this->tenantContext->current()?->id;
 
         if (!$tenantId) {
             return [];
         }
 
-        $pattern = "tenant_$tenantId:session:*";
+        $pattern = sprintf('tenant_%s:session:*', $tenantId);
 
         if (method_exists($this->cache->getStore(), 'connection')) {
             return $this->cache->getStore()->connection()->keys($pattern);

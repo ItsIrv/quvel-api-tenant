@@ -10,8 +10,6 @@ class TenantDatabaseLock extends DatabaseLock
 {
     /**
      * Attempt to acquire the lock.
-     *
-     * @return bool
      */
     public function acquire(): bool
     {
@@ -41,9 +39,9 @@ class TenantDatabaseLock extends DatabaseLock
     /**
      * Release the lock.
      *
-     * @return bool
+     * @return false|int
      */
-    public function release(): bool
+    public function release(): int|false
     {
         if ($this->isOwnedByCurrentProcess()) {
             $query = $this->connection->table($this->table)

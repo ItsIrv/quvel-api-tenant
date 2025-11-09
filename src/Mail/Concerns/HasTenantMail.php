@@ -45,8 +45,6 @@ trait HasTenantMail
 
     /**
      * Get tenant-specific from address and name.
-     *
-     * @return array
      */
     protected function tenantFrom(): array
     {
@@ -67,8 +65,6 @@ trait HasTenantMail
 
     /**
      * Get tenant-specific mailer driver.
-     *
-     * @return string
      */
     protected function tenantMailer(): string
     {
@@ -83,8 +79,6 @@ trait HasTenantMail
 
     /**
      * Get tenant-specific reply-to address and name.
-     *
-     * @return array|null
      */
     protected function tenantReplyTo(): ?array
     {
@@ -109,8 +103,6 @@ trait HasTenantMail
 
     /**
      * Get tenant-specific return path.
-     *
-     * @return string|null
      */
     protected function tenantReturnPath(): ?string
     {
