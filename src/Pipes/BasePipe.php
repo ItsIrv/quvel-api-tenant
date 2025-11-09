@@ -64,11 +64,8 @@ abstract class BasePipe implements ConfigurationPipe
     protected function setMany(array $mappings): void
     {
         foreach ($mappings as $tenantKey => $laravelKey) {
-            if (is_int($tenantKey)) {
-                $this->setIfExists($laravelKey, $laravelKey);
-            } else {
-                $this->setIfExists($tenantKey, $laravelKey);
-            }
+            $key = is_int($tenantKey) ? $laravelKey : $tenantKey;
+            $this->setIfExists($key, $laravelKey);
         }
     }
 
@@ -86,7 +83,9 @@ abstract class BasePipe implements ConfigurationPipe
     protected function applyConfigurator(string $key, string $defaultValue): string
     {
         if (isset(static::$configurators[$key])) {
-            return static::$configurators[$key]($this);
+            $configurator = static::$configurators[$key];
+
+            return $configurator($this);
         }
 
         return $defaultValue;

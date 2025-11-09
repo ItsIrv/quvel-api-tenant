@@ -20,11 +20,9 @@ class RedisConfigPipe extends BasePipe
             'database.redis.default.port',
         ]);
 
-        if ($this->tenant->hasConfig('database.redis.default.prefix')) {
-            $prefix = $this->tenant->getConfig('database.redis.default.prefix');
-        } else {
-            $prefix = $this->getDefaultPrefix();
-        }
+        $prefix = $this->tenant->hasConfig('database.redis.default.prefix')
+            ? $this->tenant->getConfig('database.redis.default.prefix')
+            : $this->getDefaultPrefix();
 
         $this->config->set('database.redis.default.prefix', $prefix);
         $this->config->set('database.redis.cache.prefix', $prefix);

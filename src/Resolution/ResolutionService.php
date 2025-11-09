@@ -26,6 +26,8 @@ class ResolutionService implements ResolutionServiceContract
 
     /**
      * Resolve tenant from request.
+     *
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     public function resolve(Request $request): mixed
     {
@@ -58,21 +60,29 @@ class ResolutionService implements ResolutionServiceContract
             return null;
         }
 
-        if (config('tenant.resolver.config.cache_enabled', true)) {
+        $cacheEnabled = config('tenant.resolver.config.cache_enabled', true);
+        $tenant = null;
+        $cacheKey = null;
+
+        if ($cacheEnabled) {
             $tenant = $this->resolveTenantWithCache($identifier, $request, $resolverUsed);
             $cacheKey = $identifier;
-        } else {
+        }
+
+        if (!$cacheEnabled) {
             $tenant = $resolverUsed->resolve($request);
             $cacheKey = null;
         }
 
         if ($tenant) {
             TenantResolved::dispatch($tenant, $resolverUsed::class, $cacheKey);
-        } else {
-            TenantNotFound::dispatch($request, $resolverUsed::class, $cacheKey);
+
+            return $tenant;
         }
 
-        return $tenant;
+        TenantNotFound::dispatch($request, $resolverUsed::class, $cacheKey);
+
+        return null;
     }
 
     /**

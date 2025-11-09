@@ -563,7 +563,7 @@ if (!function_exists('tenant_storage_temporary_url')) {
         $disk = Storage::disk(tenant_storage_disk());
 
         if (!method_exists($disk, 'temporaryUrl')) {
-            throw new RuntimeException('Disk [' . tenant_storage_disk() . '] does not support temporary URLs.');
+            throw new \RuntimeException('Disk [' . tenant_storage_disk() . '] does not support temporary URLs.');
         }
 
         return $disk->temporaryUrl(tenant_storage_path($path), $expiration, $options);

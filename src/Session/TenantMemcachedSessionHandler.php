@@ -6,6 +6,7 @@ namespace Quvel\Tenant\Session;
 
 use Illuminate\Session\CacheBasedSessionHandler;
 use Quvel\Tenant\Contracts\TenantContext;
+use RuntimeException;
 
 /**
  * Tenant-aware Memcached session handler that isolates sessions by tenant.
@@ -31,7 +32,7 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
         }
 
         // Throw error for an untested driver
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'TenantMemcachedSessionHandler has not been tested yet. ' .
             'Please use database, file, or redis session drivers instead. ' .
             'If you need Memcached support, please test and verify this implementation.'

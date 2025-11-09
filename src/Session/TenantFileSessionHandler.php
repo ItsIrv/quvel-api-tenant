@@ -120,6 +120,10 @@ class TenantFileSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings("PHPMD.ShortMethodName")
+     * @SuppressWarnings("PHPMD.CamelCaseParameterName")
+     * @SuppressWarnings("PHPMD.CamelCaseVariableName")
      */
     public function gc($max_lifetime): int
     {

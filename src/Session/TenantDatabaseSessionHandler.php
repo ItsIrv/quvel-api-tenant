@@ -27,7 +27,9 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
 
         if ($this->exists) {
             $this->performUpdate($sessionId, $payload);
-        } else {
+        }
+
+        if (!$this->exists) {
             $this->performInsert($sessionId, $payload);
         }
 

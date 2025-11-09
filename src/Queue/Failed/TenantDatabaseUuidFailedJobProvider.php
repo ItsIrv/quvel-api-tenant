@@ -19,7 +19,7 @@ class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
      */
     public function log($connection, $queue, $payload, $exception): int
     {
-        $failed_at = Carbon::now();
+        $failedAt = Carbon::now();
 
         $record = [
             'uuid' => (string) str()->uuid(),
@@ -27,7 +27,7 @@ class TenantDatabaseUuidFailedJobProvider extends DatabaseUuidFailedJobProvider
             'queue' => $queue,
             'payload' => $payload,
             'exception' => (string) $exception,
-            'failed_at' => $failed_at,
+            'failed_at' => $failedAt,
         ];
 
         if (config('tenant.queue.auto_tenant_id', true)) {

@@ -20,7 +20,7 @@ class TenantSessionManager extends SessionManager
             : new TenantStore(
                 $this->config->get('session.cookie'),
                 $handler,
-                $id = null,
+                null,
                 $this->config->get('session.serialization', 'php')
             );
     }
@@ -37,7 +37,7 @@ class TenantSessionManager extends SessionManager
             $this->config->get('session.cookie'),
             $handler,
             $this->container['encrypter'],
-            $id = null,
+            null,
             $this->config->get('session.serialization', 'php'),
         );
     }

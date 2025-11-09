@@ -254,12 +254,14 @@ class Tenant extends Model
                         $filtered[$key] = $filteredChild;
                     }
                 }
-            } else {
-                $vis = ConfigVisibility::tryFrom($visValue) ?? ConfigVisibility::PRIVATE;
 
-                if ($this->isVisibilityAllowed($vis, $minVisibility)) {
-                    $filtered[$key] = $config[$key] ?? null;
-                }
+                continue;
+            }
+
+            $vis = ConfigVisibility::tryFrom($visValue) ?? ConfigVisibility::PRIVATE;
+
+            if ($this->isVisibilityAllowed($vis, $minVisibility)) {
+                $filtered[$key] = $config[$key] ?? null;
             }
         }
 

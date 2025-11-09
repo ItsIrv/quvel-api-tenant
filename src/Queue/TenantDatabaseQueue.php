@@ -31,7 +31,9 @@ class TenantDatabaseQueue extends DatabaseQueue
         $queue = $this->getQueue($queue);
 
         return $this->database->transaction(function () use ($queue) {
-            if ($job = $this->getNextAvailableJob($queue)) {
+            $job = $this->getNextAvailableJob($queue);
+
+            if ($job) {
                 return $this->marshalJob($queue, $job);
             }
 

@@ -23,7 +23,9 @@ class SessionConfigPipe extends BasePipe
 
         if ($this->tenant->hasConfig('session.domain')) {
             $this->setIfExists('session.domain', 'session.domain');
-        } else {
+        }
+
+        if (!$this->tenant->hasConfig('session.domain')) {
             $sessionDomain = $this->extractSessionDomain();
 
             if ($sessionDomain !== null) {
@@ -86,13 +88,11 @@ class SessionConfigPipe extends BasePipe
         $apiUrl = $this->tenant->getConfig('app.url');
         $frontendUrl = $this->tenant->getConfig('frontend.url');
 
-        if ($apiUrl !== null) {
-            $domain = parse_url($apiUrl, PHP_URL_HOST);
-        } elseif ($frontendUrl !== null) {
-            $domain = parse_url($frontendUrl, PHP_URL_HOST);
-        } else {
-            $domain = $this->tenant->identifier;
-        }
+        $domain = match (true) {
+            $apiUrl !== null => parse_url($apiUrl, PHP_URL_HOST),
+            $frontendUrl !== null => parse_url($frontendUrl, PHP_URL_HOST),
+            default => $this->tenant->identifier,
+        };
 
         if (in_array($domain, [null, false, ''], true)) {
             return null;
@@ -125,7 +125,9 @@ class SessionConfigPipe extends BasePipe
     protected function getDefaultCookieName($tenantForCookie): string
     {
         if ($this->hasConfigurator('default_cookie_name')) {
-            return static::$configurators['default_cookie_name']($this, $tenantForCookie);
+            $configurator = static::$configurators['default_cookie_name'];
+
+            return $configurator($this, $tenantForCookie);
         }
 
         return sprintf('tenant_%s_session', $tenantForCookie->public_id);

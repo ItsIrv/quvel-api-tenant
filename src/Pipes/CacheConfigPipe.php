@@ -20,11 +20,11 @@ class CacheConfigPipe extends BasePipe
             'cache.default',
         ]);
 
-        if ($this->tenant->hasConfig('cache.prefix')) {
-            $this->setIfExists('cache.prefix', 'cache.prefix');
-        } else {
-            $this->config->set('cache.prefix', $this->getDefaultPrefix());
-        }
+        $prefix = $this->tenant->hasConfig('cache.prefix')
+            ? $this->tenant->getConfig('cache.prefix')
+            : $this->getDefaultPrefix();
+
+        $this->config->set('cache.prefix', $prefix);
 
         if ($hasCacheOverride) {
             $defaultDriver = $this->config->get('cache.default');

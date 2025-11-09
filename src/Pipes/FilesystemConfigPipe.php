@@ -23,25 +23,27 @@ class FilesystemConfigPipe extends BasePipe
             'aws_s3_url' => 'filesystems.disks.s3.url',
         ]);
 
-        if ($this->tenant->hasConfig('filesystem_local_root')) {
-            $this->setIfExists('filesystem_local_root', 'filesystems.disks.local.root');
-        } else {
-            $this->config->set('filesystems.disks.local.root', $this->getLocalRootPath());
-        }
+        $localRoot = $this->tenant->hasConfig('filesystem_local_root')
+            ? $this->tenant->getConfig('filesystem_local_root')
+            : $this->getLocalRootPath();
+
+        $this->config->set('filesystems.disks.local.root', $localRoot);
 
         if ($this->tenant->hasConfig('filesystem_public_root')) {
             $this->setIfExists('filesystem_public_root', 'filesystems.disks.public.root');
-        } else {
+        }
+
+        if (!$this->tenant->hasConfig('filesystem_public_root')) {
             $this->config->set('filesystems.disks.public.root', $this->getPublicRootPath());
             $this->config->set('filesystems.disks.public.url', $this->getPublicUrl());
         }
 
         if ($this->tenant->hasConfig('aws_s3_bucket')) {
-            if ($this->tenant->hasConfig('aws_s3_path_prefix')) {
-                $this->setIfExists('aws_s3_path_prefix', 'filesystems.disks.s3.path_prefix');
-            } else {
-                $this->config->set('filesystems.disks.s3.path_prefix', $this->getS3PathPrefix());
-            }
+            $s3PathPrefix = $this->tenant->hasConfig('aws_s3_path_prefix')
+                ? $this->tenant->getConfig('aws_s3_path_prefix')
+                : $this->getS3PathPrefix();
+
+            $this->config->set('filesystems.disks.s3.path_prefix', $s3PathPrefix);
         }
 
         if (!$this->tenant->hasConfig('disable_temp_isolation')) {

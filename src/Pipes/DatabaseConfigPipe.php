@@ -114,7 +114,9 @@ class DatabaseConfigPipe extends BasePipe
     protected function getTenantConnectionName(string $baseConnection): string
     {
         if ($this->hasConfigurator('tenant_connection_name')) {
-            return static::$configurators['tenant_connection_name']($this, $baseConnection);
+            $configurator = static::$configurators['tenant_connection_name'];
+
+            return $configurator($this, $baseConnection);
         }
 
         if (config('tenant.database.pool_connections_by_host', false)) {

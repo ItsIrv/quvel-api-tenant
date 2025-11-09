@@ -39,17 +39,17 @@ class LoggingConfigPipe extends BasePipe
      */
     protected function configureTenantLogPaths(): void
     {
-        if ($this->tenant->hasConfig('log_single_path')) {
-            $this->setIfExists('log_single_path', 'logging.channels.single.path');
-        } else {
-            $this->config->set('logging.channels.single.path', $this->getSingleLogPath());
-        }
+        $singlePath = $this->tenant->hasConfig('log_single_path')
+            ? $this->tenant->getConfig('log_single_path')
+            : $this->getSingleLogPath();
 
-        if ($this->tenant->hasConfig('log_daily_path')) {
-            $this->setIfExists('log_daily_path', 'logging.channels.daily.path');
-        } else {
-            $this->config->set('logging.channels.daily.path', $this->getDailyLogPath());
-        }
+        $this->config->set('logging.channels.single.path', $singlePath);
+
+        $dailyPath = $this->tenant->hasConfig('log_daily_path')
+            ? $this->tenant->getConfig('log_daily_path')
+            : $this->getDailyLogPath();
+
+        $this->config->set('logging.channels.daily.path', $dailyPath);
     }
 
     /**

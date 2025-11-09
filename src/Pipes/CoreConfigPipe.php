@@ -148,7 +148,9 @@ class CoreConfigPipe extends BasePipe
     protected function getCustomCorsOrigins(array $defaultOrigins): array
     {
         if ($this->hasConfigurator('cors_origins')) {
-            return static::$configurators['cors_origins']($this, $defaultOrigins);
+            $configurator = static::$configurators['cors_origins'];
+
+            return $configurator($this, $defaultOrigins);
         }
 
         return $defaultOrigins;

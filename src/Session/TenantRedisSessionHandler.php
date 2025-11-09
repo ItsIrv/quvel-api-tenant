@@ -89,6 +89,9 @@ class TenantRedisSessionHandler implements SessionHandlerInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @SuppressWarnings("PHPMD.ShortMethodName")
+     * @SuppressWarnings("PHPMD.CamelCaseParameterName")
      */
     public function gc($max_lifetime): int
     {
