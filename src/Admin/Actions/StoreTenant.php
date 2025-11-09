@@ -31,8 +31,6 @@ class StoreTenant
 
         $action = app(CreateTenant::class);
 
-        $tenant = $action($name, $identifier, $configBuilder);
-
-        return $tenant;
+        return $action($name, $identifier, $configBuilder);
     }
 }

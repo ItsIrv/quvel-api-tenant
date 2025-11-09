@@ -11,16 +11,14 @@ use Quvel\Tenant\Context\TenantContext;
 class TenantContextProcessor implements ProcessorInterface
 {
     /**
-     * The tenant context instance.
-     */
-    protected TenantContext $tenantContext;
-
-    /**
      * Create a new tenant context processor.
      */
-    public function __construct(TenantContext $tenantContext)
-    {
-        $this->tenantContext = $tenantContext;
+    public function __construct(
+        /**
+         * The tenant context instance.
+         */
+        protected TenantContext $tenantContext
+    ) {
     }
 
     /**

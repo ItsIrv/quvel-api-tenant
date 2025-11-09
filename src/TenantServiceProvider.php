@@ -34,6 +34,9 @@ use Quvel\Tenant\Database\TableRegistry;
 use Quvel\Tenant\Facades\TenantContext as TenantContextFacade;
 use Quvel\Tenant\Http\Middleware\TenantMiddleware;
 use Quvel\Tenant\Pipes\PipelineRegistry;
+use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
+use Quvel\Tenant\Queue\Connectors\TenantHorizonConnector;
+use Quvel\Tenant\Queue\Connectors\TenantRedisConnector;
 use Quvel\Tenant\Queue\Failed\TenantDatabaseUuidFailedJobProvider;
 use Quvel\Tenant\Queue\TenantDatabaseBatchRepository;
 use Quvel\Tenant\Redis\TenantAwareRedisManager;
@@ -291,18 +294,17 @@ class TenantServiceProvider extends ServiceProvider
             $this->app->afterResolving('queue', function (QueueManager $manager): void {
                 $manager->addConnector(
                     'database',
-                    function (): \Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector {
-                        return new Queue\Connectors\TenantDatabaseConnector($this->app['db']);
-                    }
+                    fn (): TenantDatabaseConnector => new Queue\Connectors\TenantDatabaseConnector($this->app['db'])
                 );
 
                 $redisConnectorClass = class_exists(Horizon::class)
                     ? Queue\Connectors\TenantHorizonConnector::class
                     : Queue\Connectors\TenantRedisConnector::class;
 
-                $manager->addConnector('redis', function () use ($redisConnectorClass) {
-                    return new $redisConnectorClass($this->app['redis']);
-                });
+                $manager->addConnector(
+                    'redis',
+                    fn (): TenantHorizonConnector|TenantRedisConnector => new $redisConnectorClass($this->app['redis'])
+                );
             });
         }
     }
@@ -658,12 +660,10 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->app->singleton(
             \Laravel\Telescope\Contracts\EntriesRepository::class,
-            function (): TenantAwareDatabaseEntriesRepository {
-                return new TenantAwareDatabaseEntriesRepository(
-                    config('telescope.storage.database.connection'),
-                    config('telescope.storage.database.chunk', 1000)
-                );
-            }
+            fn (): TenantAwareDatabaseEntriesRepository => new TenantAwareDatabaseEntriesRepository(
+                config('telescope.storage.database.connection'),
+                config('telescope.storage.database.chunk', 1000)
+            )
         );
     }
 

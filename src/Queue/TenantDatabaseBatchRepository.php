@@ -43,7 +43,7 @@ class TenantDatabaseBatchRepository extends DatabaseBatchRepository
         $batch = $this->find($id);
 
         if (!$batch) {
-            throw new RuntimeException("Failed to retrieve batch after creation: {$id}");
+            throw new RuntimeException('Failed to retrieve batch after creation: ' . $id);
         }
 
         return $batch;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Quvel\Tenant\Cache;
 
 use Illuminate\Cache\CacheManager;
+use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Quvel\Tenant\Contracts\TenantContext;
@@ -31,10 +32,8 @@ class TenantCacheManager extends CacheManager
 
     /**
      * Get a cache store instance with tenant awareness.
-     *
-     * @return Repository|TenantCacheStore
      */
-    public function store($name = null): TenantCacheStore|Repository|Repository
+    public function store($name = null): Repository
     {
         $store = parent::store($name);
 
@@ -47,7 +46,9 @@ class TenantCacheManager extends CacheManager
             return $store;
         }
 
-        return new TenantCacheStore($store->getStore(), $tenant);
+        $tenantStore = new TenantCacheStore($store->getStore(), $tenant);
+
+        return new CacheRepository($tenantStore);
     }
 
     /**

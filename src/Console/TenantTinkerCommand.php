@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Quvel\Tenant\Console;
 
+use Laravel\Horizon\Horizon;
 use Laravel\Tinker\Console\TinkerCommand;
 use Quvel\Tenant\Console\Concerns\HasTenantCommands;
 use Quvel\Tenant\Contracts\PipelineRegistry;
 use Quvel\Tenant\Facades\TenantContext;
+use Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector;
+use Quvel\Tenant\Queue\Connectors\TenantHorizonConnector;
+use Quvel\Tenant\Queue\Connectors\TenantRedisConnector;
 
 /**
  * Tenant-aware Tinker command.
@@ -54,6 +58,8 @@ class TenantTinkerCommand extends TinkerCommand
 
             TenantContext::setCurrent($tenant);
 
+            $this->ensureTenantQueueConnectors();
+
             $this->info('Tinker session started with tenant context:');
             $this->line(sprintf('  → Tenant: <fg=cyan>%s</>', $tenant->name));
             $this->line(sprintf('  → Identifier: <fg=cyan>%s</>', $tenant->identifier));
@@ -78,5 +84,38 @@ class TenantTinkerCommand extends TinkerCommand
         }
 
         return parent::handle();
+    }
+
+    /**
+     * Ensure tenant queue connectors are registered and cached connections are cleared.
+     *
+     * This prevents the first job dispatch from failing by ensuring tenant-aware
+     * connectors are registered before any queue connections are created.
+     */
+    protected function ensureTenantQueueConnectors(): void
+    {
+        if (!config('tenant.queue.auto_tenant_id', true)) {
+            return;
+        }
+
+        $queueManager = app('queue');
+
+        $queueManager->addConnector(
+            'database',
+            fn (): TenantDatabaseConnector => new TenantDatabaseConnector(
+                app('db')
+            )
+        );
+
+        $redisConnectorClass = class_exists(Horizon::class)
+            ? TenantHorizonConnector::class
+            : TenantRedisConnector::class;
+
+        $queueManager->addConnector(
+            'redis',
+            fn (): TenantHorizonConnector|TenantRedisConnector => new $redisConnectorClass(
+                app('redis')
+            )
+        );
     }
 }

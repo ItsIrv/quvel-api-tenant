@@ -6,6 +6,7 @@ use Rector\Config\RectorConfig;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\ClassMethod\ParamTypeByParentCallTypeRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -14,6 +15,7 @@ return RectorConfig::configure()
     ->withSkip([
         __DIR__ . '/vendor',
         AddOverrideAttributeToOverriddenMethodsRector::class,
+        ParamTypeByParentCallTypeRector::class,
     ])
     ->withPhpSets(php84: true)
     ->withSets([

@@ -44,7 +44,7 @@ class TenantConfigurationBuilder
         $required = ['app.name', 'app.url', 'frontend.url'];
         $missing = array_diff($required, array_keys($config));
 
-        if (!empty($missing)) {
+        if ($missing !== []) {
             throw new InvalidArgumentException(
                 'Missing required core config keys: ' . implode(', ', $missing)
             );
