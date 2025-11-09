@@ -7,8 +7,8 @@ namespace Quvel\Tenant\Database;
 /**
  * Configuration for making a database table tenant-aware.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
+ * @SuppressWarnings("PHPMD.ExcessiveParameterList")
  */
 class TenantTableConfig
 {

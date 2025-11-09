@@ -693,6 +693,6 @@ return [
     */
     'logging' => [
         'auto_tenant_context' => env('TENANT_LOG_AUTO_CONTEXT', true),
-        'isolation_strategy' => env('TENANT_LOG_ISOLATION', 'directory'),
+        'isolation_strategy' => env('TENANT_LOG_ISOLATION', 'prefix'),
     ],
 ];

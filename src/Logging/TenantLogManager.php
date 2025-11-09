@@ -81,7 +81,7 @@ class TenantLogManager extends LogManager
     }
 
     /**
-     * Get the tenant-specific log path based on isolation strategy.
+     * Get the tenant-specific log path based on an isolation strategy.
      */
     protected function getTenantLogPath(string $path): string
     {
@@ -91,10 +91,10 @@ class TenantLogManager extends LogManager
             return $path;
         }
 
-        $strategy = config('tenant.logging.isolation_strategy', 'directory');
+        $strategy = config('tenant.logging.isolation_strategy', 'prefix');
 
         return match ($strategy) {
-            'prefix' => $this->getPrefixedPath($path, $tenant->id),
+            'prefix' => $this->getPrefixedPath($path, $tenant->public_id),
             'directory' => $this->getDirectoryPath($path, $tenant->public_id),
             'shared' => $path,
             default => $path,
@@ -102,14 +102,14 @@ class TenantLogManager extends LogManager
     }
 
     /**
-     * Get prefixed log path (e.g., tenant_2.laravel.log).
+     * Get prefixed log path (e.g., {public_id}.laravel.log).
      */
-    protected function getPrefixedPath(string $path, int $tenantId): string
+    protected function getPrefixedPath(string $path, string $tenantPublicId): string
     {
         $dir = dirname($path);
         $filename = basename($path);
 
-        return $dir . '/tenant_' . $tenantId . '.' . $filename;
+        return $dir . '/' . $tenantPublicId . '.' . $filename;
     }
 
     /**

@@ -91,7 +91,7 @@ class TenantQueueWorkCommand extends WorkCommand
     /**
      * Set the tenant filter on all queue connections.
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
      */
     protected function setQueueTenantFilter(int $tenantId): void
     {

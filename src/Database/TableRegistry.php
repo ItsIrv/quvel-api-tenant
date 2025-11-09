@@ -17,7 +17,7 @@ use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
  * to existing database tables based on configuration. It automatically detects
  * which tables need processing and skips those that already have tenant support.
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 class TableRegistry implements TableRegistryContract
 {
@@ -175,8 +175,8 @@ class TableRegistry implements TableRegistryContract
      * @param TenantTableConfig $config The tenant configuration for this table
      *
      * @throws Exception If the table modification fails
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+     * @SuppressWarnings("PHPMD.NPathComplexity")
      */
     private function addTenantSupport(string $tableName, TenantTableConfig $config): void
     {

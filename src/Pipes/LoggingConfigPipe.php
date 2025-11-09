@@ -114,7 +114,7 @@ class LoggingConfigPipe extends BasePipe
     {
         return $this->applyConfigurator(
             'single_log_path',
-            storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log')
+            $this->getDefaultLogPath('laravel.log')
         );
     }
 
@@ -125,7 +125,7 @@ class LoggingConfigPipe extends BasePipe
     {
         return $this->applyConfigurator(
             'daily_log_path',
-            storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log')
+            $this->getDefaultLogPath('laravel.log')
         );
     }
 
@@ -136,7 +136,22 @@ class LoggingConfigPipe extends BasePipe
     {
         return $this->applyConfigurator(
             'custom_log_path',
-            storage_path('logs/tenants/' . $this->tenant->public_id . '/custom.log')
+            $this->getDefaultLogPath('custom.log')
         );
+    }
+
+    /**
+     * Get the default log path based on isolation strategy.
+     */
+    protected function getDefaultLogPath(string $filename): string
+    {
+        $strategy = config('tenant.logging.isolation_strategy', 'directory');
+
+        return match ($strategy) {
+            'prefix' => storage_path('logs/' . $this->tenant->public_id . '.' . $filename),
+            'directory' => storage_path('logs/tenants/' . $this->tenant->public_id . '/' . $filename),
+            'shared' => storage_path('logs/' . $filename),
+            default => storage_path('logs/tenants/' . $this->tenant->public_id . '/' . $filename),
+        };
     }
 }

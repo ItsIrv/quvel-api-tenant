@@ -14,7 +14,7 @@ use Quvel\Tenant\Models\Tenant;
  * for file operations. It modifies file paths to include tenant context
  * while preserving the original filesystem's functionality.
  *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings("PHPMD.TooManyPublicMethods")
  */
 class TenantFilesystemAdapter implements Filesystem
 {

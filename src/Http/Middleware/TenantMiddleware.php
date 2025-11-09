@@ -53,6 +53,8 @@ class TenantMiddleware
 
     /**
      * Handle when no tenant is found.
+     *
+     * @SuppressWarnings("PHPMD.ExitExpression")
      */
     protected function handleTenantNotFound(Request $request): never
     {
@@ -70,6 +72,8 @@ class TenantMiddleware
 
     /**
      * Call a custom tenant not found handler.
+     *
+     * @SuppressWarnings("PHPMD.ExitExpression")
      */
     protected function callCustomHandler(mixed $handler, Request $request): never
     {
