@@ -666,4 +666,33 @@ return [
     'horizon' => [
         'tenant_scoped' => env('TENANT_HORIZON_SCOPED', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logging Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure tenant-aware logging behavior at the provider level.
+    |
+    | auto_tenant_context: When enabled, automatically adds tenant_id to ALL
+    |                      log entries' context, regardless of driver or channel.
+    |                      This works with queue workers, console commands, etc.
+    |
+    | isolation_strategy: How to isolate tenant logs:
+    |   - 'shared': All tenants log to the same file with tenant_id in context
+    |               (e.g., storage/logs/laravel.log with tenant_id field)
+    |   - 'prefix': Tenant-specific files with tenant prefix
+    |               (e.g., storage/logs/tenant_2.laravel.log)
+    |   - 'directory': Tenant-specific subdirectories
+    |                  (e.g., storage/logs/tenants/2/laravel.log)
+    |               This is the default and recommended approach.
+    |
+    | Note: This is provider-level logging that always runs, unlike
+    |       LoggingConfigPipe which only runs when the pipeline is applied.
+    |
+    */
+    'logging' => [
+        'auto_tenant_context' => env('TENANT_LOG_AUTO_CONTEXT', true),
+        'isolation_strategy' => env('TENANT_LOG_ISOLATION', 'directory'),
+    ],
 ];

@@ -30,8 +30,12 @@ class BroadcastingConfigPipe extends BasePipe
             'broadcasting.connections.ably.key',
         ]);
 
-        if ($this->config->get('broadcasting.default') === 'redis' || $this->tenant->hasConfig('broadcasting.connections.redis.prefix')) {
-            $prefix = $this->tenant->getConfig('broadcasting.connections.redis.prefix') ?? $this->getRedisPrefix();
+        $isRedisDefault = $this->config->get('broadcasting.default') === 'redis';
+        $hasRedisPrefix = $this->tenant->hasConfig('broadcasting.connections.redis.prefix');
+
+        if ($isRedisDefault || $hasRedisPrefix) {
+            $prefix = $this->tenant->getConfig('broadcasting.connections.redis.prefix')
+                ?? $this->getRedisPrefix();
 
             $this->config->set('broadcasting.connections.redis.prefix', $prefix);
         }

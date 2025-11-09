@@ -24,6 +24,8 @@ class TenantPublicConfig
             throw new NotFoundHttpException('API not enabled for this tenant');
         }
 
-        return new TenantConfigResource($tenant)->setVisibilityLevel('public');
+        $tenantConfigResource = new TenantConfigResource($tenant);
+
+        return $tenantConfigResource->setVisibilityLevel('public');
     }
 }

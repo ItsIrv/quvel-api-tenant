@@ -29,10 +29,10 @@ class StoreTenant
             }
         }
 
-        return app(CreateTenant::class)(
-            name: $name,
-            identifier: $identifier,
-            configBuilder: $configBuilder
-        );
+        $action = app(CreateTenant::class);
+
+        $tenant = $action($name, $identifier, $configBuilder);
+
+        return $tenant;
     }
 }

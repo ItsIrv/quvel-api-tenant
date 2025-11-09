@@ -28,9 +28,15 @@ use Quvel\Tenant\Enums\ConfigVisibility;
  * @property Carbon|null $deleted_at
  * @property array $config
  * @property ?Tenant $parent
+ *
+ * @template-use HasFactory<TenantFactory>
  */
 class Tenant extends Model
 {
+    /**
+     * @use HasFactory<TenantFactory>
+     * @psalm-suppress MissingTemplateParam,InvalidTemplateParam
+     */
     use HasFactory;
     use SoftDeletes;
 

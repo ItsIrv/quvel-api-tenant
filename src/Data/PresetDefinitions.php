@@ -14,7 +14,8 @@ class PresetDefinitions
         return [
             'basic' => [
                 'name' => 'Basic',
-                'description' => 'Shared database with tenant_id scoping. Quick setup for development or small applications.',
+                'description' => 'Shared database with tenant_id scoping. '
+                    . 'Quick setup for development or small applications.',
                 'features' => [
                     'Shared database',
                     'Automatic tenant scoping',

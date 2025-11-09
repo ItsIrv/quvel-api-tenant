@@ -44,7 +44,7 @@ trait HandlesTenantModels
                     'Cross-tenant operation blocked: %s (tenant_id: %s) cannot be modified from tenant %s context',
                     $model::class,
                     $modelTenantId,
-                    $currentTenantId
+                    $currentTenantId ?? 0
                 )
             );
         }

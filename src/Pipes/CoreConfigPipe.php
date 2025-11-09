@@ -18,16 +18,16 @@ class CoreConfigPipe extends BasePipe
     public function apply(): void
     {
         $this->setMany([
-            'app.name',
+            'app.name', // required
             'app.env',
             'app.key',
             'app.debug',
-            'app.url',
+            'app.url', // required
             'app.timezone',
             'app.locale',
             'app.fallback_locale',
-            'frontend.url',
-            'frontend.internal_api_url',
+            'frontend.url', // required
+            'frontend.internal_api_url', // highly recommended
             'frontend.capacitor_scheme',
         ]);
 
@@ -97,7 +97,8 @@ class CoreConfigPipe extends BasePipe
      */
     protected function handleForwardedPrefix(): void
     {
-        if (!app()->bound('request')) {
+        /** @psalm-suppress TypeDoesNotContainType bound() can return false when binding doesn't exist */
+        if (!app()->bound(Request::class)) {
             return;
         }
 

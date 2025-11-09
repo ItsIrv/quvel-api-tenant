@@ -50,7 +50,8 @@ class TenantDatabaseSessionHandler extends DatabaseSessionHandler
 
         $session = $session->first();
 
-        if ($this->expired($session)) {
+        /** @psalm-suppress ArgumentTypeCoercion Laravel query builder first() returns object which is compatible with stdClass */
+        if ($session === null || $this->expired($session)) {
             $this->exists = false;
 
             return '';

@@ -112,7 +112,10 @@ class LoggingConfigPipe extends BasePipe
      */
     protected function getSingleLogPath(): string
     {
-        return $this->applyConfigurator('single_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+        return $this->applyConfigurator(
+            'single_log_path',
+            storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log')
+        );
     }
 
     /**
@@ -120,7 +123,10 @@ class LoggingConfigPipe extends BasePipe
      */
     protected function getDailyLogPath(): string
     {
-        return $this->applyConfigurator('daily_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log'));
+        return $this->applyConfigurator(
+            'daily_log_path',
+            storage_path('logs/tenants/' . $this->tenant->public_id . '/laravel.log')
+        );
     }
 
     /**
@@ -128,6 +134,9 @@ class LoggingConfigPipe extends BasePipe
      */
     protected function getCustomLogPath(): string
     {
-        return $this->applyConfigurator('custom_log_path', storage_path('logs/tenants/' . $this->tenant->public_id . '/custom.log'));
+        return $this->applyConfigurator(
+            'custom_log_path',
+            storage_path('logs/tenants/' . $this->tenant->public_id . '/custom.log')
+        );
     }
 }

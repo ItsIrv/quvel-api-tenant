@@ -147,6 +147,8 @@ class SchemaIntrospector
      * Get all indexes (including unique).
      *
      * @return array<int, array{name: string, columns: array<string>, unique: bool}>
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function getIndexes(string $tableName, string $connection): array
     {
@@ -282,6 +284,7 @@ class SchemaIntrospector
      * Get foreign key constraints.
      *
      * @return array<int, array{name: string, column: string, references: string, on: string, onUpdate: string, onDelete: string}>
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function getForeignKeys(string $tableName, string $connection): array
     {
@@ -396,8 +399,8 @@ class SchemaIntrospector
                 'column' => $row->column_name,
                 'references' => $row->references,
                 'on' => $row->ref_table,
-                'onUpdate' => strtolower(str_replace('_', ' ', $row->on_update)),
-                'onDelete' => strtolower(str_replace('_', ' ', $row->on_delete)),
+                'onUpdate' => strtolower(str_replace('_', ' ', (string) $row->on_update)),
+                'onDelete' => strtolower(str_replace('_', ' ', (string) $row->on_delete)),
             ], $results);
         }
 

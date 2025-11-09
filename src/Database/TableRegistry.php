@@ -16,6 +16,8 @@ use Quvel\Tenant\Contracts\TableRegistry as TableRegistryContract;
  * This registry provides a simple way to add tenant_id columns and constraints
  * to existing database tables based on configuration. It automatically detects
  * which tables need processing and skips those that already have tenant support.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class TableRegistry implements TableRegistryContract
 {
@@ -173,6 +175,8 @@ class TableRegistry implements TableRegistryContract
      * @param TenantTableConfig $config The tenant configuration for this table
      *
      * @throws Exception If the table modification fails
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private function addTenantSupport(string $tableName, TenantTableConfig $config): void
     {
@@ -184,11 +188,9 @@ class TableRegistry implements TableRegistryContract
                 $tenantIdColumn->nullable();
             }
 
-            if ($config->cascadeDelete) {
-                $tenantIdColumn->constrained('tenants')->cascadeOnDelete();
-            } else {
-                $tenantIdColumn->constrained('tenants');
-            }
+            $config->cascadeDelete
+                ? $tenantIdColumn->constrained('tenants')->cascadeOnDelete()
+                : $tenantIdColumn->constrained('tenants');
 
             $table->index('tenant_id');
 

@@ -136,6 +136,7 @@ if (!function_exists('tenant_broadcast')) {
         $channels = is_array($channels) ? $channels : [$channels];
         $tenantChannels = array_map(tenant_channel(...), $channels);
 
+        /** @psalm-suppress InvalidArgument broadcast() accepts event class string in Laravel */
         broadcast($event)->to($tenantChannels)->with($data);
     }
 }

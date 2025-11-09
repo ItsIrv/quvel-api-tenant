@@ -156,7 +156,7 @@ class TenantAwareRedisConnection
             $parameters[0] = $this->addTenantPrefix($parameters[0], $tenantId);
         } elseif (is_array($parameters[0])) {
             $parameters[0] = array_map(
-                fn($key): mixed => is_string($key) ? $this->addTenantPrefix($key, $tenantId) : $key,
+                fn ($key): mixed => is_string($key) ? $this->addTenantPrefix($key, $tenantId) : $key,
                 $parameters[0]
             );
         }

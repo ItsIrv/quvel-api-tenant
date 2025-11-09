@@ -7,13 +7,14 @@ use Illuminate\Bus\DatabaseBatchRepository;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Str;
 use Quvel\Tenant\Facades\TenantContext;
+use RuntimeException;
 
 class TenantDatabaseBatchRepository extends DatabaseBatchRepository
 {
     /**
      * Store a new pending batch.
      */
-    public function store(PendingBatch $batch): Batch|null
+    public function store(PendingBatch $batch): Batch
     {
         $id = (string) Str::orderedUuid();
 
@@ -39,6 +40,12 @@ class TenantDatabaseBatchRepository extends DatabaseBatchRepository
 
         $this->connection->table($this->table)->insert($record);
 
-        return $this->find($id);
+        $batch = $this->find($id);
+
+        if (!$batch) {
+            throw new RuntimeException("Failed to retrieve batch after creation: {$id}");
+        }
+
+        return $batch;
     }
 }

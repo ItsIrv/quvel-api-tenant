@@ -8,6 +8,8 @@ class ConfigFieldDefinitions
 {
     /**
      * Get all available configuration fields.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public static function all(): array
     {

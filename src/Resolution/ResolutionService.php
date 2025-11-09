@@ -38,6 +38,10 @@ class ResolutionService implements ResolutionServiceContract
                 $resolverConfig = $resolvers[$i];
                 [$driver, $config] = [array_key_first($resolverConfig), reset($resolverConfig)];
 
+                if ($driver === null) {
+                    continue;
+                }
+
                 $resolver = $this->manager->makeResolver($driver, $config);
                 $identifier = $resolver->getIdentifier($request);
 
@@ -82,7 +86,7 @@ class ResolutionService implements ResolutionServiceContract
             return Cache::remember(
                 'tenant.' . $cacheKey,
                 $cacheTtl,
-                static fn(): mixed => $resolver->resolve($request)
+                static fn (): mixed => $resolver->resolve($request)
             );
         }
 

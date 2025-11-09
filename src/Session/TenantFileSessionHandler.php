@@ -57,7 +57,7 @@ class TenantFileSessionHandler implements SessionHandlerInterface
     }
 
     /**
-     * Update handler with current tenant path.
+     * Update the handler with the current tenant path.
      */
     protected function updateHandlerPath(): void
     {

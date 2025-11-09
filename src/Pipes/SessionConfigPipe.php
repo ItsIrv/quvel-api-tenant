@@ -102,6 +102,7 @@ class SessionConfigPipe extends BasePipe
 
         if (count($parts) > 2) {
             array_shift($parts);
+
             return '.' . implode('.', $parts);
         }
 

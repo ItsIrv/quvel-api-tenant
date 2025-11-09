@@ -13,8 +13,9 @@ class TenantPasswordBrokerManager extends PasswordBrokerManager
     /**
      * Create a token repository instance based on the given configuration.
      */
-    protected function createTokenRepository(array $config): TenantDatabaseTokenRepository|CacheTokenRepository|TokenRepositoryInterface
-    {
+    protected function createTokenRepository(
+        array $config
+    ): TenantDatabaseTokenRepository|CacheTokenRepository|TokenRepositoryInterface {
         $key = $this->app['config']['app.key'];
 
         if (str_starts_with((string) $key, 'base64:')) {
@@ -22,6 +23,7 @@ class TenantPasswordBrokerManager extends PasswordBrokerManager
         }
 
         if (isset($config['driver']) && $config['driver'] === 'cache') {
+            /** @psalm-suppress ArgumentTypeCoercion */
             return new CacheTokenRepository(
                 $this->app['cache']->store($config['store'] ?? null),
                 $this->app['hash'],

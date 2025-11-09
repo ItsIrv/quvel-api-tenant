@@ -29,6 +29,8 @@ class TenantConfigResource extends JsonResource
 
     /**
      * Transform the resource into an array.
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
      */
     public function toArray(Request $request): array
     {
@@ -40,13 +42,18 @@ class TenantConfigResource extends JsonResource
             'name' => $this->resource->name,
             'identifier' => $this->resource->identifier,
             'parent' => $this->when((bool) $this->resource->parent, function (): array {
+                $parent = $this->resource->parent;
+                if (!$parent) {
+                    return [];
+                }
+
                 $parentConfig = $this->getParentFilteredConfig();
-                $parentConfig['__visibility'] = data_get($this->resource->parent->config, '__visibility', []);
+                $parentConfig['__visibility'] = data_get($parent->config, '__visibility', []);
 
                 return [
-                    'id' => $this->resource->parent->public_id,
-                    'name' => $this->resource->parent->name,
-                    'identifier' => $this->resource->parent->identifier,
+                    'id' => $parent->public_id,
+                    'name' => $parent->name,
+                    'identifier' => $parent->identifier,
                     'config' => $parentConfig,
                 ];
             }),

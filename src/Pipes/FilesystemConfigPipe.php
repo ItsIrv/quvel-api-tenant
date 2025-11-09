@@ -116,7 +116,10 @@ class FilesystemConfigPipe extends BasePipe
      */
     protected function getPublicRootPath(): string
     {
-        return $this->applyConfigurator('public_root_path', storage_path('app/public/tenants/' . $this->tenant->public_id));
+        return $this->applyConfigurator(
+            'public_root_path',
+            storage_path('app/public/tenants/' . $this->tenant->public_id)
+        );
     }
 
     /**
@@ -124,7 +127,10 @@ class FilesystemConfigPipe extends BasePipe
      */
     protected function getPublicUrl(): string
     {
-        return $this->applyConfigurator('public_url', config('app.url') . '/storage/tenants/' . $this->tenant->public_id);
+        return $this->applyConfigurator(
+            'public_url',
+            config('app.url') . '/storage/tenants/' . $this->tenant->public_id
+        );
     }
 
     /**

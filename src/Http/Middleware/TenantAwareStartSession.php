@@ -69,6 +69,8 @@ class TenantAwareStartSession extends StartSession
 
     /**
      * Validate that the session belongs to the current tenant.
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
      */
     protected function validateTenantSession(Request $request, Session $session): void
     {

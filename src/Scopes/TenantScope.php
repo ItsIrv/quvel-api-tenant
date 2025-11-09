@@ -53,7 +53,8 @@ class TenantScope implements Scope
             if (config('tenant.scoping.throw_no_tenant_exception', true)) {
                 throw new NoTenantException(
                     sprintf(
-                        'No tenant context found for model %s. Ensure tenant middleware is active or use without_tenant() for admin operations.',
+                        'No tenant context found for model %s. '
+                            . 'Ensure tenant middleware is active or use without_tenant() for admin operations.',
                         $model::class
                     )
                 );
@@ -81,11 +82,11 @@ class TenantScope implements Scope
      */
     public function extend(Builder $builder): void
     {
-        $builder->macro('withoutTenantScope', fn(Builder $builder) => $builder->withoutGlobalScope($this));
+        $builder->macro('withoutTenantScope', fn (Builder $builder) => $builder->withoutGlobalScope($this));
 
-        $builder->macro('forTenant', fn(Builder $builder, $tenantId) => $builder->withoutGlobalScope($this)
+        $builder->macro('forTenant', fn (Builder $builder, $tenantId) => $builder->withoutGlobalScope($this)
             ->where($this->column, $tenantId));
 
-        $builder->macro('forAllTenants', fn(Builder $builder) => $builder->withoutGlobalScope($this));
+        $builder->macro('forAllTenants', fn (Builder $builder) => $builder->withoutGlobalScope($this));
     }
 }

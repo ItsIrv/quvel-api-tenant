@@ -59,8 +59,11 @@ trait HasTenantCommands
             return $this->runForAllTenants($callback);
         }
 
-        if ($tenantIdentifier = $this->option('tenant')) {
-            return $this->runForTenant($tenantIdentifier, $callback);
+        $tenantIdentifier = $this->option('tenant');
+        if ($tenantIdentifier) {
+            $identifier = is_array($tenantIdentifier) ? $tenantIdentifier[0] : $tenantIdentifier;
+
+            return $this->runForTenant((string) $identifier, $callback);
         }
 
         return $callback(null);
@@ -68,6 +71,7 @@ trait HasTenantCommands
 
     protected function runForAllTenants($callback): int
     {
+        /** @psalm-suppress InvalidMethodCall Static call on class-string is valid PHP */
         $tenants = tenant_class()::where('is_active', true)->get();
 
         if ($tenants->isEmpty()) {
@@ -143,11 +147,13 @@ trait HasTenantCommands
         if ($this->option('apply-tenant-config')) {
             return true;
         }
+
         return (bool) $this->option('hard');
     }
 
     protected function findTenant(string $identifier): mixed
     {
+        /** @psalm-suppress InvalidMethodCall Static call on class-string is valid PHP */
         $tenant = tenant_class()::where('identifier', $identifier)
             ->orWhere('id', $identifier)
             ->orWhere('public_id', $identifier)
@@ -168,6 +174,7 @@ trait HasTenantCommands
         if ($this->option('tenant')) {
             return true;
         }
+
         return (bool) $this->option('all-tenants');
     }
 }

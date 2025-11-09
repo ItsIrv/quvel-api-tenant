@@ -31,6 +31,8 @@ abstract class TenantAwareCommand extends Command
     /**
      * Handle the command for a specific tenant.
      * Override this method in your command.
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
      */
     protected function handleForTenant($tenant): int
     {

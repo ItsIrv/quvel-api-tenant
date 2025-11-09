@@ -6,7 +6,6 @@ namespace Quvel\Tenant\Broadcasting;
 
 use Illuminate\Broadcasting\Broadcasters\PusherBroadcaster;
 use Pusher\Pusher;
-use Quvel\Tenant\Contracts\TenantContext;
 
 /**
  * Pusher broadcaster that automatically prefixes channels with tenant identifiers.
@@ -30,7 +29,7 @@ class TenantPusherBroadcaster extends PusherBroadcaster
     }
 
     /**
-     * Format the channel array with tenant prefixes using existing helper.
+     * Format the channel array with tenant prefixes using the existing helper.
      */
     protected function formatChannels(array $channels): array
     {

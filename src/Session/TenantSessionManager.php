@@ -10,6 +10,8 @@ class TenantSessionManager extends SessionManager
 {
     /**
      * Build the session instance.
+     *
+     * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
      */
     protected function buildSession($handler): TenantEncryptedStore|TenantStore
     {
@@ -25,6 +27,9 @@ class TenantSessionManager extends SessionManager
 
     /**
      * Build the encrypted session instance.
+     *
+     * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.Found
      */
     protected function buildEncryptedSession($handler)
     {

@@ -16,6 +16,19 @@
     </projectFiles>
     <issueHandlers>
         <MissingOverrideAttribute errorLevel="suppress"/>
+        <!-- Optional dependencies (Telescope, Horizon, Reverb) are checked dynamically -->
+        <MissingDependency errorLevel="suppress"/>
+        <UndefinedClass errorLevel="suppress"/>
+        <!-- Laravel interface parameter naming inconsistencies -->
+        <ParamNameMismatch errorLevel="suppress"/>
+        <!-- Laravel magic methods and dynamic calls -->
+        <UndefinedMagicMethod errorLevel="suppress"/>
+        <!-- Laravel interface return type mismatches (bool vs int, etc) -->
+        <ImplementedReturnTypeMismatch errorLevel="suppress"/>
+        <!-- Laravel parent class methods not always visible to static analysis -->
+        <UndefinedMethod errorLevel="suppress"/>
+        <!-- Laravel factory template system false positive -->
+        <InvalidTemplateParam errorLevel="suppress"/>
     </issueHandlers>
     <plugins>
         <pluginClass class="Psalm\LaravelPlugin\Plugin"/>

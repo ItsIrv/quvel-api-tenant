@@ -17,6 +17,8 @@ class TenantAwareRedisManager extends RedisManager
 {
     /**
      * Get a Redis connection instance.
+     *
+     * @psalm-suppress InvalidReturnType,InvalidReturnStatement Intentionally returns TenantAwareRedisConnection which extends Connection
      */
     public function connection($name = null): Connection|TenantAwareRedisConnection
     {

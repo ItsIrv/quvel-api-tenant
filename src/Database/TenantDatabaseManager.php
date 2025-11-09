@@ -45,11 +45,7 @@ class TenantDatabaseManager extends DatabaseManager
             return parent::getDefaultConnection();
         }
 
-        $baseConnection = $tenant->getConfig('database.default')
-            ?? config('database.default')
-            ?? 'mysql';
-
-        return $this->getTenantConnectionName($tenant, $baseConnection);
+        return $this->getTenantConnectionName($tenant);
     }
 
     /**
@@ -57,7 +53,7 @@ class TenantDatabaseManager extends DatabaseManager
      *
      * This matches the naming convention in DatabaseConfigPipe.
      */
-    protected function getTenantConnectionName($tenant, string $baseConnection): string
+    protected function getTenantConnectionName($tenant): string
     {
         return 'tenant_' . $tenant->id;
     }

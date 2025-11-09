@@ -73,7 +73,7 @@ abstract class BaseTenantTable
      */
     protected function config(): TenantTableConfig
     {
-        return TenantTableConfig::for($this->tableName());
+        return TenantTableConfig::for();
     }
 
     /**

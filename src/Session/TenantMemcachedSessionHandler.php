@@ -77,6 +77,8 @@ class TenantMemcachedSessionHandler extends CacheBasedSessionHandler
      *
      * Note: Memcached doesn't support key pattern matching like Redis,
      * so this is limited. Consider using a tenant session registry if needed.
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
      */
     public function clearTenantSessions(
         ?int $tenantId = null

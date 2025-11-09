@@ -16,6 +16,11 @@ use Throwable;
  */
 class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
 {
+    public function __construct(?string $connection, int $chunkSize = 1000)
+    {
+        parent::__construct($connection, $chunkSize);
+    }
+
     /**
      * Store the given array of entries.
      */
@@ -91,7 +96,7 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
             $stored->each(function ($exception) use ($table, $tenantId): void {
                 $table
                     ->where('family_hash', $exception->familyHash)
-                    ->when($tenantId !== null, fn($query) => $query->where('tenant_id', $tenantId))
+                    ->when($tenantId !== null, fn ($query) => $query->where('tenant_id', $tenantId))
                     ->update([
                         'content->occurrences' => $table->raw('JSON_EXTRACT(`content`, "$.occurrences") + 1'),
                         'should_display_on_index' => true,
@@ -113,7 +118,7 @@ class TenantAwareDatabaseEntriesRepository extends DatabaseEntriesRepository
             try {
                 $table->insert(
                     $chunked->flatMap(
-                        fn($tags, $uuid) => collect($tags)->map(function ($tag) use ($uuid, $tenantId): array {
+                        fn ($tags, $uuid) => collect($tags)->map(function ($tag) use ($uuid, $tenantId): array {
                             $data = [
                                 'entry_uuid' => $uuid,
                                 'tag' => $tag,

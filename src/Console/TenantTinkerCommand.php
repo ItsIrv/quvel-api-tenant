@@ -43,8 +43,10 @@ class TenantTinkerCommand extends TinkerCommand
      */
     public function handle()
     {
-        if ($tenantIdentifier = $this->option('tenant')) {
-            $tenant = $this->findTenant($tenantIdentifier);
+        $tenantIdentifier = $this->option('tenant');
+        if ($tenantIdentifier) {
+            $identifier = is_array($tenantIdentifier) ? $tenantIdentifier[0] : $tenantIdentifier;
+            $tenant = $this->findTenant((string)$identifier);
 
             if (!$tenant) {
                 return 1;
@@ -59,16 +61,20 @@ class TenantTinkerCommand extends TinkerCommand
 
             if ($this->shouldApplyTenantConfig()) {
                 $this->line('  → <fg=yellow>Applying tenant configuration pipeline...</>');
-
                 app(PipelineRegistry::class)->applyPipes($tenant);
-
                 $this->info('  → <fg=green>Configuration pipeline applied (database, mail, etc.)</>');
-            } else {
-                $this->line('  → <fg=yellow>Soft mode: tenant set in context only</>');
-                $this->line('  → <fg=gray>Use --hard to apply full configuration pipeline</>');
+
+                $this->newLine();
+
+                return parent::handle();
             }
 
+            $this->line('  → <fg=yellow>Soft mode: tenant set in context only</>');
+            $this->line('  → <fg=gray>Use --hard to apply full configuration pipeline</>');
+
             $this->newLine();
+
+            return parent::handle();
         }
 
         return parent::handle();

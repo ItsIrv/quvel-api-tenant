@@ -17,7 +17,7 @@ class TenantQueueServiceProvider extends QueueServiceProvider
     {
         $manager->addConnector(
             'database',
-            fn(): TenantDatabaseConnector => new TenantDatabaseConnector(
+            fn (): TenantDatabaseConnector => new TenantDatabaseConnector(
                 $this->app['db']
             )
         );

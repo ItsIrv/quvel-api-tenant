@@ -69,6 +69,7 @@ class TenantConfigController
         }
 
         if ($tenant->isInternal() && $request->hasHeader('X-Tenant-Override')) {
+            /** @psalm-suppress InvalidMethodCall Static call on class-string is valid PHP */
             $targetTenant = tenant_class()::where('identifier', $request->header('X-Tenant-Override'))
                 ->with('parent')
                 ->first();

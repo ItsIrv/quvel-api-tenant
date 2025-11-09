@@ -51,7 +51,7 @@ class TenantDatabaseQueue extends DatabaseQueue
                 $this->isAvailable($query);
                 $this->isReservedButExpired($query);
             })
-            ->when($this->filterByTenantId !== null, fn($query) => $query->where('tenant_id', $this->filterByTenantId))
+            ->when($this->filterByTenantId !== null, fn ($query) => $query->where('tenant_id', $this->filterByTenantId))
             ->orderBy('id')
             ->first();
 

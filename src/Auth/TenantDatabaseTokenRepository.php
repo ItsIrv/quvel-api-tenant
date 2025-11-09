@@ -63,8 +63,6 @@ class TenantDatabaseTokenRepository extends DatabaseTokenRepository
 
     /**
      * Find a token record by email address.
-     *
-     *
      */
     protected function getToken(string $email): object|null
     {

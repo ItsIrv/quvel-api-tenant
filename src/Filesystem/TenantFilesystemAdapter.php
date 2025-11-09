@@ -13,6 +13,8 @@ use Quvel\Tenant\Models\Tenant;
  * This class wraps any filesystem to provide automatic tenant scoping
  * for file operations. It modifies file paths to include tenant context
  * while preserving the original filesystem's functionality.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class TenantFilesystemAdapter implements Filesystem
 {
@@ -21,7 +23,7 @@ class TenantFilesystemAdapter implements Filesystem
     }
 
     /**
-     * Get tenant-scoped file path.
+     * Get the tenant-scoped file path.
      */
     protected function getTenantPath(string $path): string
     {
@@ -262,6 +264,8 @@ class TenantFilesystemAdapter implements Filesystem
      */
     public function putFile($path, $file = null, $options = [])
     {
+        $path = is_string($path) ? $path : '';
+
         return $this->filesystem->putFile($this->getTenantPath($path), $file, $options);
     }
 
@@ -270,11 +274,13 @@ class TenantFilesystemAdapter implements Filesystem
      */
     public function putFileAs($path, $file, $name = null, $options = [])
     {
+        $path = is_string($path) ? $path : '';
+
         return $this->filesystem->putFileAs($this->getTenantPath($path), $file, $name, $options);
     }
 
     /**
-     * Pass through any other method calls to the underlying filesystem.
+     * Pass through any other method calling to the underlying filesystem.
      */
     public function __call(string $method, array $parameters)
     {

@@ -16,7 +16,7 @@ class GetPresets
     {
         $presets = PresetDefinitions::all();
 
-        return array_map(fn(array $preset): array => [
+        return array_map(fn (array $preset): array => [
             'name' => $preset['name'],
             'description' => $preset['description'],
             'features' => $preset['features'],

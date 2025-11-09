@@ -13,6 +13,7 @@ class TenantDatabaseConnector extends DatabaseConnector
      */
     public function connect(array $config): TenantDatabaseQueue|Queue
     {
+        /** @psalm-suppress ArgumentTypeCoercion Laravel connection() returns ConnectionInterface but DatabaseQueue expects concrete Connection */
         return new TenantDatabaseQueue(
             $this->connections->connection($config['connection'] ?? null),
             $config['table'],

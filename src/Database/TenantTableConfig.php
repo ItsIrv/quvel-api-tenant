@@ -6,6 +6,9 @@ namespace Quvel\Tenant\Database;
 
 /**
  * Configuration for making a database table tenant-aware.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class TenantTableConfig
 {
@@ -181,10 +184,8 @@ class TenantTableConfig
 
     /**
      * Create a new instance for a table.
-     *
-     * @param string $tableName The table name
      */
-    public static function for(string $tableName): static
+    public static function for(): static
     {
         return new static();
     }
@@ -210,7 +211,7 @@ class TenantTableConfig
     }
 
     /**
-     * Make tenant_id column nullable or not.
+     * Make the tenant_id column nullable or not.
      */
     public function nullable(bool $enabled = true): static
     {

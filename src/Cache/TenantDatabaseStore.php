@@ -46,7 +46,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
     /**
      * Retrieve an item from the cache by key.
      *
-     * @param string|array $key
+     * @param string $key
      * @return mixed
      */
     public function get($key)
@@ -57,12 +57,9 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
-            if ($tenant) {
-                $cache = $cache->where('tenant_id', $tenant->id);
-            } else {
-                // For operations without tenant context, only show system-level cache
-                $cache = $cache->whereNull('tenant_id');
-            }
+            $cache = $tenant
+                ? $cache->where('tenant_id', $tenant->id)
+                : $cache->whereNull('tenant_id'); // For operations without tenant context, only show system-level cache
         }
 
         $cache = $cache->first();
@@ -91,12 +88,11 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
-            if ($tenant) {
-                $query = $query->where('tenant_id', $tenant->id);
-            } else {
-                // For operations without tenant context, only affect system-level cache
-                $query = $query->whereNull('tenant_id');
-            }
+            $query = $tenant
+                ? $query->where('tenant_id', $tenant->id)
+                : $query->whereNull(
+                    'tenant_id'
+                ); // For operations without tenant context, only affect system-level cache
         }
 
         return $query->delete();
@@ -111,13 +107,11 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
 
         if (config('tenant.cache.auto_tenant_id', false) && TenantContext::needsTenantIdScope()) {
             $tenant = TenantContext::current();
-
-            if ($tenant) {
-                $query = $query->where('tenant_id', $tenant->id);
-            } else {
-                // For operations without tenant context, only flush system-level cache
-                $query = $query->whereNull('tenant_id');
-            }
+            $query = $tenant
+                ? $query->where('tenant_id', $tenant->id)
+                : $query->whereNull(
+                    'tenant_id'
+                ); // For operations without tenant context, only flush system-level cache
         }
 
         return $query->delete();
@@ -133,6 +127,7 @@ class TenantDatabaseStore extends DatabaseStore implements LockProvider
      */
     public function lock($name, $seconds = 0, $owner = null)
     {
+        /** @psalm-suppress ArgumentTypeCoercion Laravel DatabaseLock expects concrete Connection but parent uses ConnectionInterface */
         return new TenantDatabaseLock(
             $this->connection,
             $this->lockTable,

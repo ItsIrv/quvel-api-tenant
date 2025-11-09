@@ -96,6 +96,7 @@ class TenantServiceProvider extends ServiceProvider
         $this->registerTenantFilesystemManager();
         $this->registerTenantMailManager();
         $this->registerTenantRedisManager();
+        $this->registerTenantLogManager();
         $this->registerFacades();
 
         if ($this->app->runningInConsole()) {
@@ -284,27 +285,24 @@ class TenantServiceProvider extends ServiceProvider
             $this->app->afterResolving('queue', function (QueueManager $manager): void {
                 $manager->addConnector(
                     'database',
-                    fn(
-                    ): \Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector => new Queue\Connectors\TenantDatabaseConnector(
-                        $this->app['db']
-                    )
+                    function (): \Quvel\Tenant\Queue\Connectors\TenantDatabaseConnector {
+                        return new Queue\Connectors\TenantDatabaseConnector($this->app['db']);
+                    }
                 );
 
                 if (class_exists(Horizon::class)) {
                     $manager->addConnector(
                         'redis',
-                        fn(
-                        ): \Quvel\Tenant\Queue\Connectors\TenantHorizonConnector => new Queue\Connectors\TenantHorizonConnector(
-                            $this->app['redis']
-                        )
+                        function (): \Quvel\Tenant\Queue\Connectors\TenantHorizonConnector {
+                            return new Queue\Connectors\TenantHorizonConnector($this->app['redis']);
+                        }
                     );
                 } else {
                     $manager->addConnector(
                         'redis',
-                        fn(
-                        ): \Quvel\Tenant\Queue\Connectors\TenantRedisConnector => new Queue\Connectors\TenantRedisConnector(
-                            $this->app['redis']
-                        )
+                        function (): \Quvel\Tenant\Queue\Connectors\TenantRedisConnector {
+                            return new Queue\Connectors\TenantRedisConnector($this->app['redis']);
+                        }
                     );
                 }
             });
@@ -339,10 +337,12 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.queue.auto_tenant_id', true)) {
             $this->app->extend(
                 DatabaseBatchRepository::class,
-                fn(
+                // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
+                fn (
                     $repository,
                     $app
                 ): \Quvel\Tenant\Queue\TenantDatabaseBatchRepository => new TenantDatabaseBatchRepository(
+                    // phpcs:enable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                     $app->make(BatchFactory::class),
                     $app->make('db')->connection($app->config->get('queue.batching.database')),
                     $app->config->get('queue.batching.table', 'job_batches')
@@ -358,7 +358,7 @@ class TenantServiceProvider extends ServiceProvider
     {
         $this->app->extend(
             'db',
-            fn($manager, $app): \Quvel\Tenant\Database\TenantDatabaseManager => new Database\TenantDatabaseManager(
+            fn ($manager, $app): \Quvel\Tenant\Database\TenantDatabaseManager => new Database\TenantDatabaseManager( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                 $app,
                 $app['db.factory'],
                 $app->make(TenantContext::class)
@@ -373,7 +373,7 @@ class TenantServiceProvider extends ServiceProvider
     {
         $this->app->extend(
             'session',
-            fn($manager, $app): \Quvel\Tenant\Session\TenantSessionManager => new Session\TenantSessionManager($app)
+            fn ($manager, $app): \Quvel\Tenant\Session\TenantSessionManager => new Session\TenantSessionManager($app) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
         );
     }
 
@@ -472,7 +472,7 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.cache.auto_tenant_scoping', false)) {
             $this->app->extend(
                 'cache',
-                fn($manager, $app): \Quvel\Tenant\Cache\TenantCacheManager => new Cache\TenantCacheManager(
+                fn ($manager, $app): \Quvel\Tenant\Cache\TenantCacheManager => new Cache\TenantCacheManager( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                     $app,
                     $app->make(TenantContext::class)
                 )
@@ -488,7 +488,7 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.password_reset_tokens.auto_tenant_id', false)) {
             $this->app->extend(
                 'auth.password',
-                fn($manager, $app): \Quvel\Tenant\Auth\TenantPasswordBrokerManager => new TenantPasswordBrokerManager(
+                fn ($manager, $app): \Quvel\Tenant\Auth\TenantPasswordBrokerManager => new TenantPasswordBrokerManager( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                     $app
                 )
             );
@@ -505,7 +505,7 @@ class TenantServiceProvider extends ServiceProvider
 
             $manager->extend(
                 'log',
-                fn($app): \Quvel\Tenant\Broadcasting\TenantLogBroadcaster => new Broadcasting\TenantLogBroadcaster(
+                fn ($app): \Quvel\Tenant\Broadcasting\TenantLogBroadcaster => new Broadcasting\TenantLogBroadcaster(
                     $app->make('log'),
                     $app->make(TenantContext::class)
                 )
@@ -514,17 +514,18 @@ class TenantServiceProvider extends ServiceProvider
             if (class_exists(\Pusher\Pusher::class)) {
                 $manager->extend(
                     'pusher',
-                    fn(
+                    // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
+                    fn (
                         $app,
                         $config
                     ): \Quvel\Tenant\Broadcasting\TenantPusherBroadcaster => new Broadcasting\TenantPusherBroadcaster(
+                        // phpcs:enable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                         new \Pusher\Pusher(
                             $config['key'],
                             $config['secret'],
                             $config['app_id'],
                             $config['options'] ?? []
-                        ),
-                        $app->make(TenantContext::class)
+                        )
                     )
                 );
             }
@@ -532,7 +533,7 @@ class TenantServiceProvider extends ServiceProvider
             if (class_exists(\Illuminate\Broadcasting\Broadcasters\ReverseProxyBroadcaster::class)) {
                 $manager->extend(
                     'reverb',
-                    fn(
+                    fn (
                         $app,
                         $config
                     ): \Quvel\Tenant\Broadcasting\TenantReverbBroadcaster => new Broadcasting\TenantReverbBroadcaster(
@@ -552,10 +553,12 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.filesystems.auto_tenant_scoping', false)) {
             $this->app->extend(
                 'filesystem',
-                fn(
+                // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
+                fn (
                     $manager,
                     $app
                 ): \Quvel\Tenant\Filesystem\TenantFilesystemManager => new Filesystem\TenantFilesystemManager(
+                    // phpcs:enable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                     $app,
                     $app->make(TenantContext::class)
                 )
@@ -571,7 +574,7 @@ class TenantServiceProvider extends ServiceProvider
         if (config('tenant.mail.auto_tenant_mail', false)) {
             $this->app->extend(
                 'mail.manager',
-                fn($manager, $app): \Quvel\Tenant\Mail\TenantMailManager => new Mail\TenantMailManager(
+                fn ($manager, $app): \Quvel\Tenant\Mail\TenantMailManager => new Mail\TenantMailManager( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                     $app,
                     $app->make(TenantContext::class)
                 )
@@ -597,11 +600,29 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->app->extend(
             'redis',
-            fn($redis, $app): \Quvel\Tenant\Redis\TenantAwareRedisManager => new TenantAwareRedisManager(
+            fn ($redis, $app): \Quvel\Tenant\Redis\TenantAwareRedisManager => new TenantAwareRedisManager( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                 $app,
                 config('database.redis.client', 'phpredis'),
                 config('database.redis')
             )
+        );
+    }
+
+    /**
+     * Register tenant-aware log manager.
+     *
+     * Automatically adds tenant_id to all log entries and handles different
+     * isolation strategies (shared, prefix, directory).
+     */
+    protected function registerTenantLogManager(): void
+    {
+        if (!config('tenant.logging.auto_tenant_context', true)) {
+            return;
+        }
+
+        $this->app->extend(
+            'log',
+            fn ($log, $app): \Quvel\Tenant\Logging\TenantLogManager => new Logging\TenantLogManager($app) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
         );
     }
 
@@ -620,11 +641,12 @@ class TenantServiceProvider extends ServiceProvider
 
         $this->app->singleton(
             \Laravel\Telescope\Contracts\EntriesRepository::class,
-            fn(
-            ): \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository => new \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository(
-                config('telescope.storage.database.connection'),
-                config('telescope.storage.database.chunk', 1000)
-            )
+            function (): \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository {
+                return new \Quvel\Tenant\Telescope\TenantAwareDatabaseEntriesRepository(
+                    config('telescope.storage.database.connection'),
+                    config('telescope.storage.database.chunk', 1000)
+                );
+            }
         );
     }
 
@@ -669,24 +691,24 @@ class TenantServiceProvider extends ServiceProvider
      */
     protected function registerTenantCommands(): void
     {
-        $this->app->afterResolving('command.tinker', function ($command, $app): void {
+        $this->app->afterResolving('command.tinker', function ($command, $app): void { // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
             $app->forgetInstance('command.tinker');
             $app->singleton(
                 'command.tinker',
-                fn($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand()
+                fn ($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand() // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
             );
         });
 
         $this->app->singleton(
             'command.tinker',
-            fn($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand()
+            fn ($app): \Quvel\Tenant\Console\TenantTinkerCommand => new Console\TenantTinkerCommand() // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
         );
 
         $this->commands(['command.tinker']);
 
         $this->app->extend(
             WorkCommand::class,
-            fn($command, $app): \Quvel\Tenant\Console\TenantQueueWorkCommand => new Console\TenantQueueWorkCommand(
+            fn ($command, $app): \Quvel\Tenant\Console\TenantQueueWorkCommand => new Console\TenantQueueWorkCommand( // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                 $app['queue.worker'],
                 $app['cache.store']
             )
